@@ -4,11 +4,11 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { getCurrentSession } from "@/lib/auth/session";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/movimientos", label: "Movimientos" },
-  { href: "/talonario", label: "Talonario" },
-  { href: "/usuarios", label: "Usuarios" },
-  { href: "/configuracion", label: "Configuracion" },
+  { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/movimientos", label: "Movimientos", icon: "💼" },
+  { href: "/talonario", label: "Talonario", icon: "📒" },
+  { href: "/usuarios", label: "Usuarios", icon: "👥" },
+  { href: "/configuracion", label: "Configuracion", icon: "⚙️" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -32,9 +32,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Link
                 key={link.href}
                 href={link.href}
-                className="block rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-teal-50"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-teal-50"
               >
-                {link.label}
+                <span className="text-base">{link.icon}</span>
+                <span>{link.label}</span>
               </Link>
             ))}
           </nav>
