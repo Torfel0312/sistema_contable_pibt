@@ -1,0 +1,149 @@
+Explicacion Completa del Proyecto: Sistema Contable Iglesia (MVP Local)
+
+Este es un MVP local de un sistema web de contabilidad para iglesia, disenado para evolucionar a produccion sin rehacer arquitectura. Esta construido por etapas, actualmente en ETAPA 4 (completa), con base solida en tecnologias modernas. El objetivo es gestionar ingresos y egresos contables, con trazabilidad, auditoria, generacion automatica de PDFs, almacenamiento en Google Drive y notificaciones por email, todo integrado via Google Apps Script.
+
+1. Proposito y Alcance del Proyecto
+- Objetivo principal: Proporcionar una herramienta web segura y mantenible para registrar movimientos contables (ingresos/egresos) en una iglesia, con funcionalidades como:
+  - Gestion de usuarios con roles (ADMIN, OPERADOR, VISOR).
+  - CRUD de movimientos con folio correlativo.
+  - Dashboard con indicadores y graficos.
+  - Trazabilidad completa (quien creo/edito/anulo cada movimiento).
+  - Auditoria de eventos.
+  - Generacion automatica de PDFs (comprobantes) y almacenamiento en Google Drive.
+  - Sincronizacion con Google Sheets.
+  - Notificaciones por email (Gmail) al crear movimientos.
+- Alcance actual: MVP local (SQLite), preparado para escalar a PostgreSQL/Supabase.
+- Etapas del proyecto:
+  - ETAPA 1: Base del proyecto (Next.js, Prisma, arquitectura modular).
+  - ETAPA 2: Autenticacion local (NextAuth, seed de usuarios).
+  - ETAPA 3: Formularios y UI para movimientos.
+  - ETAPA 4: CRUD completo, dashboard, trazabilidad, auditoria (actual).
+  - ETAPA 5: Gestion avanzada de usuarios.
+  - ETAPA 6: Auditoria completa.
+  - ETAPA 7: Integracion Google Apps Script (PDFs, Drive, email).
+  - ETAPA 8: Revision final y escalamiento.
+
+2. Stack Tecnologico
+- Frontend: Next.js 16 (App Router), React 19, TypeScript estricto, Tailwind CSS 4.
+- Backend: API routes en Next.js, NextAuth (credenciales para login).
+- Base de datos: Prisma ORM con SQLite (MVP), preparado para PostgreSQL.
+- Formularios: React Hook Form + Zod para validacion.
+- Graficos: Recharts para dashboard.
+- Autenticacion: NextAuth con JWT persistente.
+- Integraciones: Google Apps Script (para PDFs, Drive, Gmail, Sheets).
+- Otras: bcrypt para hashes de password, RBAC (control de acceso basado en roles).
+
+3. Arquitectura del Proyecto
+- Capas:
+  - UI (app/, components/): Paginas y componentes React.
+  - Aplicacion/Servicios (services/): Logica de negocio desacoplada (movimientos, auditoria, integraciones Google).
+  - Acceso a datos (lib/db/, Prisma): Consultas a DB.
+  - Seguridad (lib/auth/, lib/permissions/): Autenticacion y permisos.
+  - Integraciones (services/google/): Conexion con Google.
+- Estructura de carpetas:
+  - app/: Rutas UI (dashboard, login, movimientos, etc.).
+  - components/: UI reutilizable (forms, layouts).
+  - lib/: Utilidades (auth, db, validators, rbac).
+  - services/: Logica de negocio (movimientos, dashboard, google).
+  - prisma/: Esquema DB, migraciones, seed.
+  - types/: Definiciones TypeScript.
+  - docs/: Documentacion (arquitectura, levantamiento, estado).
+- Modelo de datos (Prisma):
+  - User: Usuarios con roles, activo/inactivo.
+  - Movimiento: Registros contables con folio, monto, categoria, estado (ACTIVO/ANULADO), trazabilidad.
+  - AuditoriaMovimiento: Historial de cambios.
+  - ConfiguracionSistema: Config global (ultimo folio, IDs Google, etc.).
+
+4. Funcionalidades Implementadas (ETAPA 4)
+- Autenticacion: Login/logout con NextAuth, sesion JWT persistente, middleware de rutas protegidas.
+- Gestion de usuarios: Seed de usuarios demo (admin@iglesia.local, operador@iglesia.local, visor@iglesia.local), RBAC (ADMIN accede a /usuarios y /configuracion).
+- CRUD de movimientos:
+  - Crear (formulario con validacion Zod).
+  - Listar (con filtros y paginacion).
+  - Ver detalle (con trazabilidad y auditoria).
+  - Editar.
+  - Anular (logica, no fisica).
+- Dashboard: Indicadores (total ingresos/egresos, saldo, cantidad movimientos), graficos (Recharts: ingresos vs egresos, resumen por categoria).
+- Trazabilidad: Cada movimiento registra usuario y fecha de creacion/edicion/anulacion.
+- Auditoria basica: Eventos de creacion/edicion/anulacion.
+- Folio correlativo: Desde 0, incrementa automaticamente.
+- Preparado para integraciones: Campos en DB para PDFs (url, status, error), Drive (fileId), Sheets (sync), email (status, error).
+
+5. Configuracion Inicial del Proyecto
+- Requisitos: Node.js LTS 22, npm.
+- Instalacion:
+  1. cd c:\proy_contabilidad_PIBT
+  2. npm install
+- Variables de entorno (archivo .env):
+  DATABASE_URL="file:./dev.db"
+  NEXTAUTH_SECRET="local_dev_secret_change_me"
+  NEXTAUTH_URL="http://localhost:3000"
+  APP_NAME="Sistema Contable Iglesia"
+  DEFAULT_CURRENCY="CLP"
+  SEED_DEFAULT_PASSWORD="Admin12345!"
+  GOOGLE_APPS_SCRIPT_WEBHOOK_URL="https://script.google.com/macros/s/AKfycbyQTbBd_Gt6TbHEfRJwyQXISpWXkxUp2AtbYmlDPkVj1b39dzEW5Gr_STA57QcIbLOc/exec"
+  GOOGLE_APPS_SCRIPT_SECRET="Sargento_aldea_170"
+  GOOGLE_DRIVE_FOLDER_ID="1L8Ozx4KTtSiKMJtSq7t1Yn4hQweuSOQO"
+  GOOGLE_SHEET_ID="1xgacb9O2Jwegnsv1bNoWQHtqPJWg1VLO7hn0WYvgysU"
+  NOTIFICATION_EMAIL="contabilidadpibt@gmail.com"
+  GMAIL_SENDER_NAME="Sistema Contable Iglesia 1 Bautista Talcahuano"
+- Base de datos:
+  1. npm run db:init (aplica SQL y seed).
+  2. Usuarios demo: email como arriba, password de SEED_DEFAULT_PASSWORD.
+- Levantar servidor: npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+- Flujo de prueba:
+  1. Login con usuario demo.
+  2. Crear movimiento en /movimientos/nuevo.
+  3. Ver detalle, editar, anular.
+  4. Revisar dashboard.
+
+6. Configuracion de Google (Apps Script, Drive, Gmail, Sheets)
+Esta es la parte critica para integraciones futuras. No guardar credenciales de Gmail en el proyecto. La autenticacion se hace en Google Apps Script.
+
+- Donde configurar en este proyecto:
+  - Archivo .env con las variables listadas arriba.
+  - GOOGLE_APPS_SCRIPT_WEBHOOK_URL: URL del Web App de Apps Script.
+  - GOOGLE_APPS_SCRIPT_SECRET: Secreto compartido para validar llamadas (largo y unico).
+  - GOOGLE_DRIVE_FOLDER_ID: ID de la carpeta en Drive donde guardar PDFs.
+  - GOOGLE_SHEET_ID: ID de la hoja de calculo para sincronizacion completa de movimientos.
+  - NOTIFICATION_EMAIL: Email destino para notificaciones.
+  - GMAIL_SENDER_NAME: Nombre del remitente.
+
+- Donde configurar acceso real a Gmail/Drive:
+  - En Google Apps Script (proyecto separado):
+    1. Crear proyecto Apps Script en script.google.com.
+    2. Implementar como Web App (ejecutar como: tu cuenta Gmail oficial).
+    3. Autorizar scopes al primer uso: DriveApp, GmailApp/MailApp, SpreadsheetApp.
+    4. Guardar GOOGLE_APPS_SCRIPT_SECRET en Properties Service (Script Properties).
+    5. Validar en Apps Script: comparar header x-app-script-secret con el secreto guardado.
+
+- Flujo de seguridad recomendado:
+  1. Backend Next.js llama al webhook de Apps Script (nunca desde frontend).
+  2. Apps Script valida el secreto en el header.
+  3. Apps Script genera PDF, guarda en Drive, envia email y sincroniza Sheet completo con todos los movimientos activos.
+  4. Devuelve JSON: {ok: true, pdfUrl: "...", driveFileId: "...", sheetSynced: true, mailSent: true, error: null} o error.
+
+- Que NO hacer:
+  - No guardar password de Gmail en .env.
+  - No llamar Apps Script directo desde React (cliente).
+  - No exponer webhook sin secreto.
+
+- Verificacion:
+  - Crear movimiento, revisar en detalle: pdfStatus, pdfUrl, driveFileId, syncedToSheet, notificationStatus, errores si falla.
+  - El Sheet tendra headers y filas de todos los movimientos activos, actualizado en cada creacion/edicion/anulacion.
+
+7. Flujo de Trabajo Completo
+1. Usuario loguea con credenciales demo.
+2. Navega a /movimientos, crea uno nuevo (formulario valida con Zod).
+3. Sistema asigna folio, registra trazabilidad.
+4. En detalle, puede editar o anular (logica).
+5. Dashboard muestra indicadores y graficos.
+6. Futuro: Al crear, Apps Script genera PDF, guarda en Drive, envia email.
+
+8. Estado Actual y Proximos Pasos
+- Completado: Hasta ETAPA 4 (CRUD, dashboard, trazabilidad).
+- Pendientes: ETAPA 5+ (gestion usuarios, auditoria completa, integraciones Google).
+- Errores conocidos: Error menor en Tailwind (gradiente en app/page.tsx).
+- Cambios pendientes: Archivos no commited en git.
+
+Esta explicacion es completa para que un LLM pueda ayudar con configuracion de Google, debugging, o implementacion de etapas futuras. Si necesitas codigo especifico o pasos detallados, indicarlo.

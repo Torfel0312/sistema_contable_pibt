@@ -2,25 +2,44 @@
   "name": "iglesia-contable-mvp",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:apply-sql": "prisma db execute --file prisma/migrations/0001_init/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/0002_auditoria_sistema/migration.sql --schema prisma/schema.prisma",
+    "prisma:seed": "prisma db seed",
+    "db:init": "npm run prisma:apply-sql && npm run prisma:seed",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@prisma/client": "^6.16.3",
+    "bcrypt": "^6.0.0",
     "next": "16.1.6",
+    "next-auth": "^4.24.13",
+    "prisma": "^6.16.3",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2",
+    "recharts": "^3.8.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

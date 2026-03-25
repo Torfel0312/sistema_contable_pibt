@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema Contable Iglesia
 
-## Getting Started
+MVP local serio, mantenible y escalable para contabilidad de iglesia.
 
-First, run the development server:
+## Estado
+
+- ETAPA 1 a ETAPA 8 completadas.
+- Proyecto funcional en entorno local.
+
+## Stack
+
+- Next.js (App Router)
+- TypeScript estricto
+- Tailwind CSS
+- Prisma ORM
+- SQLite (MVP local)
+- NextAuth (credentials)
+- React Hook Form + Zod
+- Recharts
+- Integraciones Google Apps Script desacopladas
+
+## Arquitectura
+
+Capas principales:
+
+1. UI: `app/`, `components/`
+2. Negocio: `services/`
+3. Datos: Prisma + `lib/db`
+4. Seguridad: `lib/auth`, `lib/permissions`
+5. Integraciones externas: `services/google`
+
+## Modulos implementados
+
+1. Autenticacion local con roles (`ADMIN`, `OPERADOR`, `VISOR`)
+2. Gestion de usuarios (admin)
+3. Movimientos (crear/listar/detalle/editar/anular)
+4. Dashboard con KPIs y graficos
+5. Auditoria de movimientos y sistema
+6. Integracion preparada para PDF/Drive/correo via Apps Script
+
+## Modelo de datos
+
+- `User`
+- `Movimiento`
+- `AuditoriaMovimiento`
+- `AuditoriaSistema`
+- `ConfiguracionSistema`
+
+## Variables de entorno
+
+Revisar `.env.example`.
+
+Variables clave:
+
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `APP_NAME`
+- `DEFAULT_CURRENCY`
+- `SEED_DEFAULT_PASSWORD`
+- `GOOGLE_APPS_SCRIPT_WEBHOOK_URL`
+- `GOOGLE_APPS_SCRIPT_SECRET`
+- `GOOGLE_DRIVE_FOLDER_ID`
+- `GOOGLE_SHEET_ID`
+- `NOTIFICATION_EMAIL`
+- `GMAIL_SENDER_NAME`
+
+## Instalacion local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd c:\proy_contabilidad_PIBT
+npm.cmd install
+npm.cmd run db:init
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Ejecutar proyecto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Modo desarrollo:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
 
-## Learn More
+Modo estable recomendado en este entorno:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+INICIAR_ESTABLE.bat
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Seed y usuarios demo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm.cmd run prisma:seed
+```
 
-## Deploy on Vercel
+Usuarios:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `admin@iglesia.local`
+- `operador@iglesia.local`
+- `visor@iglesia.local`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Password: `SEED_DEFAULT_PASSWORD` (por defecto `Admin12345!`).
+
+## Integracion Apps Script (PDF/Drive/Correo)
+
+Guia detallada:
+
+- [apps-script-integration.md](c:/proy_contabilidad_PIBT/docs/apps-script-integration.md)
+- [CREDENCIALES_GOOGLE.md](c:/proy_contabilidad_PIBT/docs/CREDENCIALES_GOOGLE.md)
+
+## Documentacion operativa
+
+- [LEVANTAR_PROYECTO.md](c:/proy_contabilidad_PIBT/docs/LEVANTAR_PROYECTO.md)
+- [ESTADO_PROYECTO.md](c:/proy_contabilidad_PIBT/docs/ESTADO_PROYECTO.md)
+- [arquitectura.md](c:/proy_contabilidad_PIBT/docs/arquitectura.md)
+
+## Roadmap de escalamiento (PostgreSQL/Supabase)
+
+1. Cambiar `DATABASE_URL` a PostgreSQL/Supabase.
+2. Ajustar provider de Prisma y migraciones.
+3. Mover secretos a gestor seguro (prod).
+4. Habilitar despliegue continuo y monitoreo.

@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum RolUsuario {
+  ADMIN
+  OPERADOR
+  VISOR
+}
+
+enum TipoMovimiento {
+  INGRESO
+  EGRESO
+}
+
+enum EstadoMovimiento {
+  ACTIVO
+  ANULADO
+}
+
+enum PdfStatus {
+  PENDIENTE
+  GENERADO
+  ERROR
+}
+
+enum NotificationStatus {
+  PENDIENTE
+  ENVIADO
+  ERROR
+}
+
+enum AccionAuditoria {
+  CREADO
+  EDITADO
+  ANULADO
+  PDF_REGENERADO
+  NOTIFICACION_ENVIADA
+  NOTIFICACION_ERROR
+}
+
+model User {
+  id                         String               @id @default(cuid())
+  nombre                     String
+  email                      String               @unique
+  passwordHash               String
+  rol                        RolUsuario           @default(OPERADOR)
+  activo                     Boolean              @default(true)
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @updatedAt
+  movimientosCreados         Movimiento[]         @relation("MovimientoCreadoPor")
+  movimientosActualizados    Movimiento[]         @relation("MovimientoActualizadoPor")
+  movimientosAnulados        Movimiento[]         @relation("MovimientoAnuladoPor")
+  auditorias                 AuditoriaMovimiento[]
+  auditoriasSistema          AuditoriaSistema[]
+}
+
+model Movimiento {
+  id                  String             @id @default(cuid())
+  folio               Int                @unique
+  folioDisplay        String
+  fechaMovimiento     DateTime
+  tipoMovimiento      TipoMovimiento
+  monto               Decimal
+  categoria           String
+  concepto            String
+  referente           String?
+  recibidoPor         String?
+  entregadoPor        String?
+  beneficiario        String?
+  medioPago           String?
+  numeroRespaldo      String?
+  observaciones       String?
+  estado              EstadoMovimiento   @default(ACTIVO)
+  motivoAnulacion     String?
+  pdfUrl              String?
+  driveFileId         String?
+  pdfStatus           PdfStatus          @default(PENDIENTE)
+  pdfError            String?
+  syncedToSheet       Boolean            @default(false)
+  syncError           String?
+  notificationStatus  NotificationStatus @default(PENDIENTE)
+  notificationSentAt  DateTime?
+  notificationError   String?
+  creadoPorId         String
+  creadoEn            DateTime           @default(now())
+  actualizadoPorId    String?
+  actualizadoEn       DateTime?
+  anuladoPorId        String?
+  anuladoEn           DateTime?
+  creadoPor           User               @relation("MovimientoCreadoPor", fields: [creadoPorId], references: [id])
+  actualizadoPor      User?              @relation("MovimientoActualizadoPor", fields: [actualizadoPorId], references: [id])
+  anuladoPor          User?              @relation("MovimientoAnuladoPor", fields: [anuladoPorId], references: [id])
+  auditorias          AuditoriaMovimiento[]
+}
+
+model AuditoriaMovimiento {
+  id           String          @id @default(cuid())
+  movimientoId String
+  accion       AccionAuditoria
+  usuarioId    String
+  fechaEvento  DateTime        @default(now())
+  valorAnterior String?
+  valorNuevo   String?
+  observacion  String?
+  movimiento   Movimiento      @relation(fields: [movimientoId], references: [id])
+  usuario      User            @relation(fields: [usuarioId], references: [id])
+}
+
+model ConfiguracionSistema {
+  id                          String   @id @default("main")
+  ultimoFolio                 Int      @default(-1)
+  emailNotificacion           String?
+  googleSheetId               String?
+  googleDriveFolderId         String?
+  googleAppsScriptWebhookUrl  String?
+  googleAppsScriptSecret      String?
+  gmailSenderName             String?
+  nombreOrganizacion          String   @default("Sistema Contable Iglesia")
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
+model AuditoriaSistema {
+  id           String   @id @default(cuid())
+  entidad      String
+  accion       String
+  entidadId    String?
+  usuarioId    String
+  fechaEvento  DateTime @default(now())
+  valorAnterior String?
+  valorNuevo   String?
+  observacion  String?
+  usuario      User     @relation(fields: [usuarioId], references: [id])
+}
