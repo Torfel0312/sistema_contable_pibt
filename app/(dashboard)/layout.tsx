@@ -6,6 +6,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/movimientos", label: "Movimientos" },
+  { href: "/eventos", label: "Eventos" },
   { href: "/usuarios", label: "Usuarios" },
   { href: "/configuracion", label: "Configuracion" },
 ];

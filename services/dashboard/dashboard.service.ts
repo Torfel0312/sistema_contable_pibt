@@ -1,12 +1,41 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 
 type SerieItem = { name: string; ingresos: number; egresos: number };
 type CategoriaItem = { categoria: string; total: number };
 
+type DashboardPeriodo = {
+  from?: string;
+  to?: string;
+};
+
 export const dashboardService = {
-  async getResumen() {
+  async getResumen(periodo: DashboardPeriodo = {}) {
+    const where: Prisma.MovimientoWhereInput = { estado: "ACTIVO" };
+    const filters: Prisma.MovimientoWhereInput[] = [];
+
+    if (periodo.from) {
+      const fromDate = new Date(periodo.from);
+      if (!Number.isNaN(fromDate.getTime())) {
+        filters.push({ fechaMovimiento: { gte: fromDate } });
+      }
+    }
+
+    if (periodo.to) {
+      const toDate = new Date(periodo.to);
+      if (!Number.isNaN(toDate.getTime())) {
+        // include end of day
+        toDate.setHours(23, 59, 59, 999);
+        filters.push({ fechaMovimiento: { lte: toDate } });
+      }
+    }
+
+    if (filters.length > 0) {
+      where.AND = filters;
+    }
+
     const activos = await prisma.movimiento.findMany({
-      where: { estado: "ACTIVO" },
+      where,
       orderBy: { fechaMovimiento: "asc" },
       select: {
         id: true,

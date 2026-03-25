@@ -34,3 +34,25 @@ body {
 .input:focus {
   box-shadow: 0 0 0 2px rgb(15 118 110 / 0.2);
 }
+
+.btn-primary {
+  border-radius: 0.55rem;
+  border: 1px solid #0f766e;
+  background-color: #0f766e;
+  color: white;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  border-radius: 0.55rem;
+  border: 1px solid #94a3b8;
+  background-color: white;
+  color: #475569;
+  font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+
