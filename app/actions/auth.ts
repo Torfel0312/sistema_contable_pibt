@@ -1,12 +1,10 @@
 "use server"
 
-import { headers } from "next/headers"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { sendForgotPasswordEmail } from "@/services/email/resend.service"
 import { wrapAuthLink } from "@/services/auth/link-wrapper"
 import { getSiteUrl } from "@/lib/utils"
-import { checkRateLimit } from "@/lib/rate-limit"
 
 export async function activateAccount() {
   const supabase = await createSupabaseServerClient()
@@ -27,14 +25,6 @@ export async function activateAccount() {
 
 export async function sendForgotPassword(email: string) {
   const normalizedEmail = email.toLowerCase().trim()
-
-  const reqHeaders = await headers()
-  const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-  const [ipLimit, emailLimit] = await Promise.all([
-    checkRateLimit(`forgot-password:ip:${ip}`, 5, 60),
-    checkRateLimit(`forgot-password:email:${normalizedEmail}`, 5, 3600)
-  ])
-  if (!ipLimit.allowed || !emailLimit.allowed) return
 
   const admin = createSupabaseAdminClient()
 

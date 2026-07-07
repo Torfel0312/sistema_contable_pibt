@@ -84,7 +84,7 @@ Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'm
 Outbound webhooks via Google Apps Script (configured via env vars): PDF generation + Drive storage and Google Sheets sync. Triggered in `services/google/movement-postprocess.ts` after a movement is created/edited. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`. Integration state tracked on `movements` (`pdf_status`, `synced_to_sheet`, `notification_status`, etc.).
 
 **Database schema:**
-Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `invoices`, `ministries`, `ministry_assignments`, `budget_periods`, `ministry_budgets`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`, `rate_limits`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
+Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `invoices`, `ministries`, `ministry_assignments`, `budget_periods`, `ministry_budgets`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
 
 Always use `pnpm supabase migration new ...` for new migrations
 
