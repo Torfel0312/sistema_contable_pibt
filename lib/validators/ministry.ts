@@ -2,13 +2,24 @@ import { z } from "zod"
 
 export const createMinistrySchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  description: z.string().optional()
+  description: z.string().optional(),
+  minister_name: z
+    .string()
+    .trim()
+    .min(2, "El nombre del ministro debe tener al menos 2 caracteres")
+    .max(120, "El nombre del ministro es demasiado largo")
 })
 
 export const updateMinistrySchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").optional(),
   description: z.string().optional(),
-  is_active: z.boolean().optional()
+  is_active: z.boolean().optional(),
+  minister_name: z
+    .string()
+    .trim()
+    .min(2, "El nombre del ministro debe tener al menos 2 caracteres")
+    .max(120, "El nombre del ministro es demasiado largo")
+    .optional()
 })
 
 export const assignMinisterSchema = z.object({

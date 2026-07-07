@@ -20,6 +20,7 @@ const eslintConfig = [
       "public/sw.js",
       "public/swe-worker-*.js",
       ".worktrees/**",
+      ".claude/**",
       "scripts/**"
     ]
   },

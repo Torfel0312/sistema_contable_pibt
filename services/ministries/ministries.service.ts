@@ -25,7 +25,12 @@ export const ministriesService = {
   async create(db: DB, input: CreateMinistryInput, userId: string) {
     const { data, error } = await db
       .from("ministries")
-      .insert({ name: input.name, description: input.description ?? null, created_by: userId })
+      .insert({
+        name: input.name,
+        description: input.description ?? null,
+        minister_name: input.minister_name.trim(),
+        created_by: userId
+      })
       .select()
       .single()
     if (error) throw error
@@ -35,7 +40,7 @@ export const ministriesService = {
       action: "MINISTRY_CREATED",
       user_id: userId,
       entity_id: data.id,
-      new_value: { name: data.name }
+      new_value: { name: data.name, minister_name: data.minister_name }
     })
 
     return data

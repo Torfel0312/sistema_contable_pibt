@@ -409,6 +409,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          minister_name: string | null
           name: string
           updated_at: string
         }
@@ -418,6 +419,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          minister_name?: string | null
           name: string
           updated_at?: string
         }
@@ -427,6 +429,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          minister_name?: string | null
           name?: string
           updated_at?: string
         }
@@ -908,9 +911,10 @@ export type Database = {
         }
         Returns: string
       }
-      get_dashboard_summary:
-        | { Args: { p_from?: string; p_to?: string }; Returns: Json }
-        | { Args: { p_from?: string; p_to?: string }; Returns: Json }
+      get_dashboard_summary: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
       get_ministry_budget_summary: {
         Args: { p_ministry_id: string; p_period_id: string }
         Returns: Json

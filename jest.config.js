@@ -12,7 +12,8 @@ const customJestConfig = {
     "^@/(.*)$": "<rootDir>/$1"
   },
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
-  testPathIgnorePatterns: ["/node_modules/", "/.next/", "/.worktrees/"],
+  testPathIgnorePatterns: ["/node_modules/", "/.next/", "/.worktrees/", "/.claude/"],
+  modulePathIgnorePatterns: ["<rootDir>/.claude/"],
   transform: {
     "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["next/babel"] }]
   }
