@@ -25,20 +25,14 @@ import {
   ItemActions
 } from "@/components/ui/item"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { createMinistrySchema } from "@/lib/validators/ministry"
-import { createMinistry, assignMinister } from "@/app/actions/ministries"
-import { z } from "zod"
-
-const createMinistryFormSchema = createMinistrySchema.extend({
-  minister_id: z.string().optional()
-})
-type CreateMinistryForm = z.infer<typeof createMinistryFormSchema>
+import { createMinistrySchema, type CreateMinistryInput } from "@/lib/validators/ministry"
+import { createMinistry } from "@/app/actions/ministries"
 
 type Ministry = {
   id: string
   name: string
   description: string | null
+  minister_name: string | null
   is_active: boolean
   created_at: string
 }
@@ -48,49 +42,33 @@ type CurrentAssignment = {
   users: { full_name: string } | null
 }
 
-type Minister = {
-  id: string
-  full_name: string
-  email: string
-}
-
 type Props = {
   initialMinistries: Ministry[]
   initialCurrentAssignments: CurrentAssignment[]
-  ministers: Minister[]
 }
 
-export function MinistriesClient({ initialMinistries, initialCurrentAssignments, ministers }: Props) {
+export function MinistriesClient({ initialMinistries, initialCurrentAssignments }: Props) {
   const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries)
-  const [currentAssignments, setCurrentAssignments] =
-    useState<CurrentAssignment[]>(initialCurrentAssignments)
+  const [currentAssignments] = useState<CurrentAssignment[]>(initialCurrentAssignments)
   const [open, setOpen] = useState(false)
 
-  const form = useForm<CreateMinistryForm>({
-    resolver: zodResolver(createMinistryFormSchema),
-    defaultValues: { name: "", description: "", minister_id: "" }
+  const form = useForm<CreateMinistryInput>({
+    resolver: zodResolver(createMinistrySchema),
+    defaultValues: { name: "", description: "", minister_name: "" }
   })
 
   function getMinister(ministryId: string) {
     return currentAssignments.find((a) => a.ministry_id === ministryId)?.users ?? null
   }
 
-  async function handleCreate(values: CreateMinistryForm) {
+  async function handleCreate(values: CreateMinistryInput) {
     try {
       const created = await createMinistry({
         name: values.name.trim(),
-        description: values.description?.trim() || undefined
+        description: values.description?.trim() || undefined,
+        minister_name: values.minister_name.trim()
       })
       const newMinistry = created as unknown as Ministry
-
-      if (values.minister_id) {
-        await assignMinister(newMinistry.id, { user_id: values.minister_id })
-        const selectedMinister = ministers.find((u) => u.id === values.minister_id)
-        setCurrentAssignments((prev) => [
-          ...prev,
-          { ministry_id: newMinistry.id, users: selectedMinister ?? null }
-        ])
-      }
 
       setMinistries((prev) => [newMinistry, ...prev])
       form.reset()
@@ -145,28 +123,13 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments,
                 <FieldError errors={[form.formState.errors.description]} />
               </Field>
               <Field>
-                <FieldLabel htmlFor="minister_id">Ministro</FieldLabel>
-                <NativeSelect
-                  id="minister_id"
-                  className="w-full"
-                  {...form.register("minister_id")}
-                  defaultValue=""
-                >
-                  <NativeSelectOption value="">Sin asignar</NativeSelectOption>
-                  {ministers.map((u) => (
-                    <NativeSelectOption key={u.id} value={u.id}>
-                      {u.full_name} — {u.email}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-                {ministers.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    No hay usuarios con rol ministro.{" "}
-                    <a href="/users" className="underline underline-offset-2">
-                      Crear uno
-                    </a>
-                  </p>
-                )}
+                <FieldLabel htmlFor="minister_name">Ministro *</FieldLabel>
+                <Input
+                  id="minister_name"
+                  placeholder="Nombre del ministro"
+                  {...form.register("minister_name")}
+                />
+                <FieldError errors={[form.formState.errors.minister_name]} />
               </Field>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Creando..." : "Crear ministerio"}
@@ -189,7 +152,7 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments,
       ) : (
         <ItemGroup>
           {ministries.map((m) => {
-            const minister = getMinister(m.id)
+            const ministerName = getMinister(m.id)?.full_name ?? m.minister_name
             return (
               <Item key={m.id} variant="outline" render={<Link href={`/ministries/${m.id}`} />}>
                 <ItemContent>
@@ -204,9 +167,9 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments,
                   {m.description && <ItemDescription>{m.description}</ItemDescription>}
                 </ItemContent>
                 <ItemActions>
-                  {minister ? (
+                  {ministerName ? (
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
-                      {minister.full_name}
+                      {ministerName}
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">Sin ministro</span>
