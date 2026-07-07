@@ -5,8 +5,11 @@ import { intentionsService } from "@/services/intentions/intentions.service"
 import { settlementsService } from "@/services/settlements/settlements.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
 import { IntentionDetailClient } from "@/components/intentions/intention-detail-client"
+import { FEATURES } from "@/lib/feature-flags"
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!FEATURES.requests) redirect("/dashboard")
+
   const user = await getCurrentUser()
   if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) redirect("/dashboard")
 
