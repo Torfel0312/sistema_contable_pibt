@@ -1,13 +1,5 @@
 import { activateAccount, sendForgotPassword } from "../auth"
 
-jest.mock("next/headers", () => ({
-  headers: jest.fn(() => Promise.resolve({ get: () => "127.0.0.1" }))
-}))
-
-jest.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: jest.fn(() => Promise.resolve({ allowed: true, remaining: 4 }))
-}))
-
 const mockGetUser = jest.fn()
 const mockAdminAuthListUsers = jest.fn()
 const mockAdminAuthGenerateLink = jest.fn()
