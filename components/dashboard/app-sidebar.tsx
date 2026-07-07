@@ -30,12 +30,14 @@ import {
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/dashboard/nav-user"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { FEATURES, type FeatureKey } from "@/lib/feature-flags"
 
 type NavLink = {
   href: string
   label: string
   icon: React.ElementType
   roles?: string[]
+  feature?: FeatureKey
 }
 
 type NavGroup = {
@@ -67,7 +69,8 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/budget",
         label: "Presupuesto",
         icon: PiggyBank,
-        roles: ["ADMIN", "BURSAR", "FINANCE"]
+        roles: ["ADMIN", "BURSAR", "FINANCE"],
+        feature: "budget"
       }
     ]
   },
@@ -79,7 +82,8 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/requests",
         label: "Solicitudes",
         icon: FileCheck,
-        roles: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
+        roles: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"],
+        feature: "requests"
       }
     ]
   },
@@ -111,7 +115,10 @@ export function AppSidebar({
     () =>
       NAV_GROUPS.map((group) => ({
         ...group,
-        links: group.links.filter((l) => !l.roles || l.roles.includes(user.role))
+        links: group.links.filter(
+          (l) =>
+            (!l.feature || FEATURES[l.feature]) && (!l.roles || l.roles.includes(user.role))
+        )
       })).filter((group) => group.links.length > 0),
     [user.role]
   )
