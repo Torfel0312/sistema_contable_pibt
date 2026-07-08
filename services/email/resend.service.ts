@@ -5,7 +5,8 @@ import { MovementEmail } from "@/emails/movement-email"
 import type { AppsScriptResponse, MovementIntegrationPayload } from "@/services/google/types"
 
 const ORG_SHORT = "Sistema Contable PIBT"
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Sistema contable PIBT <hola@pibtalcahuano.com>"
+export const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ?? "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
 const TRANSACTIONAL_HEADERS = {
