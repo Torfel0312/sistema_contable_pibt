@@ -33,22 +33,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  const admin = createSupabaseAdminClient()
-  const recipients = await inboundRoutesService.findByLocalPart(admin, localPart)
+  try {
+    const admin = createSupabaseAdminClient()
+    const recipients = await inboundRoutesService.findByLocalPart(admin, localPart)
 
-  if (recipients.length === 0) {
-    console.warn(`[resend-inbound] no route configured for local-part "${localPart}"`)
-    return NextResponse.json({ ok: true })
-  }
+    if (recipients.length === 0) {
+      console.warn(`[resend-inbound] no route configured for local-part "${localPart}"`)
+      return NextResponse.json({ ok: true })
+    }
 
-  const { error } = await resend.emails.receiving.forward({
-    emailId: event.data.email_id,
-    to: recipients,
-    from: FROM_EMAIL
-  })
+    const { error } = await resend.emails.receiving.forward({
+      emailId: event.data.email_id,
+      to: recipients,
+      from: FROM_EMAIL
+    })
 
-  if (error) {
-    console.error(`[resend-inbound] forward failed for "${localPart}"`, error)
+    if (error) {
+      console.error(`[resend-inbound] forward failed for "${localPart}"`, error)
+    }
+  } catch (err) {
+    console.error(`[resend-inbound] unexpected error handling "${localPart}"`, err)
   }
 
   return NextResponse.json({ ok: true })

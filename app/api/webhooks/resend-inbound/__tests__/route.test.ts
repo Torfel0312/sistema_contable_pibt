@@ -88,4 +88,16 @@ describe("POST /api/webhooks/resend-inbound", () => {
       from: "Sistema contable PIBT <hola@pibtalcahuano.com>"
     })
   })
+
+  it("returns 200 even when the service layer throws", async () => {
+    mockVerify.mockReturnValue({
+      type: "email.received",
+      data: { email_id: "email-1", to: ["tesoreria@pibtalcahuano.com"], from: "ext@example.com" }
+    })
+    mockFindByLocalPart.mockRejectedValue(new Error("db unreachable"))
+
+    const res = await POST(makeRequest("{}"))
+
+    expect(res.status).toBe(200)
+  })
 })
