@@ -307,6 +307,45 @@ export type Database = {
         }
         Relationships: []
       }
+      inbound_email_routes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          local_part: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          local_part: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          local_part?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_email_routes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_email_routes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intention_transfers: {
         Row: {
           amount: number
