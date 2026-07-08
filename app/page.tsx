@@ -70,7 +70,7 @@ export default async function LoginPage() {
               Acceso restringido a personal autorizado
             </p>
             <a
-              href={`https://github.com/Primera-Iglesia-Bautista-de-Talcahuano/sistema_contable_pibt/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
+              href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"

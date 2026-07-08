@@ -41,16 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/app/generated/prisma
-
-# local data
-prisma/*.db
-prisma/*.db-journal
-/scripts/seed-movimientos.ts
-
 # superpowers brainstorm artifacts
 .superpowers/
 
 # git worktrees
 .worktrees/
-x

@@ -20,7 +20,6 @@ const PAGE_LABELS: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/movements": "Movimientos",
   "/movements/new": "Nuevo Movimiento",
-  "/events": "Eventos",
   "/settlements": "Rendiciones",
   "/users": "Usuarios",
   "/audit": "Auditoría",
@@ -89,7 +88,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <NotificationBell />
           <a
-            href={`https://github.com/Primera-Iglesia-Bautista-de-Talcahuano/sistema_contable_pibt/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
+            href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[10px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
