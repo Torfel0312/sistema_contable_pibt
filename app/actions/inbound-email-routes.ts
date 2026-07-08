@@ -14,7 +14,7 @@ function assertSettingsAccess(user: Awaited<ReturnType<typeof getCurrentUser>>) 
 }
 
 export async function listInboundEmailRoutes() {
-  const user = assertSettingsAccess(await getCurrentUser())
+  assertSettingsAccess(await getCurrentUser())
   const db = await createSupabaseServerClient()
   return inboundRoutesService.list(db)
 }
