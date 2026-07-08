@@ -48,11 +48,13 @@ export const inboundRoutesService = {
   },
 
   async remove(db: DB, id: string, actorId: string) {
-    const { data: existing } = await db
+    const { data: existing, error: fetchError } = await db
       .from("inbound_email_routes")
       .select("local_part, user_id")
       .eq("id", id)
       .maybeSingle()
+
+    if (fetchError) throw fetchError
 
     const { error } = await db.from("inbound_email_routes").delete().eq("id", id)
     if (error) throw error
