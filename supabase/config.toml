@@ -160,8 +160,8 @@ additional_redirect_urls = [
   "https://contabilidad-pibt.vercel.app",
   "https://contabilidad-pibt.vercel.app/auth/callback",
   "https://contabilidad-pibt-*.vercel.app/**",
-  "https://finanzas.pibtalcahuano.com",
-  "https://finanzas.pibtalcahuano.com/auth/callback"
+  "https://tesoreria.pibtalcahuano.com",
+  "https://tesoreria.pibtalcahuano.com/auth/callback"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
