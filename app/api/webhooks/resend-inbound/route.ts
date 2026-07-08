@@ -4,11 +4,16 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { inboundRoutesService } from "@/services/email/inbound-routes.service"
 import { FROM_EMAIL } from "@/services/email/resend.service"
 
+const DOMAIN = "pibtalcahuano.com"
+
 export async function POST(request: Request) {
   const payload = await request.text()
   const resend = new Resend(process.env.RESEND_API_KEY)
 
-  let event: { type: string; data: { email_id: string; to: string[] } }
+  let event: {
+    type: string
+    data: { email_id: string; to?: string[]; cc?: string[]; bcc?: string[] }
+  }
   try {
     event = resend.webhooks.verify({
       payload,
@@ -27,18 +32,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  const to = event.data.to[0]
-  const localPart = to?.split("@")[0]?.toLowerCase()
-  if (!localPart) {
-    return NextResponse.json({ ok: true })
-  }
-
   try {
+    const addresses = [
+      ...(event.data.to ?? []),
+      ...(event.data.cc ?? []),
+      ...(event.data.bcc ?? [])
+    ]
+
+    const localParts = [
+      ...new Set(
+        addresses
+          .filter((address) => address.toLowerCase().endsWith(`@${DOMAIN}`))
+          .map((address) => address.split("@")[0].toLowerCase())
+      )
+    ]
+
+    if (localParts.length === 0) {
+      return NextResponse.json({ ok: true })
+    }
+
     const admin = createSupabaseAdminClient()
-    const recipients = await inboundRoutesService.findByLocalPart(admin, localPart)
+    const recipientLists = await Promise.all(
+      localParts.map((localPart) => inboundRoutesService.findByLocalPart(admin, localPart))
+    )
+    const recipients = [...new Set(recipientLists.flat())]
 
     if (recipients.length === 0) {
-      console.warn(`[resend-inbound] no route configured for local-part "${localPart}"`)
+      console.warn(`[resend-inbound] no route configured for local-part(s) "${localParts.join(", ")}"`)
       return NextResponse.json({ ok: true })
     }
 
@@ -49,10 +69,10 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error(`[resend-inbound] forward failed for "${localPart}"`, error)
+      console.error(`[resend-inbound] forward failed for "${localParts.join(", ")}"`, error)
     }
   } catch (err) {
-    console.error(`[resend-inbound] unexpected error handling "${localPart}"`, err)
+    console.error("[resend-inbound] unexpected error handling inbound email", err)
   }
 
   return NextResponse.json({ ok: true })

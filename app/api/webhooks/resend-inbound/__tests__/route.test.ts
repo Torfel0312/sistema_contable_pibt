@@ -89,6 +89,31 @@ describe("POST /api/webhooks/resend-inbound", () => {
     })
   })
 
+  it("forwards to matched user when the address is in cc rather than to", async () => {
+    mockVerify.mockReturnValue({
+      type: "email.received",
+      data: {
+        email_id: "email-2",
+        to: ["someone-else@example.com"],
+        cc: ["tesoreria@pibtalcahuano.com"],
+        bcc: [],
+        from: "ext@example.com"
+      }
+    })
+    mockFindByLocalPart.mockResolvedValue(["ana@example.com"])
+    mockForward.mockResolvedValue({ data: { id: "fwd-2" }, error: null })
+
+    const res = await POST(makeRequest("{}"))
+
+    expect(res.status).toBe(200)
+    expect(mockFindByLocalPart).toHaveBeenCalledWith({}, "tesoreria")
+    expect(mockForward).toHaveBeenCalledWith({
+      emailId: "email-2",
+      to: ["ana@example.com"],
+      from: "Sistema contable PIBT <hola@pibtalcahuano.com>"
+    })
+  })
+
   it("returns 200 even when the service layer throws", async () => {
     mockVerify.mockReturnValue({
       type: "email.received",
