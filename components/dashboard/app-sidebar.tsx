@@ -12,7 +12,9 @@ import {
   Receipt,
   Church,
   FileCheck,
-  Settings
+  SlidersHorizontal,
+  Mail,
+  ShieldCheck
 } from "lucide-react"
 import {
   Sidebar,
@@ -67,7 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
     ]
   },
   {
-    label: "Gestión",
+    label: "Ministerios",
     links: [
       { href: "/ministries", label: "Ministerios", icon: Church, roles: ["ADMIN", "BURSAR"] },
       {
@@ -82,9 +84,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Administración",
     links: [
+      { href: "/settings/general", label: "General", icon: SlidersHorizontal, roles: ["ADMIN"] },
+      { href: "/settings/inbound-email", label: "Correo entrante", icon: Mail, roles: ["ADMIN"] },
+      { href: "/settings/permissions", label: "Permisos", icon: ShieldCheck, roles: ["ADMIN"] },
       { href: "/users", label: "Usuarios", icon: Users, roles: ["ADMIN"] },
-      { href: "/audit", label: "Auditoría", icon: ClipboardList, roles: ["ADMIN"] },
-      { href: "/settings", label: "Configuración", icon: Settings, roles: ["ADMIN"] }
+      { href: "/audit", label: "Auditoría", icon: ClipboardList, roles: ["ADMIN"] }
     ]
   }
 ]

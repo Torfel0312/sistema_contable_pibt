@@ -14,6 +14,6 @@ export async function updateSettings(input: UpdateSettingsInput) {
 
   const db = await createSupabaseServerClient()
   const data = await settingsService.update(db, input, user.id)
-  revalidatePath("/configuration")
+  revalidatePath("/settings/general")
   return data
 }

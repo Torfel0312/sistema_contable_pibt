@@ -25,7 +25,13 @@ const PAGE_LABELS: Record<string, string> = {
   "/audit": "Auditoría",
   "/requests": "Solicitudes",
   "/ministries": "Ministerios",
-  "/settings": "Configuración"
+  "/settings": "Administración"
+}
+
+const SETTINGS_SUBPAGE_LABELS: Record<string, string> = {
+  "/settings/general": "General",
+  "/settings/inbound-email": "Correo entrante",
+  "/settings/permissions": "Permisos"
 }
 
 function usePageLabel() {
@@ -38,6 +44,10 @@ function usePageLabel() {
   }
   if (pathname.startsWith("/requests/")) {
     return { parent: { label: "Solicitudes", href: "/requests" }, current: "Detalle" }
+  }
+  if (pathname.startsWith("/settings/")) {
+    const label = SETTINGS_SUBPAGE_LABELS[pathname] ?? "..."
+    return { parent: { label: "Administración", href: "/settings" }, current: label }
   }
   const label = PAGE_LABELS[pathname]
   return { parent: null, current: label ?? "..." }

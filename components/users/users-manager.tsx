@@ -247,43 +247,8 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
     })
   }
 
-  const { totalUsers, activeUsers, adminUsers } = useMemo(
-    () => ({
-      totalUsers: users.length,
-      activeUsers: users.filter((u) => u.status === "ACTIVE").length,
-      adminUsers: users.filter((u) => u.role === "ADMIN").length
-    }),
-    [users]
-  )
-
   return (
     <div className="flex flex-col gap-8">
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-        <Card className="p-5 sm:p-6">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Personal Activo
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="font-heading text-4xl font-bold tracking-tight text-primary">
-              {activeUsers}
-            </span>
-            <span className="text-sm font-medium text-muted-foreground">de {totalUsers}</span>
-          </div>
-        </Card>
-        <Card className="p-5 sm:p-6">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Administradores
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="font-heading text-4xl font-bold tracking-tight text-foreground">
-              {adminUsers}
-            </span>
-            <span className="text-sm font-medium text-muted-foreground">cuentas de control</span>
-          </div>
-        </Card>
-      </div>
-
       {/* Search + invite */}
       <div className="flex gap-3 items-center">
         <div className="relative flex-1">

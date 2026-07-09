@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import type { Permission } from "@/lib/permissions/rbac"
 import type { UserRole } from "@/types/auth"
@@ -19,10 +18,10 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   VIEW_WORKFLOW: "Ver flujo de trabajo"
 }
 
-const EDITABLE_ROLES: { role: Exclude<UserRole, "ADMIN">; label: string }[] = [
-  { role: "BURSAR", label: "Tesorero" },
-  { role: "FINANCE", label: "Finanzas" },
-  { role: "MINISTER", label: "Ministro" }
+const EDITABLE_ROLES: { role: Exclude<UserRole, "ADMIN">; label: string; dotClass: string }[] = [
+  { role: "BURSAR", label: "Tesorero", dotClass: "bg-role-purple" },
+  { role: "FINANCE", label: "Finanzas", dotClass: "bg-emerald-600" },
+  { role: "MINISTER", label: "Ministro", dotClass: "bg-amber-600" }
 ]
 
 type PermissionMatrix = Record<string, Record<string, boolean>>
@@ -56,15 +55,15 @@ export function PermissionsMatrix({ initialMatrix }: { initialMatrix: Permission
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Permisos por Rol</CardTitle>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-heading text-base font-medium">Permisos por Rol</h2>
         <p className="text-sm text-muted-foreground">
           Configura qué acciones puede realizar cada rol. Los permisos de Administrador son
           inmutables.
         </p>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
+      </div>
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -72,14 +71,20 @@ export function PermissionsMatrix({ initialMatrix }: { initialMatrix: Permission
                 Permiso
               </th>
               <th className="text-center py-3 px-4 font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-                Administrador
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  Administrador
+                </span>
               </th>
-              {EDITABLE_ROLES.map(({ role, label }) => (
+              {EDITABLE_ROLES.map(({ role, label, dotClass }) => (
                 <th
                   key={role}
                   className="text-center py-3 px-4 font-bold text-[11px] uppercase tracking-wider text-muted-foreground"
                 >
-                  {label}
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`size-1.5 rounded-full ${dotClass}`} />
+                    {label}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -120,7 +125,7 @@ export function PermissionsMatrix({ initialMatrix }: { initialMatrix: Permission
             ))}
           </tbody>
         </table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
