@@ -68,6 +68,47 @@ export const inboundRoutesService = {
     })
   },
 
+  async renameLocalPart(db: DB, oldLocalPart: string, newLocalPart: string, actorId: string) {
+    const { data, error } = await db
+      .from("inbound_email_routes")
+      .update({ local_part: newLocalPart })
+      .eq("local_part", oldLocalPart)
+      .select("id")
+
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "INBOUND_EMAIL_ROUTE",
+      action: "MAILBOX_GROUP_RENAMED",
+      entity_id: newLocalPart,
+      user_id: actorId,
+      previous_value: { local_part: oldLocalPart },
+      new_value: { local_part: newLocalPart }
+    })
+
+    return data
+  },
+
+  async removeByLocalPart(db: DB, localPart: string, actorId: string) {
+    const { data: existing, error: fetchError } = await db
+      .from("inbound_email_routes")
+      .select("id, user_id")
+      .eq("local_part", localPart)
+
+    if (fetchError) throw fetchError
+
+    const { error } = await db.from("inbound_email_routes").delete().eq("local_part", localPart)
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "INBOUND_EMAIL_ROUTE",
+      action: "MAILBOX_GROUP_DELETED",
+      entity_id: localPart,
+      user_id: actorId,
+      previous_value: { local_part: localPart, routes: existing }
+    })
+  },
+
   async findByLocalPart(adminDb: DB, localPart: string): Promise<string[]> {
     const { data, error } = await adminDb
       .from("inbound_email_routes")

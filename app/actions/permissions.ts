@@ -24,5 +24,5 @@ export async function updateRolePermission(
   const supabase = await createSupabaseServerClient()
   await updatePermission(supabase, role, permission, enabled)
   revalidateRolePermissions()
-  revalidatePath("/configuration")
+  revalidatePath("/settings/permissions")
 }

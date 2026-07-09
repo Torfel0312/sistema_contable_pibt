@@ -1,19 +1,46 @@
 "use client"
 
+import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { Card } from "@/components/ui/card"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { updateSettingsSchema } from "@/lib/validators/settings"
 import type { UpdateSettingsInput } from "@/lib/validators/settings"
 import type { AppSettings } from "@/services/settings/settings.service"
 import { updateSettings } from "@/app/actions/settings"
 
-export function SettingsClient({ initialSettings }: { initialSettings: AppSettings }) {
+const DOMAIN = "pibtalcahuano.com"
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-4">
+      <h2 className="shrink-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+        {label}
+      </h2>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  )
+}
+
+function groupOptions(mailboxGroups: string[], current: string | null | undefined) {
+  const emails = mailboxGroups.map((g) => `${g}@${DOMAIN}`)
+  if (current && !emails.includes(current)) emails.push(current)
+  return emails
+}
+
+export function SettingsClient({
+  initialSettings,
+  mailboxGroups
+}: {
+  initialSettings: AppSettings
+  mailboxGroups: string[]
+}) {
   const form = useForm<z.input<typeof updateSettingsSchema>, unknown, UpdateSettingsInput>({
     resolver: zodResolver(updateSettingsSchema),
     defaultValues: {
@@ -33,45 +60,85 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
     }
   }
 
+  const tesoreriaOptions = groupOptions(
+    mailboxGroups,
+    initialSettings.tesoreria_notification_email
+  )
+  const voucherOptions = groupOptions(mailboxGroups, initialSettings.voucher_email)
+
   return (
-    <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Configuración</h1>
-        <p className="text-sm text-muted-foreground">
-          Ajustes del flujo de aprobación de presupuesto
+    <form onSubmit={form.handleSubmit(handleSave)} className="flex max-w-2xl flex-col gap-8">
+      <div className="flex flex-col gap-5">
+        <SectionDivider label="Notificaciones" />
+        <p className="text-xs text-muted-foreground">
+          Un <strong className="font-medium text-foreground">grupo</strong> es un buzón compartido
+          (<code className="text-[11px]">nombre@{DOMAIN}</code>) configurado en Correo entrante que
+          reenvía a una o más personas. Úsalo aquí en vez de escribir un email individual.
         </p>
+
+        {mailboxGroups.length === 0 ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-4 text-sm">
+            <p className="text-muted-foreground">
+              Todavía no hay grupos de correo entrante configurados. Crea uno para poder asignarlo
+              aquí.
+            </p>
+            <Link
+              href="/settings/inbound-email"
+              className="inline-flex w-fit items-center gap-1 font-medium text-primary hover:underline"
+            >
+              Crear grupo en Correo entrante
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="tesoreria-email">Grupo — Tesorería</FieldLabel>
+              <NativeSelect
+                id="tesoreria-email"
+                {...form.register("tesoreria_notification_email")}
+              >
+                <NativeSelectOption value="">Sin grupo asignado</NativeSelectOption>
+                {tesoreriaOptions.map((email) => (
+                  <NativeSelectOption key={email} value={email}>
+                    {email}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <p className="text-xs text-muted-foreground">
+                Recibe alertas de nuevas solicitudes y recordatorios de pendientes.{" "}
+                <Link href="/settings/inbound-email" className="underline hover:text-foreground">
+                  ¿Falta el grupo? Créalo aquí
+                </Link>
+              </p>
+              <FieldError errors={[form.formState.errors.tesoreria_notification_email]} />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="voucher-email">Grupo — Comprobantes a ministros</FieldLabel>
+              <NativeSelect id="voucher-email" {...form.register("voucher_email")}>
+                <NativeSelectOption value="">Sin grupo (usar email del ministro)</NativeSelectOption>
+                {voucherOptions.map((email) => (
+                  <NativeSelectOption key={email} value={email}>
+                    {email}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <p className="text-xs text-muted-foreground">
+                Si está vacío, se envían al email registrado de cada ministro.{" "}
+                <Link href="/settings/inbound-email" className="underline hover:text-foreground">
+                  ¿Falta el grupo? Créalo aquí
+                </Link>
+              </p>
+              <FieldError errors={[form.formState.errors.voucher_email]} />
+            </Field>
+          </div>
+        )}
       </div>
 
-      <Card className="p-5">
-        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5">
-          <Field>
-            <FieldLabel htmlFor="tesoreria-email">Email de notificación — Tesorería</FieldLabel>
-            <Input
-              id="tesoreria-email"
-              type="email"
-              placeholder="tesoreria@pibtalcahuano.com"
-              {...form.register("tesoreria_notification_email")}
-            />
-            <p className="text-xs text-muted-foreground">
-              Recibe alertas de nuevas solicitudes y recordatorios de pendientes.
-            </p>
-            <FieldError errors={[form.formState.errors.tesoreria_notification_email]} />
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="voucher-email">Email de comprobante — Ministros</FieldLabel>
-            <Input
-              id="voucher-email"
-              type="email"
-              placeholder="notificaciones@pibtalcahuano.com"
-              {...form.register("voucher_email")}
-            />
-            <p className="text-xs text-muted-foreground">
-              Si está vacío, los correos se envían al email registrado de cada ministro.
-            </p>
-            <FieldError errors={[form.formState.errors.voucher_email]} />
-          </Field>
-
+      <div className="flex flex-col gap-5">
+        <SectionDivider label="Período presupuestario" />
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="reminder-days">Intervalo de recordatorios (días)</FieldLabel>
             <Input
@@ -82,14 +149,13 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
               {...form.register("reminder_interval_days")}
             />
             <p className="text-xs text-muted-foreground">
-              Si una solicitud lleva este número de días sin respuesta, se envía un recordatorio a
-              tesorería.
+              Días sin respuesta antes de recordar a tesorería.
             </p>
             <FieldError errors={[form.formState.errors.reminder_interval_days]} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="start-month">Mes de inicio del período presupuestario</FieldLabel>
+            <FieldLabel htmlFor="start-month">Mes de inicio</FieldLabel>
             <Input
               id="start-month"
               type="number"
@@ -98,16 +164,18 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
               {...form.register("budget_period_start_month")}
             />
             <p className="text-xs text-muted-foreground">
-              1 = Enero, 5 = Mayo, 12 = Diciembre. Valor por defecto: 5 (mayo).
+              1 = Enero, 5 = Mayo, 12 = Diciembre. Por defecto: 5 (mayo).
             </p>
             <FieldError errors={[form.formState.errors.budget_period_start_month]} />
           </Field>
+        </div>
+      </div>
 
-          <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
-            {form.formState.isSubmitting ? "Guardando..." : "Guardar configuración"}
-          </Button>
-        </form>
-      </Card>
-    </div>
+      <div className="flex justify-end border-t border-border pt-6">
+        <Button type="submit" disabled={form.formState.isSubmitting} className="px-8">
+          {form.formState.isSubmitting ? "Guardando..." : "Guardar configuración"}
+        </Button>
+      </div>
+    </form>
   )
 }

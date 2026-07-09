@@ -71,7 +71,7 @@ describe("inbound email route actions", () => {
       { local_part: "tesoreria", user_id: "u-1" },
       mockUser.id
     )
-    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings")
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/inbound-email")
     expect(data).toEqual(created)
   })
 
@@ -83,7 +83,7 @@ describe("inbound email route actions", () => {
     await removeInboundEmailRoute("r-2")
 
     expect(mockRemove).toHaveBeenCalledWith(mockDb, "r-2", mockUser.id)
-    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings")
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/inbound-email")
   })
 
   it("removeInboundEmailRoute throws when caller lacks permission", async () => {

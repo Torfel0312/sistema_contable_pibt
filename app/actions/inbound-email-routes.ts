@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { inboundRoutesService } from "@/services/email/inbound-routes.service"
-import type { CreateInboundEmailRouteInput } from "@/lib/validators/inbound-email-route"
+import type {
+  CreateInboundEmailRouteInput,
+  RenameInboundMailboxGroupInput
+} from "@/lib/validators/inbound-email-route"
 
 function assertSettingsAccess(user: Awaited<ReturnType<typeof getCurrentUser>>) {
   if (!user || !can(user.permissions, PERMISSIONS.MANAGE_SETTINGS)) {
@@ -23,7 +26,7 @@ export async function createInboundEmailRoute(input: CreateInboundEmailRouteInpu
   const user = assertSettingsAccess(await getCurrentUser())
   const db = await createSupabaseServerClient()
   const data = await inboundRoutesService.create(db, input, user.id)
-  revalidatePath("/settings")
+  revalidatePath("/settings/inbound-email")
   return data
 }
 
@@ -31,5 +34,25 @@ export async function removeInboundEmailRoute(id: string) {
   const user = assertSettingsAccess(await getCurrentUser())
   const db = await createSupabaseServerClient()
   await inboundRoutesService.remove(db, id, user.id)
-  revalidatePath("/settings")
+  revalidatePath("/settings/inbound-email")
+}
+
+export async function renameInboundMailboxGroup(input: RenameInboundMailboxGroupInput) {
+  const user = assertSettingsAccess(await getCurrentUser())
+  const db = await createSupabaseServerClient()
+  const data = await inboundRoutesService.renameLocalPart(
+    db,
+    input.old_local_part,
+    input.new_local_part,
+    user.id
+  )
+  revalidatePath("/settings/inbound-email")
+  return data
+}
+
+export async function removeInboundMailboxGroup(localPart: string) {
+  const user = assertSettingsAccess(await getCurrentUser())
+  const db = await createSupabaseServerClient()
+  await inboundRoutesService.removeByLocalPart(db, localPart, user.id)
+  revalidatePath("/settings/inbound-email")
 }

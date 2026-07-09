@@ -58,7 +58,7 @@ describe("updateSettings", () => {
     const data = await updateSettings(input)
 
     expect(mockSettingsUpdate).toHaveBeenCalledWith(mockDb, input, mockUser.id)
-    expect(mockRevalidatePath).toHaveBeenCalledWith("/configuration")
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/general")
     expect(data).toEqual(result)
   })
 })
