@@ -8,12 +8,6 @@ export const updateSettingsSchema = z.object({
     .int()
     .min(1, "Mínimo 1 día")
     .max(30, "Máximo 30 días")
-    .optional(),
-  budget_period_start_month: z.coerce
-    .number()
-    .int()
-    .min(1, "Mes inválido")
-    .max(12, "Mes inválido")
     .optional()
 })
 
@@ -24,7 +18,6 @@ export const updatePermissionSchema = z.object({
     "CREATE_MOVEMENT",
     "VIEW_MOVEMENT",
     "MANAGE_MINISTRIES",
-    "MANAGE_BUDGETS",
     "REVIEW_INTENTIONS",
     "SUBMIT_INTENTIONS",
     "MANAGE_SETTINGS",

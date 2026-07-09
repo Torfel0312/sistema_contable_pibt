@@ -28,8 +28,7 @@ jest.mock("next/cache", () => ({
 const input = {
   tesoreria_notification_email: "t@example.com",
   voucher_email: "v@example.com",
-  reminder_interval_days: 3,
-  budget_period_start_month: 5
+  reminder_interval_days: 3
 }
 
 const mockUser = { id: "user-1", permissions: ["MANAGE_SETTINGS"] }

@@ -19,8 +19,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
     defaultValues: {
       tesoreria_notification_email: initialSettings.tesoreria_notification_email,
       voucher_email: initialSettings.voucher_email,
-      reminder_interval_days: String(initialSettings.reminder_interval_days),
-      budget_period_start_month: String(initialSettings.budget_period_start_month)
+      reminder_interval_days: String(initialSettings.reminder_interval_days)
     }
   })
 
@@ -38,7 +37,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       <div>
         <h1 className="text-2xl font-semibold">Configuración</h1>
         <p className="text-sm text-muted-foreground">
-          Ajustes del flujo de aprobación de presupuesto
+          Ajustes del flujo de aprobación de solicitudes
         </p>
       </div>
 
@@ -86,21 +85,6 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
               tesorería.
             </p>
             <FieldError errors={[form.formState.errors.reminder_interval_days]} />
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="start-month">Mes de inicio del período presupuestario</FieldLabel>
-            <Input
-              id="start-month"
-              type="number"
-              min={1}
-              max={12}
-              {...form.register("budget_period_start_month")}
-            />
-            <p className="text-xs text-muted-foreground">
-              1 = Enero, 5 = Mayo, 12 = Diciembre. Valor por defecto: 5 (mayo).
-            </p>
-            <FieldError errors={[form.formState.errors.budget_period_start_month]} />
           </Field>
 
           <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">

@@ -1,5 +1,4 @@
 export const FEATURES = {
-  budget: false,
   requests: false
 } as const
 

@@ -394,9 +394,9 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   <Alert variant="info">
                     <AlertTitle>Tesorero — Ingreso y aprobación</AlertTitle>
                     <AlertDescription>
-                      Puede crear, editar y anular movimientos contables, aprobar o rechazar
-                      solicitudes de fondos de ministros y gestionar presupuestos. No puede
-                      gestionar usuarios ni configurar el sistema.
+                      Puede crear, editar y anular movimientos contables, y aprobar o rechazar
+                      solicitudes de fondos de ministros. No puede gestionar usuarios ni
+                      configurar el sistema.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -404,8 +404,8 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   <Alert variant="info">
                     <AlertTitle>Finanzas — Monitoreo de registros</AlertTitle>
                     <AlertDescription>
-                      Puede consultar movimientos, presupuestos y el flujo de solicitudes, pero no
-                      puede crear, editar ni aprobar ningún registro. Rol de supervisión financiera.
+                      Puede consultar movimientos y el flujo de solicitudes, pero no puede crear,
+                      editar ni aprobar ningún registro. Rol de supervisión financiera.
                     </AlertDescription>
                   </Alert>
                 )}

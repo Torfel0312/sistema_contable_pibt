@@ -49,7 +49,6 @@ const mockUser = {
   permissions: ["SUBMIT_INTENTIONS", "REVIEW_INTENTIONS", "VIEW_WORKFLOW"]
 }
 const requestInput = {
-  period_id: "00000000-0000-0000-0000-000000000001",
   amount: 5000,
   description: "Test request long enough"
 }
