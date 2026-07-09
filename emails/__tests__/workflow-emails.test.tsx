@@ -14,26 +14,10 @@ const detailUrl = "https://example.com/requests/1"
 
 describe("IntentionNotificationEmail", () => {
   it("renders with amount and description", () => {
-    const html = render(
-      IntentionNotificationEmail({ intention, isOverBudget: false, reviewUrl: detailUrl })
-    )
+    const html = render(IntentionNotificationEmail({ intention, reviewUrl: detailUrl }))
     expect(html).toContain("200.000")
     expect(html).toContain("Compra de sillas")
     expect(html).toContain(detailUrl)
-  })
-
-  it("shows over-budget badge when isOverBudget is true", () => {
-    const html = render(
-      IntentionNotificationEmail({ intention, isOverBudget: true, reviewUrl: detailUrl })
-    )
-    expect(html).toContain("SOBRE PRESUPUESTO")
-  })
-
-  it("omits badge when not over budget", () => {
-    const html = render(
-      IntentionNotificationEmail({ intention, isOverBudget: false, reviewUrl: detailUrl })
-    )
-    expect(html).not.toContain("SOBRE PRESUPUESTO")
   })
 })
 

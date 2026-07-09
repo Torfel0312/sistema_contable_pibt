@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, AlertTriangle, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
-import { Card } from "@/components/ui/card"
+import { Plus, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -38,9 +37,6 @@ type Intention = Awaited<ReturnType<typeof intentionsService.list>>[number]
 type MinistryAssignment = Awaited<ReturnType<typeof ministriesService.getMinistryForUser>>
 type Ministry = NonNullable<MinistryAssignment>["ministries"] | null
 
-type BudgetSummary = { allocated: number; used: number; remaining: number }
-type ActivePeriod = { id: string; name: string } | null
-
 const STATUS_ICONS = {
   PENDING: <Clock className="size-4 text-amber-500" />,
   APPROVED: <CheckCircle className="size-4 text-green-500" />,
@@ -56,15 +52,11 @@ const STATUS_LABELS = {
 export function IntentionsClient({
   canSubmit,
   intentions: initialIntentions,
-  ministry,
-  budgetSummary,
-  activePeriod
+  ministry
 }: {
   canSubmit: boolean
   intentions: Intention[]
   ministry: Ministry
-  budgetSummary: BudgetSummary | null
-  activePeriod: ActivePeriod
 }) {
   const router = useRouter()
   const [intentions, setIntentions] = useState<Intention[]>(initialIntentions)
@@ -80,7 +72,6 @@ export function IntentionsClient({
       CreateIntentionInput
     >,
     defaultValues: {
-      period_id: activePeriod?.id ?? "",
       amount: "",
       description: "",
       purpose: "",
@@ -88,13 +79,7 @@ export function IntentionsClient({
     }
   })
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const watchedAmount = form.watch("amount")
-  const overBudgetWarning =
-    isMinister && budgetSummary && Number(watchedAmount) > budgetSummary.remaining
-
   async function handleSubmit(values: CreateIntentionInput) {
-    if (!activePeriod) return
     try {
       const created = await createRequest({
         ...values,
@@ -104,7 +89,6 @@ export function IntentionsClient({
       setIntentions((prev) => [created as unknown as Intention, ...prev])
       setOpen(false)
       form.reset({
-        period_id: activePeriod.id,
         amount: "",
         description: "",
         purpose: "",
@@ -127,14 +111,13 @@ export function IntentionsClient({
               : "Todas las solicitudes"}
           </p>
         </div>
-        {isMinister && activePeriod && (
+        {isMinister && (
           <Dialog
             open={open}
             onOpenChange={(o) => {
               setOpen(o)
               if (!o)
                 form.reset({
-                  period_id: activePeriod.id,
                   amount: "",
                   description: "",
                   purpose: "",
@@ -154,33 +137,6 @@ export function IntentionsClient({
               <DialogHeader>
                 <DialogTitle>Solicitud de intención de presupuesto</DialogTitle>
               </DialogHeader>
-              {budgetSummary && (
-                <div className="grid grid-cols-3 gap-3 rounded-lg bg-muted/50 p-3 text-center text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Asignado</p>
-                    <p className="font-semibold">{formatCLP(budgetSummary.allocated)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Utilizado</p>
-                    <p className="font-semibold">{formatCLP(budgetSummary.used)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Disponible</p>
-                    <p
-                      className={`font-semibold ${budgetSummary.remaining <= 0 ? "text-red-500" : "text-green-600"}`}
-                    >
-                      {formatCLP(budgetSummary.remaining)}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {overBudgetWarning && (
-                <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-                  <AlertTriangle className="size-4 shrink-0" />
-                  El monto supera tu presupuesto disponible. La solicitud quedará bajo revisión
-                  especial del equipo de tesorería.
-                </div>
-              )}
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <Field>
                   <FieldLabel htmlFor="int-amount">Monto solicitado (CLP) *</FieldLabel>
@@ -241,25 +197,6 @@ export function IntentionsClient({
         )}
       </div>
 
-      {isMinister && budgetSummary && (
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Presupuesto asignado", value: budgetSummary.allocated, color: "" },
-            { label: "Utilizado", value: budgetSummary.used, color: "text-amber-600" },
-            {
-              label: "Disponible",
-              value: budgetSummary.remaining,
-              color: budgetSummary.remaining <= 0 ? "text-red-500" : "text-green-600"
-            }
-          ].map(({ label, value, color }) => (
-            <Card key={label} className="p-4">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className={`text-xl font-bold mt-1 ${color}`}>{formatCLP(value)}</p>
-            </Card>
-          ))}
-        </div>
-      )}
-
       {intentions.length === 0 ? (
         <Empty>
           <EmptyMedia>
@@ -288,11 +225,6 @@ export function IntentionsClient({
                   <div className="flex-1 min-w-0">
                     <ItemTitle className="flex items-center gap-2">
                       {formatCLP(intention.amount)}
-                      {intention.is_over_budget && (
-                        <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded font-normal">
-                          Sobre presupuesto
-                        </span>
-                      )}
                     </ItemTitle>
                     <ItemDescription>{intention.description}</ItemDescription>
                     {!isMinister && intention.ministries && (

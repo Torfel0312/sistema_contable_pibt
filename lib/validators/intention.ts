@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 export const createIntentionSchema = z.object({
-  period_id: z.string().uuid("Período inválido"),
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
   description: z.string().min(5, "La descripción debe tener al menos 5 caracteres"),
   purpose: z.string().optional(),

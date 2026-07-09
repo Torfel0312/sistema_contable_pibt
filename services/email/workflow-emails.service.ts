@@ -19,10 +19,12 @@ const TRANSACTIONAL_HEADERS = {
   "X-Entity-Ref-ID": "sistema-contable-pibt"
 }
 
-export async function sendIntentionNotification(
-  intention: { id: string; amount: number; description: string; token: string },
-  isOverBudget: boolean
-): Promise<void> {
+export async function sendIntentionNotification(intention: {
+  id: string
+  amount: number
+  description: string
+  token: string
+}): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.tesoreria_notification_email
   if (!to) return
@@ -31,10 +33,9 @@ export async function sendIntentionNotification(
   await resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `${isOverBudget ? "[SOBRE PRESUPUESTO] " : ""}Nueva solicitud de presupuesto — ${ORG_SHORT}`,
+    subject: `Nueva solicitud de presupuesto — ${ORG_SHORT}`,
     react: IntentionNotificationEmail({
       intention,
-      isOverBudget,
       reviewUrl: `${BASE_URL}/requests/${intention.id}`
     }),
     headers: TRANSACTIONAL_HEADERS

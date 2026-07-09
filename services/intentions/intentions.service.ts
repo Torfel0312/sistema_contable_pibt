@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { auditService } from "@/services/audit/audit.service"
-import { budgetService } from "@/services/budget/budget.service"
 import {
   sendIntentionNotification,
   sendIntentionReviewNotification,
@@ -21,7 +20,7 @@ export const intentionsService = {
     let query = db
       .from("budget_intentions")
       .select(
-        "*, ministries(id, name), budget_periods(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
+        "*, ministries(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
       )
       .order("created_at", { ascending: false })
 
@@ -38,7 +37,7 @@ export const intentionsService = {
     const { data, error } = await db
       .from("budget_intentions")
       .select(
-        "*, ministries(id, name), budget_periods(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
+        "*, ministries(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
       )
       .eq("id", id)
       .single()
@@ -50,7 +49,7 @@ export const intentionsService = {
     const { data, error } = await db
       .from("budget_intentions")
       .select(
-        "*, ministries(id, name), budget_periods(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
+        "*, ministries(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
       )
       .eq("token", token)
       .single()
@@ -59,21 +58,15 @@ export const intentionsService = {
   },
 
   async create(db: DB, input: CreateIntentionInput, userId: string, ministryId: string) {
-    // getBudgetSummary uses service_role internally — no db needed
-    const summary = await budgetService.getBudgetSummary(ministryId, input.period_id)
-    const isOverBudget = input.amount > summary.remaining
-
     const { data, error } = await db
       .from("budget_intentions")
       .insert({
         ministry_id: ministryId,
-        period_id: input.period_id,
         requested_by: userId,
         amount: input.amount,
         description: input.description,
         purpose: input.purpose ?? null,
-        date_needed: input.date_needed ?? null,
-        is_over_budget: isOverBudget
+        date_needed: input.date_needed ?? null
       })
       .select()
       .single()
@@ -84,10 +77,10 @@ export const intentionsService = {
       action: "INTENTION_CREATED",
       user_id: userId,
       entity_id: data.id,
-      new_value: { amount: data.amount, ministry_id: ministryId, is_over_budget: isOverBudget }
+      new_value: { amount: data.amount, ministry_id: ministryId }
     })
 
-    await sendIntentionNotification(data, isOverBudget).catch(() => null)
+    await sendIntentionNotification(data).catch(() => null)
 
     return data
   },

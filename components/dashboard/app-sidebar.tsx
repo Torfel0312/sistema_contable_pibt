@@ -11,7 +11,6 @@ import {
   ClipboardList,
   Receipt,
   Church,
-  PiggyBank,
   FileCheck,
   SlidersHorizontal,
   Mail,
@@ -66,13 +65,6 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Rendiciones",
         icon: Receipt,
         roles: ["ADMIN", "BURSAR", "FINANCE"]
-      },
-      {
-        href: "/budget",
-        label: "Presupuesto",
-        icon: PiggyBank,
-        roles: ["ADMIN", "BURSAR", "FINANCE"],
-        feature: "budget"
       }
     ]
   },

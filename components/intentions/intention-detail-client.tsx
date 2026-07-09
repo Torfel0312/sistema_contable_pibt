@@ -206,12 +206,6 @@ export function IntentionDetailClient({
               <span className="font-semibold">{status.label}</span>
             </div>
             <p className="text-2xl font-bold">{formatCLP(intention.amount)}</p>
-            {intention.is_over_budget && (
-              <div className="flex items-center gap-1.5 text-amber-600 text-sm">
-                <AlertTriangle className="size-4" />
-                Sobre presupuesto disponible
-              </div>
-            )}
           </div>
           <div className="text-right text-sm text-muted-foreground">
             <p>{intention.ministries?.name}</p>

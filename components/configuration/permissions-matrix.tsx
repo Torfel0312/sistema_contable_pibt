@@ -12,7 +12,6 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   CREATE_MOVEMENT: "Crear y editar movimientos",
   VIEW_MOVEMENT: "Ver movimientos",
   MANAGE_MINISTRIES: "Gestionar ministerios",
-  MANAGE_BUDGETS: "Gestionar presupuestos",
   REVIEW_INTENTIONS: "Revisar solicitudes de fondos",
   SUBMIT_INTENTIONS: "Enviar solicitudes de fondos",
   MANAGE_SETTINGS: "Gestionar configuración del sistema",

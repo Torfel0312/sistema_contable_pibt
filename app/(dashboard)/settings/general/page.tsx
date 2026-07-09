@@ -23,7 +23,7 @@ export default async function GeneralSettingsPage() {
           General
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Notificaciones, comprobantes y período presupuestario.
+          Notificaciones, comprobantes y recordatorios.
         </p>
       </div>
       <SettingsClient initialSettings={settings} mailboxGroups={mailboxGroups} />

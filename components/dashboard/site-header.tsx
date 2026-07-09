@@ -25,7 +25,6 @@ const PAGE_LABELS: Record<string, string> = {
   "/audit": "Auditoría",
   "/requests": "Solicitudes",
   "/ministries": "Ministerios",
-  "/budget": "Presupuesto",
   "/settings": "Administración"
 }
 
