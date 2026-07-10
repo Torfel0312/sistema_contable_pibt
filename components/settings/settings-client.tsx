@@ -66,7 +66,7 @@ export function SettingsClient({
   const voucherOptions = groupOptions(mailboxGroups, initialSettings.voucher_email)
 
   return (
-    <form onSubmit={form.handleSubmit(handleSave)} className="flex max-w-2xl flex-col gap-8">
+    <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col gap-8">
       <div className="flex flex-col gap-5">
         <SectionDivider label="Notificaciones" />
         <p className="text-xs text-muted-foreground">

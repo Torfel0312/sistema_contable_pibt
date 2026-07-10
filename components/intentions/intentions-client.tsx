@@ -101,11 +101,11 @@ export function IntentionsClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-            Solicitudes de Presupuesto
+            Solicitudes de Dinero
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isMinister
@@ -137,7 +137,7 @@ export function IntentionsClient({
             />
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Solicitud de intención de presupuesto</DialogTitle>
+                <DialogTitle>Solicitud de dinero</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <Field>
@@ -208,7 +208,7 @@ export function IntentionsClient({
             <EmptyTitle>Sin solicitudes</EmptyTitle>
             <EmptyDescription>
               {isMinister
-                ? "Crea tu primera solicitud de presupuesto."
+                ? "Crea tu primera solicitud de dinero."
                 : "No hay solicitudes registradas."}
             </EmptyDescription>
           </EmptyHeader>

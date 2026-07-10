@@ -27,8 +27,8 @@ export const dashboardService = {
   async getSummary(period: DashboardPeriod = {}) {
     const admin = createSupabaseAdminClient()
 
-    const pFrom = period.from ?? undefined
-    const pTo = period.to ?? undefined
+    const pFrom = period.from || undefined
+    const pTo = period.to || undefined
 
     // Run aggregation RPC and recent-movements query in parallel
     const [rpcResponse, recentResponse] = await Promise.all([

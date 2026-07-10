@@ -29,7 +29,8 @@ export function formatDateTime(value: string | Date): string {
 
 export function toDateInput(value: string | Date): string {
   if (typeof value === "string" && value.length === 10) return value
-  return new Date(value).toISOString().slice(0, 10)
+  const d = new Date(value)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
 const clpFormatter = new Intl.NumberFormat("es-CL", {

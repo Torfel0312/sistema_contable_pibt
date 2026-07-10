@@ -5,7 +5,7 @@ import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { IncomeExpenseChart, CategoryChart } from "@/components/dashboard/dashboard-charts"
 import { MovementsTable } from "@/components/movements/movements-table"
 import { Label } from "@/components/ui/label"
-import { DatePicker } from "@/components/ui/date-picker"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatCLP } from "@/lib/utils"
@@ -41,22 +41,10 @@ export default async function DashboardPage({
         {/* Date filter */}
         <form className="flex flex-wrap items-end gap-3" method="get">
           <div className="flex flex-col gap-1.5">
-            <Label
-              htmlFor="from"
-              className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground"
-            >
-              Desde
+            <Label className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground">
+              Período
             </Label>
-            <DatePicker name="from" defaultValue={from} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label
-              htmlFor="to"
-              className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground"
-            >
-              Hasta
-            </Label>
-            <DatePicker name="to" defaultValue={to} />
+            <DateRangePicker fromName="from" toName="to" defaultFrom={from} defaultTo={to} />
           </div>
           <div className="flex gap-2">
             <Button type="submit" variant="outline" className="h-9 px-4 text-sm">

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MinistryDetailLoading() {
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="max-w-6xl space-y-8">
       <div className="space-y-3">
         <Skeleton className="h-8 w-20" />
         <Skeleton className="h-8 w-64" />

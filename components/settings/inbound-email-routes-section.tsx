@@ -16,7 +16,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog"
 import { createInboundEmailRouteSchema } from "@/lib/validators/inbound-email-route"
 import type { CreateInboundEmailRouteInput } from "@/lib/validators/inbound-email-route"
@@ -54,6 +55,7 @@ export function InboundEmailRoutesSection({
   const [renameValue, setRenameValue] = useState("")
   const [deletingGroup, setDeletingGroup] = useState<string | null>(null)
   const [inlineUser, setInlineUser] = useState<Record<string, string>>({})
+  const [createOpen, setCreateOpen] = useState(false)
 
   const form = useForm<CreateInboundEmailRouteInput>({
     resolver: zodResolver(createInboundEmailRouteSchema),
@@ -91,10 +93,11 @@ export function InboundEmailRoutesSection({
   async function handleAdd(values: CreateInboundEmailRouteInput) {
     try {
       await addRoute(values)
-      form.reset({ local_part: values.local_part, user_id: "" })
-      toast.success("Destinatario agregado")
+      form.reset({ local_part: "", user_id: "" })
+      setCreateOpen(false)
+      toast.success("Grupo creado")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al agregar destinatario")
+      toast.error(err instanceof Error ? err.message : "Error al crear grupo")
     }
   }
 
@@ -167,16 +170,67 @@ export function InboundEmailRoutesSection({
   const availableUsers = users.filter((u) => !alreadyAssignedIds.has(u.id))
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
-          Grupos
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          Correos externos enviados a un grupo @{DOMAIN} se reenvían automáticamente a los usuarios
-          asignados.
-        </p>
+    <div className="flex flex-col gap-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            Correo entrante
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Reglas de reenvío de correos entrantes a usuarios internos.
+          </p>
+        </div>
+        <Dialog
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o)
+            if (!o) form.reset({ local_part: "", user_id: "" })
+          }}
+        >
+          <DialogTrigger
+            render={
+              <Button size="sm" className="shrink-0">
+                <Plus className="size-4" />
+                Nuevo grupo
+              </Button>
+            }
+          />
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nuevo grupo</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={form.handleSubmit(handleAdd)} className="flex flex-col gap-4 pt-2">
+              <Field>
+                <FieldLabel htmlFor="local-part">Nombre del grupo</FieldLabel>
+                <Input id="local-part" placeholder="tesoreria" {...form.register("local_part")} />
+                <FieldError errors={[form.formState.errors.local_part]} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="route-user">Usuario</FieldLabel>
+                <NativeSelect id="route-user" {...form.register("user_id")} defaultValue="">
+                  <NativeSelectOption value="" disabled>
+                    Seleccionar usuario…
+                  </NativeSelectOption>
+                  {availableUsers.map((u) => (
+                    <NativeSelectOption key={u.id} value={u.id}>
+                      {u.full_name} — {u.email}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+                <FieldError errors={[form.formState.errors.user_id]} />
+              </Field>
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Creando..." : "Crear grupo"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <p className="-mt-4 text-xs text-muted-foreground">
+        Correos externos enviados a un grupo @{DOMAIN} se reenvían automáticamente a los usuarios
+        asignados.
+      </p>
 
       {localParts.length === 0 ? (
         <Empty className="border border-dashed py-10">
@@ -185,7 +239,7 @@ export function InboundEmailRoutesSection({
               <Mail />
             </EmptyMedia>
             <EmptyTitle>Sin grupos configurados</EmptyTitle>
-            <EmptyDescription>Crea uno con el formulario de abajo.</EmptyDescription>
+            <EmptyDescription>Crea uno con el botón &ldquo;Nuevo grupo&rdquo;.</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
@@ -317,45 +371,6 @@ export function InboundEmailRoutesSection({
           })}
         </ItemGroup>
       )}
-
-      <div className="flex flex-col gap-4 border-t border-border pt-6">
-        <h2 className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
-          Nuevo grupo
-        </h2>
-        <form onSubmit={form.handleSubmit(handleAdd)} className="flex flex-col gap-4 sm:flex-row">
-          <div className="flex-1">
-            <Field>
-              <FieldLabel htmlFor="local-part">Nombre del grupo</FieldLabel>
-              <Input id="local-part" placeholder="tesoreria" {...form.register("local_part")} />
-              <FieldError errors={[form.formState.errors.local_part]} />
-            </Field>
-          </div>
-          <div className="flex-1">
-            <Field>
-              <FieldLabel htmlFor="route-user">Usuario</FieldLabel>
-              <NativeSelect id="route-user" {...form.register("user_id")} defaultValue="">
-                <NativeSelectOption value="" disabled>
-                  Seleccionar usuario…
-                </NativeSelectOption>
-                {availableUsers.map((u) => (
-                  <NativeSelectOption key={u.id} value={u.id}>
-                    {u.full_name} — {u.email}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-              <FieldError errors={[form.formState.errors.user_id]} />
-            </Field>
-          </div>
-          <Button
-            type="submit"
-            disabled={form.formState.isSubmitting}
-            className="shrink-0 sm:self-end sm:h-9"
-          >
-            <Plus className="size-4" />
-            Agregar
-          </Button>
-        </form>
-      </div>
 
       <Dialog
         open={!!deletingGroup}
