@@ -162,7 +162,9 @@ export function MinistryDetailClient({
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{ministry.name}</h1>
+              <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+                {ministry.name}
+              </h1>
               {!ministry.is_active && (
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   Inactivo
