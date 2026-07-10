@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, Users, ChevronRight } from "lucide-react"
+import { Plus, Users, ChevronRight, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -24,15 +24,15 @@ import {
   ItemDescription,
   ItemActions
 } from "@/components/ui/item"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { createMinistrySchema, type CreateMinistryInput } from "@/lib/validators/ministry"
-import { createMinistry } from "@/app/actions/ministries"
+import { createMinistry, assignMinister } from "@/app/actions/ministries"
 
 type Ministry = {
   id: string
   name: string
   description: string | null
-  minister_name: string | null
   is_active: boolean
   created_at: string
 }
@@ -42,19 +42,32 @@ type CurrentAssignment = {
   users: { full_name: string } | null
 }
 
+type MinistryUser = {
+  id: string
+  full_name: string
+  email: string
+}
+
 type Props = {
   initialMinistries: Ministry[]
   initialCurrentAssignments: CurrentAssignment[]
+  ministers: MinistryUser[]
 }
 
-export function MinistriesClient({ initialMinistries, initialCurrentAssignments }: Props) {
+export function MinistriesClient({
+  initialMinistries,
+  initialCurrentAssignments,
+  ministers
+}: Props) {
   const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries)
-  const [currentAssignments] = useState<CurrentAssignment[]>(initialCurrentAssignments)
+  const [currentAssignments, setCurrentAssignments] =
+    useState<CurrentAssignment[]>(initialCurrentAssignments)
   const [open, setOpen] = useState(false)
+  const [ministerId, setMinisterId] = useState("")
 
   const form = useForm<CreateMinistryInput>({
     resolver: zodResolver(createMinistrySchema),
-    defaultValues: { name: "", description: "", minister_name: "" }
+    defaultValues: { name: "", description: "" }
   })
 
   function getMinister(ministryId: string) {
@@ -65,13 +78,24 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
     try {
       const created = await createMinistry({
         name: values.name.trim(),
-        description: values.description?.trim() || undefined,
-        minister_name: values.minister_name.trim()
+        description: values.description?.trim() || undefined
       })
       const newMinistry = created as unknown as Ministry
 
+      if (ministerId) {
+        const minister = ministers.find((m) => m.id === ministerId)
+        await assignMinister(newMinistry.id, { user_id: ministerId })
+        if (minister) {
+          setCurrentAssignments((prev) => [
+            ...prev,
+            { ministry_id: newMinistry.id, users: { full_name: minister.full_name } }
+          ])
+        }
+      }
+
       setMinistries((prev) => [newMinistry, ...prev])
       form.reset()
+      setMinisterId("")
       setOpen(false)
       toast.success("Ministerio creado")
     } catch (err) {
@@ -83,8 +107,10 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Ministerios</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            Ministerios
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los ministerios y sus ministros asignados
           </p>
         </div>
@@ -92,7 +118,10 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
           open={open}
           onOpenChange={(o) => {
             setOpen(o)
-            if (!o) form.reset()
+            if (!o) {
+              form.reset()
+              setMinisterId("")
+            }
           }}
         >
           <DialogTrigger
@@ -123,13 +152,29 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
                 <FieldError errors={[form.formState.errors.description]} />
               </Field>
               <Field>
-                <FieldLabel htmlFor="minister_name">Ministro *</FieldLabel>
-                <Input
-                  id="minister_name"
-                  placeholder="Nombre del ministro"
-                  {...form.register("minister_name")}
-                />
-                <FieldError errors={[form.formState.errors.minister_name]} />
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor="minister">Ministro</FieldLabel>
+                  <Link
+                    href="/users?invite=MINISTER"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <UserPlus className="size-3.5" />
+                    Crear cuenta de ministro
+                  </Link>
+                </div>
+                <NativeSelect
+                  id="minister"
+                  className="w-full"
+                  value={ministerId}
+                  onChange={(e) => setMinisterId(e.target.value)}
+                >
+                  <NativeSelectOption value="">Sin ministro</NativeSelectOption>
+                  {ministers.map((m) => (
+                    <NativeSelectOption key={m.id} value={m.id}>
+                      {m.full_name} — {m.email}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
               </Field>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Creando..." : "Crear ministerio"}
@@ -152,7 +197,7 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
       ) : (
         <ItemGroup>
           {ministries.map((m) => {
-            const ministerName = getMinister(m.id)?.full_name ?? m.minister_name
+            const ministerName = getMinister(m.id)?.full_name ?? null
             return (
               <Item key={m.id} variant="outline" render={<Link href={`/ministries/${m.id}`} />}>
                 <ItemContent>

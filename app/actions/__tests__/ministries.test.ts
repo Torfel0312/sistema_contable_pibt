@@ -40,44 +40,33 @@ describe("createMinistry", () => {
   it("throws when unauthenticated", async () => {
     mockGetCurrentUser.mockResolvedValue(null)
     mockCan.mockReturnValue(false)
-    await expect(createMinistry({ name: "Test", minister_name: "Juan Pérez" })).rejects.toThrow(
-      "Sin permisos"
-    )
+    await expect(createMinistry({ name: "Test" })).rejects.toThrow("Sin permisos")
   })
 
   it("creates ministry and revalidates", async () => {
-    const created = { id: "m-1", name: "Test", minister_name: "Juan Pérez" }
+    const created = { id: "m-1", name: "Test" }
     mockGetCurrentUser.mockResolvedValue(mockUser)
     mockCan.mockReturnValue(true)
     mockCreate.mockResolvedValue(created)
 
-    const data = await createMinistry({ name: "Test", minister_name: "Juan Pérez" })
+    const data = await createMinistry({ name: "Test" })
 
-    expect(mockCreate).toHaveBeenCalledWith(
-      mockDb,
-      { name: "Test", minister_name: "Juan Pérez" },
-      mockUser.id
-    )
+    expect(mockCreate).toHaveBeenCalledWith(mockDb, { name: "Test" }, mockUser.id)
     expect(mockRevalidatePath).toHaveBeenCalledWith("/ministries")
     expect(data).toEqual(created)
   })
 })
 
 describe("createMinistrySchema", () => {
-  it("requires minister_name", () => {
+  it("requires name", () => {
+    const result = createMinistrySchema.safeParse({})
+    expect(result.success).toBe(false)
+  })
+
+  it("accepts a valid name", () => {
     const result = createMinistrySchema.safeParse({ name: "Test" })
-    expect(result.success).toBe(false)
-  })
-
-  it("rejects minister_name shorter than 2 chars", () => {
-    const result = createMinistrySchema.safeParse({ name: "Test", minister_name: " J " })
-    expect(result.success).toBe(false)
-  })
-
-  it("accepts and trims minister_name", () => {
-    const result = createMinistrySchema.safeParse({ name: "Test", minister_name: " Juan Pérez " })
     expect(result.success).toBe(true)
-    expect(result.data?.minister_name).toBe("Juan Pérez")
+    expect(result.data?.name).toBe("Test")
   })
 })
 

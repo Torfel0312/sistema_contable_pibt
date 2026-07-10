@@ -35,20 +35,16 @@ Always use `pnpm`, never `npm`.
 
 `pnpm run ci` runs lint + typecheck. There are no mandatory automated tests yet — jest is configured with `--passWithNoTests`.
 
-## Feature flags
-
-`lib/feature-flags.ts` exposes `FEATURES`. Currently **disabled**: `budget` (`/budget`) and `requests` (`/requests`, intentions/approval workflow). Disabled features are hidden from the sidebar and their pages redirect to `/dashboard`. The underlying services, API routes, and DB tables remain in place — do not delete them; re-enable by flipping the flag.
-
 ## Architecture
 
 **Stack:** Next.js 16 App Router · TypeScript strict · Tailwind CSS v4 · Supabase (Postgres + Auth) · `@supabase/ssr` · React Hook Form + Zod · Recharts · shadcn-style components on Base UI · Resend (email)
 
 **Layer separation:**
 
-- `app/` — Route handlers and page components. `(dashboard)` route group pages: `dashboard`, `movements` (+ `new`, `[id]`, `[id]/edit`), `settlements` (Rendición de Boletas), `ministries` (+ `[id]`), `users`, `audit`, `settings`, `profile`, `voucher-book` (quick income/expense entry form, not linked in sidebar), and the flag-disabled `budget` and `requests`.
-- `app/actions/` — Server actions (auth, movements, invoices, users, ministries, budget, requests, settings, permissions, theme).
-- `app/api/` — API routes (movements, invoices, users, ministries, budget-periods, budgets, requests, ministry-settlements, notifications, reminders, settings, auth, attachments, dashboard).
-- `components/` — UI (`components/ui/`) and domain components (`components/movements/`, `components/dashboard/`, `components/settlements/`, etc.)
+- `app/` — Route handlers and page components. `(dashboard)` route group pages: `dashboard`, `movements` (+ `new`, `[id]`, `[id]/edit`), `settlements` (Rendición de Boletas), `ministries` (+ `[id]`), `requests` (+ `[id]`, intentions/approval workflow), `users`, `audit`, `settings`, `profile`, `voucher-book` (quick income/expense entry form, not linked in sidebar).
+- `app/actions/` — Server actions (auth, movements, invoices, users, ministries, requests, ministry-settlements, settings, permissions, theme).
+- `app/api/` — API routes (movements, invoices, users, ministries, requests, ministry-settlements, notifications, reminders, settings, auth, attachments, dashboard).
+- `components/` — UI (`components/ui/`) and domain components (`components/movements/`, `components/dashboard/`, `components/settlements/`, `components/intentions/`, etc.)
 - `services/` — All business logic. Never call the Supabase client directly from API routes or server actions; use the service layer.
 - `lib/supabase/` — Supabase client helpers:
   - `server.ts` — SSR client (reads/writes cookies, used in API routes and Server Components); also exports `getCurrentUser()`
@@ -56,7 +52,6 @@ Always use `pnpm`, never `npm`.
   - `admin.ts` — service role client (bypasses RLS; used only for user management and audit inserts)
 - `lib/permissions/rbac.ts` — permission checks: `can(user.permissions, PERMISSIONS.X)`. Permissions are granted per role via the `role_permissions` table.
 - `lib/validators/` — Zod schemas shared between API routes and forms
-- `lib/feature-flags.ts` — feature flags (see above)
 - `proxy.ts` — route protection (Next.js 16 convention); unauthenticated requests redirect to `/`
 - `types/` — Shared TypeScript types; `types/database.types.ts` is auto-generated (do not edit manually)
 
@@ -75,16 +70,16 @@ Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'm
 `invoices` table stores receipts submitted for monthly settlement. Status enum: `PENDING` | `SETTLED`. No physical deletion. API: `GET /api/invoices`, `POST /api/invoices`, `PATCH /api/invoices/[id]`. Service: `services/invoices/invoices.service.ts`. Validator: `lib/validators/invoice.ts`. Page: `app/(dashboard)/settlements/page.tsx` (route `/settlements`).
 
 **Ministries:**
-`ministries` + `ministry_assignments` tables; a MINISTER user is assigned to a ministry. Managed at `/ministries`. Used by the (currently disabled) budget/requests workflow.
+`ministries` + `ministry_assignments` tables; a MINISTER user is assigned to a ministry via `ministry_assignments` (FK to `users`) — there is no free-text minister field. Managed at `/ministries`. Used by the requests workflow.
 
-**Budget & requests workflow (disabled by feature flag):**
-`budget_periods`, `ministry_budgets`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments` tables. Ministers submit spending intentions against their ministry budget; BURSAR/FINANCE review, transfer funds, and ministers later settle expenses. Services: `services/budget/`, `services/intentions/`, `services/settlements/`. Keep this code compiling but do not surface it in the UI while the flags are off.
+**Requests workflow:**
+`budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments` tables. Ministers submit spending intentions (amount + description); BURSAR/FINANCE review (approve/reject), register the transfer once approved, and ministers later settle the expense with proof. Per-ministry budget allocation was removed (no `budget_periods`/`ministry_budgets` coupling) — budgets are tracked outside the platform for now. Services: `services/intentions/`, `services/settlements/`. Pages: `app/(dashboard)/requests/page.tsx` (+ `[id]`).
 
 **Google integrations:**
 Outbound webhooks via Google Apps Script (configured via env vars): PDF generation + Drive storage and Google Sheets sync. Triggered in `services/google/movement-postprocess.ts` after a movement is created/edited. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`. Integration state tracked on `movements` (`pdf_status`, `synced_to_sheet`, `notification_status`, etc.).
 
 **Database schema:**
-Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `invoices`, `ministries`, `ministry_assignments`, `budget_periods`, `ministry_budgets`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
+Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `invoices`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
 
 Always use `pnpm supabase migration new ...` for new migrations
 
