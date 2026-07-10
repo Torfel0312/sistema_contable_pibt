@@ -17,7 +17,7 @@ export default async function GeneralSettingsPage() {
   const mailboxGroups = [...new Set(routes.map((r) => r.local_part))].sort()
 
   return (
-    <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
       <div>
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           General

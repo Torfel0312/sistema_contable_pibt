@@ -45,6 +45,9 @@ function usePageLabel() {
   if (pathname.startsWith("/requests/")) {
     return { parent: { label: "Solicitudes", href: "/requests" }, current: "Detalle" }
   }
+  if (pathname.startsWith("/ministries/")) {
+    return { parent: { label: "Ministerios", href: "/ministries" }, current: "Detalle" }
+  }
   if (pathname.startsWith("/settings/")) {
     const label = SETTINGS_SUBPAGE_LABELS[pathname] ?? "..."
     return { parent: { label: "Administración", href: "/settings" }, current: label }

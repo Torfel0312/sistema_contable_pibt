@@ -10,7 +10,7 @@ export default async function NewMovementPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-8 max-w-4xl">
       <div className="flex flex-col gap-0.5">
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           Registro de Movimiento

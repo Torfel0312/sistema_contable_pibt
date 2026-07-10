@@ -25,10 +25,17 @@ export function DatePicker({
   const defaultDate = defaultValue ? new Date(defaultValue) : undefined
   const [internalDate, setInternalDate] = React.useState<Date | undefined>(defaultDate)
   const date = value !== undefined ? value : internalDate
+  const [month, setMonth] = React.useState<Date>(date ?? new Date())
 
   const handleSelect = (newDate: Date | undefined) => {
     setInternalDate(newDate)
     onChange?.(newDate)
+  }
+
+  const goToToday = () => {
+    const today = new Date()
+    setMonth(today)
+    handleSelect(today)
   }
 
   return (
@@ -49,7 +56,25 @@ export function DatePicker({
         {date ? formatDate(date) : <span className="truncate">Seleccionar fecha</span>}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 z-50 bg-popover text-popover-foreground shadow-md rounded-xl overflow-hidden ring-1 ring-border">
-        <Calendar mode="single" selected={date} onSelect={handleSelect} initialFocus locale={es} />
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={handleSelect}
+          month={month}
+          onMonthChange={setMonth}
+          initialFocus
+          locale={es}
+          captionLayout="dropdown"
+          startMonth={new Date(new Date().getFullYear() - 20, 0)}
+          endMonth={new Date(new Date().getFullYear() + 1, 11)}
+          footer={
+            <div className="flex justify-center border-t border-border pt-2">
+              <Button type="button" variant="ghost" size="sm" onClick={goToToday}>
+                Hoy
+              </Button>
+            </div>
+          }
+        />
       </PopoverContent>
       {/* Hidden input to allow native form submission method="GET" */}
       <input

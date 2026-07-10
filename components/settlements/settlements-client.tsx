@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { toast } from "sonner"
 import { cn, formatDate, formatCLP } from "@/lib/utils"
 import { attachmentHref } from "@/lib/storage/attachments"
 import { Card } from "@/components/ui/card"
@@ -18,7 +19,14 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyContent
+} from "@/components/ui/empty"
 import {
   Item,
   ItemGroup,
@@ -49,6 +57,8 @@ import {
 import type { Database } from "@/types/database.types"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { FileInput } from "@/components/ui/file-input"
+import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
+import { Spinner } from "@/components/ui/spinner"
 import { createInvoice, updateInvoiceStatus } from "@/app/actions/invoices"
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"]
@@ -118,21 +128,28 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
         })
         setAttachedFile(null)
         setOpen(false)
-      } catch {
-        // keep dialog open on error
+        toast.success("Boleta registrada")
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Error al registrar la boleta")
       }
     },
     [attachedFile, form]
   )
 
+  const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null)
+
   const toggleStatus = useCallback(async (invoice: Invoice) => {
     const nextStatus = invoice.status === "SETTLED" ? "PENDING" : "SETTLED"
+    setPendingInvoiceId(invoice.id)
     try {
       const updated = (await updateInvoiceStatus(invoice.id, nextStatus)) as unknown as Invoice
       setInvoices((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
       setSelectedInvoice((prev) => (prev?.id === updated.id ? updated : prev))
-    } catch {
-      // silently fail
+      toast.success(nextStatus === "SETTLED" ? "Boleta rendida" : "Boleta reabierta")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al actualizar el estado")
+    } finally {
+      setPendingInvoiceId(null)
     }
   }, [])
 
@@ -168,7 +185,7 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
             render={
               <Button className="gap-2">
                 <Plus data-icon="inline-start" />
-                Agregar Boleta
+                Nueva rendición
               </Button>
             }
           />
@@ -176,7 +193,7 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
             <div className="p-6 sm:p-10 flex flex-col gap-8">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-bold tracking-tight text-foreground">
-                  Nueva Boleta
+                  Nueva rendición
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-base mt-1">
                   Ingrese los detalles de la boleta para ser rendida.
@@ -334,6 +351,12 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
                 No hay boletas registradas para el período actual.
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>
+              <Button className="gap-2" onClick={() => setOpen(true)}>
+                <Plus data-icon="inline-start" />
+                Nueva rendición
+              </Button>
+            </EmptyContent>
           </Empty>
         </Card>
       ) : (
@@ -367,12 +390,14 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
                 <Button
                   variant={invoice.status === "SETTLED" ? "outline" : "default"}
                   size="xs"
+                  disabled={pendingInvoiceId === invoice.id}
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleStatus(invoice)
                   }}
-                  className="rounded-full px-5"
+                  className="rounded-full px-5 gap-1.5"
                 >
+                  {pendingInvoiceId === invoice.id && <Spinner className="size-3" />}
                   {invoice.status === "SETTLED" ? "Reabrir" : "Rendir"}
                 </Button>
               </ItemActions>
@@ -492,9 +517,18 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
               </div>
 
               <div className="flex flex-col gap-3 pt-2 border-t border-border">
+                {pendingInvoiceId === selectedInvoice.id && (
+                  <Marker role="status" aria-live="polite">
+                    <MarkerIcon>
+                      <Spinner />
+                    </MarkerIcon>
+                    <MarkerContent>Actualizando estado…</MarkerContent>
+                  </Marker>
+                )}
                 <Button
                   variant={selectedInvoice.status === "SETTLED" ? "outline" : "default"}
                   className="h-11"
+                  disabled={pendingInvoiceId === selectedInvoice.id}
                   onClick={() => toggleStatus(selectedInvoice)}
                 >
                   {selectedInvoice.status === "SETTLED" ? "Reabrir boleta" : "Marcar como rendida"}

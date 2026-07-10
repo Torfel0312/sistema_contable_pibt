@@ -11,13 +11,16 @@ import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Separator } from "@/components/ui/separator"
+import { Spinner } from "@/components/ui/spinner"
 import { formatDate } from "@/lib/utils"
 import { updateMinistrySchema, assignMinisterSchema } from "@/lib/validators/ministry"
 import type { UpdateMinistryInput, AssignMinisterInput } from "@/lib/validators/ministry"
@@ -63,6 +66,8 @@ export function MinistryDetailClient({
   const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
   const [current, setCurrent] = useState<Assignment | null>(initialCurrent)
   const [editOpen, setEditOpen] = useState(false)
+  const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
+  const [unassigning, setUnassigning] = useState(false)
 
   const ministers = users.filter((u) => u.role === "MINISTER")
   const availableMinsters = ministers.filter((u) => u.id !== current?.user_id)
@@ -118,6 +123,7 @@ export function MinistryDetailClient({
   }
 
   async function handleUnassign() {
+    setUnassigning(true)
     try {
       await unassignMinister(ministry.id)
       if (current) {
@@ -125,9 +131,12 @@ export function MinistryDetailClient({
         setAssignments((prev) => prev.map((a) => (a.id === current.id ? closed : a)))
       }
       setCurrent(null)
+      setUnassignConfirmOpen(false)
       toast.success("Ministro desasignado")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al desasignar")
+    } finally {
+      setUnassigning(false)
     }
   }
 
@@ -147,13 +156,14 @@ export function MinistryDetailClient({
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="max-w-6xl space-y-8">
       <div>
         <Button
           variant="ghost"
           size="sm"
           className="-ml-2 mb-4"
           render={<Link href="/ministries" />}
+          nativeButton={false}
         >
           <ArrowLeft className="size-4" />
           Ministerios
@@ -246,7 +256,7 @@ export function MinistryDetailClient({
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleUnassign}
+              onClick={() => setUnassignConfirmOpen(true)}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <UserMinus className="size-4" />
@@ -267,7 +277,12 @@ export function MinistryDetailClient({
           {availableMinsters.length === 0 ? (
             <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
               <span>No hay ministros disponibles para asignar</span>
-              <Button size="sm" variant="ghost" render={<Link href="/users" />}>
+              <Button
+                size="sm"
+                variant="ghost"
+                render={<Link href="/users?invite=MINISTER" />}
+                nativeButton={false}
+              >
                 <UserPlus className="size-4" />
                 Crear ministro
               </Button>
@@ -351,6 +366,37 @@ export function MinistryDetailClient({
           </div>
         )}
       </section>
+
+      <Dialog open={unassignConfirmOpen} onOpenChange={(o) => !unassigning && setUnassignConfirmOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Desasignar ministro</DialogTitle>
+            <DialogDescription>
+              ¿Desasignar a <strong>{current?.users?.full_name}</strong> de este ministerio?
+            </DialogDescription>
+          </DialogHeader>
+          {unassigning && (
+            <Marker role="status" aria-live="polite">
+              <MarkerIcon>
+                <Spinner />
+              </MarkerIcon>
+              <MarkerContent>Desasignando…</MarkerContent>
+            </Marker>
+          )}
+          <div className="flex flex-col gap-2 pt-2 border-t border-border">
+            <Button variant="destructive" disabled={unassigning} onClick={() => void handleUnassign()}>
+              Sí, desasignar
+            </Button>
+            <Button
+              variant="outline"
+              disabled={unassigning}
+              onClick={() => setUnassignConfirmOpen(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
