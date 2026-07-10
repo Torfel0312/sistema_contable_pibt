@@ -35,7 +35,15 @@ Always use `pnpm`, never `npm`.
 
 `pnpm run ci` runs lint + typecheck. There are no mandatory automated tests yet — jest is configured with `--passWithNoTests`.
 
-## Architecture
+## TypeScript 7 toolchain
+
+The project type-checks with **TypeScript 7** (the native, Go-based compiler): `tsc`/`pnpm typecheck` run the `typescript@7` binary. Parts of the toolchain still need the classic TypeScript 5.x JS compiler API, which typescript@7 no longer ships:
+
+- **typescript-eslint** (type-aware lint rules) — pinned to its own `typescript@5.x` instance via the `readPackage` hook in `.pnpmfile.cjs`. Remove that hook once typescript-eslint supports the TS7 API.
+- **Next.js build-time type check** — `next build` can't type-check without the classic package; it detects `@typescript/native-preview` (installed as a marker) and skips gracefully. The type gate is preserved because the `build` script runs `tsc --noEmit` (TS7) before `next build`, and CI runs `pnpm typecheck`.
+- **Editor support** — the bundled `tsserver` is gone; use the "TypeScript (Native Preview)" VS Code extension (or an editor with TS7 LSP support) for IntelliSense.
+
+TS7 no longer auto-includes all `@types/*` packages, so `tsconfig.json` lists them explicitly in `compilerOptions.types`. If you add a new `@types/*` dependency whose globals are needed (not imported via modules), add it there.
 
 **Stack:** Next.js 16 App Router · TypeScript strict · Tailwind CSS v4 · Supabase (Postgres + Auth) · `@supabase/ssr` · React Hook Form + Zod · Recharts · shadcn-style components on Base UI · Resend (email)
 

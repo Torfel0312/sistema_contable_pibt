@@ -1,2 +1,6 @@
 allowBuilds:
   supabase: true
+
+# typescript-eslint's TypeScript instance is pinned to 5.x via the
+# readPackage hook in .pnpmfile.cjs (see comment there). `tsc` and
+# `pnpm typecheck` use the native typescript@7.
