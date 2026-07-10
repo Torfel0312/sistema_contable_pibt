@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
 import { IntentionsClient } from "@/components/intentions/intentions-client"
 
 export default async function RequestsPage() {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) redirect("/dashboard")
+  if (!user || !canAccessWorkflow(user.permissions)) redirect("/dashboard")
 
   const db = await createSupabaseServerClient()
 

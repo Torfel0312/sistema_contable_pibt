@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
 import { settlementsService } from "@/services/settlements/settlements.service"
 import { createSettlementSchema, settlementFiltersSchema } from "@/lib/validators/settlement"
 
 export async function GET(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) {
+  if (!user || !canAccessWorkflow(user.permissions)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 

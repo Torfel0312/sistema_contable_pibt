@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { canAccessWorkflow } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { addCommentSchema } from "@/lib/validators/intention"
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) {
+  if (!user || !canAccessWorkflow(user.permissions)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 
@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) {
+  if (!user || !canAccessWorkflow(user.permissions)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 

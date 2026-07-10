@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { settlementsService } from "@/services/settlements/settlements.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
@@ -8,7 +8,7 @@ import { IntentionDetailClient } from "@/components/intentions/intention-detail-
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) redirect("/dashboard")
+  if (!user || !canAccessWorkflow(user.permissions)) redirect("/dashboard")
 
   const { id } = await params
   const db = await createSupabaseServerClient()

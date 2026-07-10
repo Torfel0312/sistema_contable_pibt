@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
 import type {
@@ -61,7 +61,7 @@ export async function registerTransfer(id: string, input: RegisterTransferInput)
 
 export async function addComment(id: string, input: AddCommentInput) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.VIEW_WORKFLOW)) {
+  if (!user || !canAccessWorkflow(user.permissions)) {
     throw new Error("Sin permisos")
   }
 

@@ -14,3 +14,11 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
 export function can(permissions: Set<string> | undefined, permission: Permission): boolean {
   return permissions?.has(permission) ?? false
 }
+
+export function canAccessWorkflow(permissions: Set<string> | undefined): boolean {
+  return (
+    can(permissions, PERMISSIONS.VIEW_WORKFLOW) ||
+    can(permissions, PERMISSIONS.SUBMIT_INTENTIONS) ||
+    can(permissions, PERMISSIONS.REVIEW_INTENTIONS)
+  )
+}

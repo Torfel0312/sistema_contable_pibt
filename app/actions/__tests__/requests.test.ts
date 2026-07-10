@@ -16,13 +16,16 @@ jest.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: () => mockCreateSupabaseServerClient()
 }))
 
+const mockCanAccessWorkflow = jest.fn()
+
 jest.mock("@/lib/permissions/rbac", () => ({
   PERMISSIONS: {
     SUBMIT_INTENTIONS: "SUBMIT_INTENTIONS",
     REVIEW_INTENTIONS: "REVIEW_INTENTIONS",
     VIEW_WORKFLOW: "VIEW_WORKFLOW"
   },
-  can: (...args: unknown[]) => mockCan(...args)
+  can: (...args: unknown[]) => mockCan(...args),
+  canAccessWorkflow: (...args: unknown[]) => mockCanAccessWorkflow(...args)
 }))
 
 jest.mock("@/services/intentions/intentions.service", () => ({
@@ -127,7 +130,7 @@ describe("addComment", () => {
   it("adds comment and revalidates", async () => {
     const comment = { id: "c-1", body: "ok" }
     mockGetCurrentUser.mockResolvedValue(mockUser)
-    mockCan.mockReturnValue(true)
+    mockCanAccessWorkflow.mockReturnValue(true)
     mockAddComment.mockResolvedValue(comment)
 
     const data = await addComment("req-1", { message: "ok" })
