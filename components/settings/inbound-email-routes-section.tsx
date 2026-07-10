@@ -32,6 +32,16 @@ const DOMAIN = "pibtalcahuano.com"
 
 type SimpleUser = { id: string; full_name: string; email: string }
 
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+}
+
 export function InboundEmailRoutesSection({
   initialRoutes,
   users
@@ -215,24 +225,10 @@ export function InboundEmailRoutesSection({
                         {localPart}@{DOMAIN}
                       </ItemTitle>
                     )}
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {groups.get(localPart)!.map((route) => (
-                        <span
-                          key={route.id}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs"
-                        >
-                          {route.users?.full_name ?? route.user_id}
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(route.id)}
-                            aria-label="Quitar destinatario"
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {groups.get(localPart)!.length}{" "}
+                      {groups.get(localPart)!.length === 1 ? "destinatario" : "destinatarios"}
+                    </p>
                   </ItemContent>
                   {!isEditing && (
                     <div className="flex shrink-0 gap-1">
@@ -256,6 +252,36 @@ export function InboundEmailRoutesSection({
                       </Button>
                     </div>
                   )}
+                </div>
+
+                <div className="mt-3 flex flex-col divide-y divide-border rounded-lg border border-border">
+                  {groups.get(localPart)!.map((route) => (
+                    <div key={route.id} className="flex items-center gap-3 px-3 py-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <span className="text-[10px] font-bold text-muted-foreground">
+                          {getInitials(route.users?.full_name ?? "?")}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {route.users?.full_name ?? route.user_id}
+                        </p>
+                        {route.users?.email && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {route.users.email}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(route.id)}
+                        aria-label="Quitar destinatario"
+                        className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
                 {usersAvailable.length > 0 && (
