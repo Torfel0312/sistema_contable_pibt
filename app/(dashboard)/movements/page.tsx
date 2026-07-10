@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { movementsService } from "@/services/movements/movements.service"
@@ -18,7 +19,8 @@ type Props = {
 
 export default async function MovementsPage({ searchParams }: Props) {
   const user = await getCurrentUser()
-  const canWrite = can(user?.permissions, PERMISSIONS.CREATE_MOVEMENT) ?? false
+  if (!user || !can(user.permissions, PERMISSIONS.VIEW_MOVEMENT)) redirect("/dashboard")
+  const canWrite = can(user.permissions, PERMISSIONS.CREATE_MOVEMENT) ?? false
   const params = await searchParams
   const search = params.search?.trim() ?? ""
   const movement_type = params.movement_type ?? "ALL"
