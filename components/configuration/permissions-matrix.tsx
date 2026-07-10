@@ -2,21 +2,24 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { PERMISSIONS } from "@/lib/permissions/rbac"
 import type { Permission } from "@/lib/permissions/rbac"
 import type { UserRole } from "@/types/auth"
 import { updateRolePermission } from "@/app/actions/permissions"
 
-const PERMISSION_LABELS: Record<Permission, string> = {
+// VIEW_WORKFLOW is intentionally excluded: access to the requests workflow is
+// derived from SUBMIT_INTENTIONS/REVIEW_INTENTIONS (see canAccessWorkflow),
+// so it's not an independently toggleable permission.
+const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
   MANAGE_USERS: "Gestionar usuarios",
   CREATE_MOVEMENT: "Crear y editar movimientos",
   VIEW_MOVEMENT: "Ver movimientos",
   MANAGE_MINISTRIES: "Gestionar ministerios",
   REVIEW_INTENTIONS: "Revisar solicitudes de fondos",
   SUBMIT_INTENTIONS: "Enviar solicitudes de fondos",
-  MANAGE_SETTINGS: "Gestionar configuración del sistema",
-  VIEW_WORKFLOW: "Ver flujo de trabajo"
+  MANAGE_SETTINGS: "Gestionar configuración del sistema"
 }
+
+const EDITABLE_PERMISSIONS = Object.keys(PERMISSION_LABELS) as Permission[]
 
 const EDITABLE_ROLES: { role: Exclude<UserRole, "ADMIN">; label: string; dotClass: string }[] = [
   { role: "BURSAR", label: "Tesorero", dotClass: "bg-role-purple" },
@@ -90,7 +93,7 @@ export function PermissionsMatrix({ initialMatrix }: { initialMatrix: Permission
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {(Object.values(PERMISSIONS) as Permission[]).map((permission) => (
+            {EDITABLE_PERMISSIONS.map((permission) => (
               <tr key={permission} className="hover:bg-muted/30 transition-colors">
                 <td className="py-3 px-4 font-medium text-foreground">
                   {PERMISSION_LABELS[permission]}
