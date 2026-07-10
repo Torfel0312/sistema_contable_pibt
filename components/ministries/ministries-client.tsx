@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, Users, ChevronRight } from "lucide-react"
+import { Plus, Users, ChevronRight, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -150,7 +150,17 @@ export function MinistriesClient({
                 <FieldError errors={[form.formState.errors.description]} />
               </Field>
               <Field>
-                <FieldLabel htmlFor="minister">Ministro</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor="minister">Ministro</FieldLabel>
+                  <Link
+                    href="/users?invite=MINISTER"
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <UserPlus className="size-3.5" />
+                    Crear cuenta de ministro
+                  </Link>
+                </div>
                 <NativeSelect
                   id="minister"
                   className="w-full"

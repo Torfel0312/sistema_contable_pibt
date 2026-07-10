@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from "@/lib/utils"
@@ -116,8 +117,10 @@ function statusMeta(status: UserStatus): StatusMeta {
 }
 
 export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
+  const searchParams = useSearchParams()
+  const inviteMinister = searchParams.get("invite") === "MINISTER"
   const [users, setUsers] = useState<UserRow[]>(initialUsers)
-  const [createOpen, setCreateOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(inviteMinister)
   const [editingUser, setEditingUser] = useState<UserRow | null>(null)
   const [deletingUser, setDeletingUser] = useState<UserRow | null>(null)
   const [search, setSearch] = useState("")
@@ -142,7 +145,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
 
   const createForm = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { full_name: "", email: "", role: "BURSAR" }
+    defaultValues: { full_name: "", email: "", role: inviteMinister ? "MINISTER" : "BURSAR" }
   })
 
   const selectedRole = useWatch({ control: createForm.control, name: "role" })
@@ -360,8 +363,8 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     <AlertTitle>Tesorero — Ingreso y aprobación</AlertTitle>
                     <AlertDescription>
                       Puede crear, editar y anular movimientos contables, y aprobar o rechazar
-                      solicitudes de fondos de ministros. No puede gestionar usuarios ni
-                      configurar el sistema.
+                      solicitudes de fondos de ministros. No puede gestionar usuarios ni configurar
+                      el sistema.
                     </AlertDescription>
                   </Alert>
                 )}

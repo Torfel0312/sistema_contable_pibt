@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
@@ -20,7 +21,9 @@ export default async function UsersPage() {
         </p>
       </div>
 
-      <UsersManager initialUsers={users} />
+      <Suspense>
+        <UsersManager initialUsers={users} />
+      </Suspense>
     </section>
   )
 }
