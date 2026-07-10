@@ -28,7 +28,6 @@ export const ministriesService = {
       .insert({
         name: input.name,
         description: input.description ?? null,
-        minister_name: input.minister_name.trim(),
         created_by: userId
       })
       .select()
@@ -40,7 +39,7 @@ export const ministriesService = {
       action: "MINISTRY_CREATED",
       user_id: userId,
       entity_id: data.id,
-      new_value: { name: data.name, minister_name: data.minister_name }
+      new_value: { name: data.name }
     })
 
     return data

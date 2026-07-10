@@ -32,7 +32,6 @@ type Ministry = {
   id: string
   name: string
   description: string | null
-  minister_name: string | null
   is_active: boolean
   created_at: string
 }
@@ -54,7 +53,7 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
 
   const form = useForm<CreateMinistryInput>({
     resolver: zodResolver(createMinistrySchema),
-    defaultValues: { name: "", description: "", minister_name: "" }
+    defaultValues: { name: "", description: "" }
   })
 
   function getMinister(ministryId: string) {
@@ -65,8 +64,7 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
     try {
       const created = await createMinistry({
         name: values.name.trim(),
-        description: values.description?.trim() || undefined,
-        minister_name: values.minister_name.trim()
+        description: values.description?.trim() || undefined
       })
       const newMinistry = created as unknown as Ministry
 
@@ -122,15 +120,6 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
                 />
                 <FieldError errors={[form.formState.errors.description]} />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="minister_name">Ministro *</FieldLabel>
-                <Input
-                  id="minister_name"
-                  placeholder="Nombre del ministro"
-                  {...form.register("minister_name")}
-                />
-                <FieldError errors={[form.formState.errors.minister_name]} />
-              </Field>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Creando..." : "Crear ministerio"}
               </Button>
@@ -152,7 +141,7 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
       ) : (
         <ItemGroup>
           {ministries.map((m) => {
-            const ministerName = getMinister(m.id)?.full_name ?? m.minister_name
+            const ministerName = getMinister(m.id)?.full_name ?? null
             return (
               <Item key={m.id} variant="outline" render={<Link href={`/ministries/${m.id}`} />}>
                 <ItemContent>

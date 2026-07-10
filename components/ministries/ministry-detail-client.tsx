@@ -23,15 +23,10 @@ import { updateMinistrySchema, assignMinisterSchema } from "@/lib/validators/min
 import type { UpdateMinistryInput, AssignMinisterInput } from "@/lib/validators/ministry"
 import { assignMinister, unassignMinister, updateMinistry } from "@/app/actions/ministries"
 
-// Stage 1: ministers are recorded as free text (minister_name) without a user
-// account. The user-based assignment UI stays hidden until stage 2 restores it.
-const SHOW_USER_ASSIGNMENT: boolean = false
-
 type Ministry = {
   id: string
   name: string
   description: string | null
-  minister_name: string | null
   is_active: boolean
   created_at: string
 }
@@ -82,7 +77,6 @@ export function MinistryDetailClient({
     defaultValues: {
       name: ministry.name,
       description: ministry.description ?? "",
-      minister_name: ministry.minister_name ?? "",
       is_active: ministry.is_active
     }
   })
@@ -142,7 +136,6 @@ export function MinistryDetailClient({
       const updated = await updateMinistry(ministry.id, {
         name: values.name?.trim(),
         description: values.description?.trim() || undefined,
-        minister_name: values.minister_name?.trim(),
         is_active: values.is_active
       })
       setMinistry(updated as unknown as Ministry)
@@ -192,7 +185,6 @@ export function MinistryDetailClient({
                 editForm.reset({
                   name: ministry.name,
                   description: ministry.description ?? "",
-                  minister_name: ministry.minister_name ?? "",
                   is_active: ministry.is_active
                 })
             }}
@@ -219,15 +211,6 @@ export function MinistryDetailClient({
                   <FieldLabel htmlFor="edit-description">Descripción</FieldLabel>
                   <Input id="edit-description" {...editForm.register("description")} />
                   <FieldError errors={[editForm.formState.errors.description]} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-minister-name">Ministro *</FieldLabel>
-                  <Input
-                    id="edit-minister-name"
-                    placeholder="Nombre del ministro"
-                    {...editForm.register("minister_name")}
-                  />
-                  <FieldError errors={[editForm.formState.errors.minister_name]} />
                 </Field>
                 <Field>
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -268,65 +251,58 @@ export function MinistryDetailClient({
               Desasignar
             </Button>
           </div>
-        ) : ministry.minister_name ? (
-          <div className="rounded-lg border bg-card px-4 py-3 space-y-0.5">
-            <p className="text-sm font-medium">{ministry.minister_name}</p>
-            <p className="text-xs text-muted-foreground">Registrado sin cuenta de usuario</p>
-          </div>
         ) : (
           <p className="text-sm text-muted-foreground rounded-lg border border-dashed px-4 py-3">
             Sin ministro asignado
           </p>
         )}
 
-        {SHOW_USER_ASSIGNMENT && (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">
-              {current ? "Cambiar ministro" : "Asignar ministro"}
-            </p>
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-muted-foreground">
+            {current ? "Cambiar ministro" : "Asignar ministro"}
+          </p>
 
-            {availableMinsters.length === 0 ? (
-              <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                <span>No hay ministros disponibles para asignar</span>
-                <Button size="sm" variant="ghost" render={<Link href="/users" />}>
+          {availableMinsters.length === 0 ? (
+            <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+              <span>No hay ministros disponibles para asignar</span>
+              <Button size="sm" variant="ghost" render={<Link href="/users" />}>
+                <UserPlus className="size-4" />
+                Crear ministro
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={assignForm.handleSubmit(handleAssign)} className="space-y-2">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <NativeSelect
+                    className="w-full"
+                    {...assignForm.register("user_id")}
+                    defaultValue=""
+                  >
+                    <NativeSelectOption value="" disabled>
+                      Seleccionar ministro…
+                    </NativeSelectOption>
+                    {availableMinsters.map((u) => (
+                      <NativeSelectOption key={u.id} value={u.id}>
+                        {u.full_name} — {u.email}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                  <FieldError errors={[assignForm.formState.errors.user_id]} />
+                </div>
+                <Button size="sm" type="submit" disabled={assignForm.formState.isSubmitting}>
                   <UserPlus className="size-4" />
-                  Crear ministro
+                  Asignar
                 </Button>
               </div>
-            ) : (
-              <form onSubmit={assignForm.handleSubmit(handleAssign)} className="space-y-2">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <NativeSelect
-                      className="w-full"
-                      {...assignForm.register("user_id")}
-                      defaultValue=""
-                    >
-                      <NativeSelectOption value="" disabled>
-                        Seleccionar ministro…
-                      </NativeSelectOption>
-                      {availableMinsters.map((u) => (
-                        <NativeSelectOption key={u.id} value={u.id}>
-                          {u.full_name} — {u.email}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                    <FieldError errors={[assignForm.formState.errors.user_id]} />
-                  </div>
-                  <Button size="sm" type="submit" disabled={assignForm.formState.isSubmitting}>
-                    <UserPlus className="size-4" />
-                    Asignar
-                  </Button>
-                </div>
-                <Input
-                  placeholder="Notas opcionales"
-                  className="text-sm"
-                  {...assignForm.register("notes")}
-                />
-              </form>
-            )}
-          </div>
-        )}
+              <Input
+                placeholder="Notas opcionales"
+                className="text-sm"
+                {...assignForm.register("notes")}
+              />
+            </form>
+          )}
+        </div>
       </section>
 
       <Separator />

@@ -381,7 +381,6 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
-          minister_name: string | null
           name: string
           updated_at: string
         }
@@ -391,7 +390,6 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
-          minister_name?: string | null
           name: string
           updated_at?: string
         }
@@ -401,7 +399,6 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
-          minister_name?: string | null
           name?: string
           updated_at?: string
         }
