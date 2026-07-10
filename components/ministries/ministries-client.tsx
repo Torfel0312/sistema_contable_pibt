@@ -107,8 +107,10 @@ export function MinistriesClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Ministerios</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            Ministerios
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los ministerios y sus ministros asignados
           </p>
         </div>
@@ -154,7 +156,6 @@ export function MinistriesClient({
                   <FieldLabel htmlFor="minister">Ministro</FieldLabel>
                   <Link
                     href="/users?invite=MINISTER"
-                    target="_blank"
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                   >
                     <UserPlus className="size-3.5" />
