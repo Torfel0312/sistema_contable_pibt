@@ -24,9 +24,10 @@ import {
   ItemDescription,
   ItemActions
 } from "@/components/ui/item"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { createMinistrySchema, type CreateMinistryInput } from "@/lib/validators/ministry"
-import { createMinistry } from "@/app/actions/ministries"
+import { createMinistry, assignMinister } from "@/app/actions/ministries"
 
 type Ministry = {
   id: string
@@ -41,15 +42,28 @@ type CurrentAssignment = {
   users: { full_name: string } | null
 }
 
+type MinistryUser = {
+  id: string
+  full_name: string
+  email: string
+}
+
 type Props = {
   initialMinistries: Ministry[]
   initialCurrentAssignments: CurrentAssignment[]
+  ministers: MinistryUser[]
 }
 
-export function MinistriesClient({ initialMinistries, initialCurrentAssignments }: Props) {
+export function MinistriesClient({
+  initialMinistries,
+  initialCurrentAssignments,
+  ministers
+}: Props) {
   const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries)
-  const [currentAssignments] = useState<CurrentAssignment[]>(initialCurrentAssignments)
+  const [currentAssignments, setCurrentAssignments] =
+    useState<CurrentAssignment[]>(initialCurrentAssignments)
   const [open, setOpen] = useState(false)
+  const [ministerId, setMinisterId] = useState("")
 
   const form = useForm<CreateMinistryInput>({
     resolver: zodResolver(createMinistrySchema),
@@ -68,8 +82,20 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
       })
       const newMinistry = created as unknown as Ministry
 
+      if (ministerId) {
+        const minister = ministers.find((m) => m.id === ministerId)
+        await assignMinister(newMinistry.id, { user_id: ministerId })
+        if (minister) {
+          setCurrentAssignments((prev) => [
+            ...prev,
+            { ministry_id: newMinistry.id, users: { full_name: minister.full_name } }
+          ])
+        }
+      }
+
       setMinistries((prev) => [newMinistry, ...prev])
       form.reset()
+      setMinisterId("")
       setOpen(false)
       toast.success("Ministerio creado")
     } catch (err) {
@@ -90,7 +116,10 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
           open={open}
           onOpenChange={(o) => {
             setOpen(o)
-            if (!o) form.reset()
+            if (!o) {
+              form.reset()
+              setMinisterId("")
+            }
           }}
         >
           <DialogTrigger
@@ -119,6 +148,22 @@ export function MinistriesClient({ initialMinistries, initialCurrentAssignments 
                   {...form.register("description")}
                 />
                 <FieldError errors={[form.formState.errors.description]} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="minister">Ministro</FieldLabel>
+                <NativeSelect
+                  id="minister"
+                  className="w-full"
+                  value={ministerId}
+                  onChange={(e) => setMinisterId(e.target.value)}
+                >
+                  <NativeSelectOption value="">Sin ministro</NativeSelectOption>
+                  {ministers.map((m) => (
+                    <NativeSelectOption key={m.id} value={m.id}>
+                      {m.full_name} — {m.email}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
               </Field>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Creando..." : "Crear ministerio"}
