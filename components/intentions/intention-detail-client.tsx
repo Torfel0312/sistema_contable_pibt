@@ -17,6 +17,7 @@ import {
   Plus
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { IntentionProgress } from "@/components/intentions/intention-progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -207,6 +208,14 @@ export function IntentionDetailClient({
         <ArrowLeft className="size-4" />
         Volver
       </Button>
+
+      <IntentionProgress
+        status={intention.status}
+        fundingMethod={intention.funding_method}
+        hasTransfer={!!currentTransfer}
+        hasSettlement={settlements.length > 0}
+        hasApprovedSettlement={settlements.some((s) => s.status === "APPROVED")}
+      />
 
       {/* Header */}
       <Card className="p-5 space-y-4">
