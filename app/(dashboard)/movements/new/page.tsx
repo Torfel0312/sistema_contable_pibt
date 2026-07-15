@@ -21,7 +21,7 @@ export default async function NewMovementPage({ searchParams }: Props) {
   const paymentMethods = await paymentMethodsService.list(db)
 
   return (
-    <div className="flex flex-col gap-8 max-w-4xl">
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       <div className="flex flex-col gap-0.5">
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           {isCapitalInjection ? "Inyectar Capital" : "Registro de Movimiento"}
@@ -36,6 +36,7 @@ export default async function NewMovementPage({ searchParams }: Props) {
         <MovementForm
           mode="create"
           paymentMethods={paymentMethods}
+          isCapitalInjection={isCapitalInjection}
           defaultValues={
             isCapitalInjection
               ? { movement_type: "INCOME", category: "Aporte de Capital" }

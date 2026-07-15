@@ -49,6 +49,9 @@ type Props = (
 ) & {
   paymentMethods: PaymentMethodOption[]
   defaultValues?: Partial<CreateMovementInput>
+  /** Capital injection is always an income with no external counterparty — hides
+   * the type/delivered-by/receipt-email fields instead of just prefilling them. */
+  isCapitalInjection?: boolean
 }
 
 function toDateValue(value?: string) {
@@ -57,7 +60,7 @@ function toDateValue(value?: string) {
 }
 
 export function MovementForm(props: Props) {
-  const { mode, onSuccess, paymentMethods, defaultValues } = props
+  const { mode, onSuccess, paymentMethods, defaultValues, isCapitalInjection } = props
   const movement = mode === "edit" ? props.movement : undefined
   const movementId = movement?.id
 
@@ -168,41 +171,47 @@ export function MovementForm(props: Props) {
         </div>
 
         <FieldGroup>
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                Tipo de Operación
-              </FieldLabel>
-              <NativeSelect className="w-full" size="lg" {...form.register("movement_type")}>
-                <option value="INCOME">Ingreso (Entrada)</option>
-                <option value="EXPENSE">Egreso (Gasto)</option>
-              </NativeSelect>
-            </Field>
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            {!isCapitalInjection && (
+              <Field>
+                <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  Tipo de Operación
+                </FieldLabel>
+                <NativeSelect className="w-full" size="lg" {...form.register("movement_type")}>
+                  <option value="INCOME">Ingreso (Entrada)</option>
+                  <option value="EXPENSE">Egreso (Gasto)</option>
+                </NativeSelect>
+              </Field>
+            )}
 
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                {deliveredByLabel}
-              </FieldLabel>
-              <Input
-                className="h-12 sm:h-14"
-                placeholder="Opcional"
-                {...form.register("delivered_by")}
-              />
-            </Field>
+            {!isCapitalInjection && (
+              <Field>
+                <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  {deliveredByLabel}
+                </FieldLabel>
+                <Input
+                  className="h-12 sm:h-14"
+                  placeholder="Opcional"
+                  {...form.register("delivered_by")}
+                />
+              </Field>
+            )}
 
-            <Field data-invalid={!!form.formState.errors.receipt_email || undefined}>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                Email de comprobante
-              </FieldLabel>
-              <Input
-                type="email"
-                className="h-12 sm:h-14"
-                placeholder="correo@ejemplo.com"
-                aria-invalid={!!form.formState.errors.receipt_email}
-                {...form.register("receipt_email")}
-              />
-              <FieldError errors={[form.formState.errors.receipt_email]} />
-            </Field>
+            {!isCapitalInjection && (
+              <Field data-invalid={!!form.formState.errors.receipt_email || undefined}>
+                <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  Email de comprobante
+                </FieldLabel>
+                <Input
+                  type="email"
+                  className="h-12 sm:h-14"
+                  placeholder="correo@ejemplo.com"
+                  aria-invalid={!!form.formState.errors.receipt_email}
+                  {...form.register("receipt_email")}
+                />
+                <FieldError errors={[form.formState.errors.receipt_email]} />
+              </Field>
+            )}
 
             <Field data-invalid={!!form.formState.errors.movement_date || undefined}>
               <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
