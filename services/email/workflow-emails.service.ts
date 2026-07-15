@@ -9,7 +9,6 @@ import { settingsService } from "@/services/settings/settings.service"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 const ORG_SHORT = "Sistema Contable PIBT"
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Sistema contable PIBT <hola@pibtalcahuano.com>"
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
@@ -28,10 +27,11 @@ export async function sendIntentionNotification(intention: {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.tesoreria_notification_email
   if (!to) return
+  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to,
     subject: `Nueva solicitud de presupuesto — ${ORG_SHORT}`,
     react: IntentionNotificationEmail({
@@ -49,12 +49,13 @@ export async function sendIntentionReviewNotification(
 ): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.voucher_email || minister.email
+  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   const statusLabel = action === "APPROVED" ? "aprobada" : "rechazada"
 
   await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to,
     subject: `Solicitud ${statusLabel} — ${ORG_SHORT}`,
     react: IntentionReviewEmail({
@@ -73,10 +74,11 @@ export async function sendTransferNotification(
 ): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.voucher_email || minister.email
+  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to,
     subject: `Transferencia registrada — ${ORG_SHORT}`,
     react: TransferNotificationEmail({
@@ -95,12 +97,13 @@ export async function sendSettlementReviewNotification(
 ): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.voucher_email || minister.email
+  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   const statusLabel = action === "APPROVED" ? "aprobada" : "rechazada"
 
   await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to,
     subject: `Rendición ${statusLabel} — ${ORG_SHORT}`,
     react: SettlementReviewEmail({
@@ -121,12 +124,13 @@ export async function sendReminderEmail(summary: {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const to = settings.tesoreria_notification_email
   if (!to) return
+  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const total = summary.intentions + summary.settlements + summary.missing_transfers
 
   await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to,
     subject: `[Recordatorio] ${total} items pendientes — ${ORG_SHORT}`,
     react: ReminderEmail({ summary, dashboardUrl: `${BASE_URL}/requests` }),

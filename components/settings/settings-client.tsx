@@ -46,6 +46,8 @@ export function SettingsClient({
     defaultValues: {
       tesoreria_notification_email: initialSettings.tesoreria_notification_email,
       voucher_email: initialSettings.voucher_email,
+      notifications_from_email: initialSettings.notifications_from_email,
+      notifications_bcc_email: initialSettings.notifications_bcc_email,
       reminder_interval_days: String(initialSettings.reminder_interval_days)
     }
   })
@@ -133,6 +135,42 @@ export function SettingsClient({
             </Field>
           </div>
         )}
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="notifications-from-email">
+              Correo remitente de notificaciones
+            </FieldLabel>
+            <Input
+              id="notifications-from-email"
+              type="email"
+              placeholder={`hola@${DOMAIN}`}
+              {...form.register("notifications_from_email")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Debe ser un dominio verificado en Resend (ej.{" "}
+              <code className="text-[11px]">@{DOMAIN}</code>). Si está vacío, se usa el remitente
+              por defecto del sistema.
+            </p>
+            <FieldError errors={[form.formState.errors.notifications_from_email]} />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="notifications-bcc-email">
+              Correo de respaldo (auditoría, BCC)
+            </FieldLabel>
+            <Input
+              id="notifications-bcc-email"
+              type="email"
+              placeholder={`auditoria@${DOMAIN}`}
+              {...form.register("notifications_bcc_email")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Recibe copia oculta de los correos de confirmación de recepción.
+            </p>
+            <FieldError errors={[form.formState.errors.notifications_bcc_email]} />
+          </Field>
+        </div>
       </div>
 
       <div className="flex flex-col gap-5">
