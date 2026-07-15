@@ -563,13 +563,99 @@ export type Database = {
           },
         ]
       }
+      movement_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          movement_type?: Database["public"]["Enums"]["movement_type"]
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movement_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movement_subcategories: {
+        Row: {
+          category_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movement_subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "movement_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movement_subcategories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movements: {
         Row: {
           amount: number
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by_id: string | null
-          category: string
+          category_id: string
           created_at: string
           created_by_id: string
           delivered_by: string | null
@@ -585,6 +671,7 @@ export type Database = {
           payment_method_id: string | null
           receipt_email: string | null
           status: Database["public"]["Enums"]["movement_status"]
+          subcategory_id: string | null
           updated_at: string | null
           updated_by_id: string | null
         }
@@ -593,7 +680,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by_id?: string | null
-          category: string
+          category_id: string
           created_at?: string
           created_by_id: string
           delivered_by?: string | null
@@ -609,6 +696,7 @@ export type Database = {
           payment_method_id?: string | null
           receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
+          subcategory_id?: string | null
           updated_at?: string | null
           updated_by_id?: string | null
         }
@@ -617,7 +705,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by_id?: string | null
-          category?: string
+          category_id?: string
           created_at?: string
           created_by_id?: string
           delivered_by?: string | null
@@ -633,6 +721,7 @@ export type Database = {
           payment_method_id?: string | null
           receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
+          subcategory_id?: string | null
           updated_at?: string | null
           updated_by_id?: string | null
         }
@@ -642,6 +731,13 @@ export type Database = {
             columns: ["cancelled_by_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "movement_categories"
             referencedColumns: ["id"]
           },
           {
@@ -656,6 +752,13 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movements_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "movement_subcategories"
             referencedColumns: ["id"]
           },
           {
