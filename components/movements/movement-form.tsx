@@ -15,9 +15,17 @@ import { format } from "date-fns"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FileInput } from "@/components/ui/file-input"
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { createMovement, updateMovement } from "@/app/actions/movements"
+import { AttachmentInput } from "@/components/ui/attachment-input"
+import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
+import { createMovement, updateMovement, removeMovementAttachment } from "@/app/actions/movements"
+import { FileText, ImageIcon, X } from "lucide-react"
+
+type ExistingAttachment = {
+  id: string
+  file_name: string
+  mime_type: string
+  drive_view_link: string
+}
 
 type EditMovement = {
   id: string
@@ -25,19 +33,22 @@ type EditMovement = {
   movement_type: string
   amount: number | string
   category: string
-  concept: string
-  reference_person?: string | null
-  received_by?: string | null
   delivered_by?: string | null
-  beneficiary?: string | null
-  payment_method?: string | null
-  support_number?: string | null
+  receipt_email?: string | null
+  payment_method_id?: string | null
   notes?: string | null
+  movement_attachments?: ExistingAttachment[]
 }
 
-type Props =
+type PaymentMethodOption = { id: string; name: string; is_active: boolean }
+
+type Props = (
   | { mode: "create"; onSuccess?: () => void }
   | { mode: "edit"; movement: EditMovement; onSuccess?: () => void }
+) & {
+  paymentMethods: PaymentMethodOption[]
+  defaultValues?: Partial<CreateMovementInput>
+}
 
 function toDateValue(value?: string) {
   if (!value) return new Date().toISOString().slice(0, 10)
@@ -45,68 +56,83 @@ function toDateValue(value?: string) {
 }
 
 export function MovementForm(props: Props) {
-  const { mode, onSuccess } = props
+  const { mode, onSuccess, paymentMethods, defaultValues } = props
   const movement = mode === "edit" ? props.movement : undefined
   const movementId = movement?.id
 
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [supportFile, setSupportFile] = useState<File | null>(null)
+  const [existingAttachments, setExistingAttachments] = useState<ExistingAttachment[]>(
+    movement?.movement_attachments ?? []
+  )
+  const attachmentUpload = useAttachmentUpload()
 
   const form = useForm<MovementFormInput, unknown, CreateMovementInput>({
     resolver: zodResolver(createMovementSchema),
     defaultValues: {
       movement_date: toDateValue(movement?.movement_date),
-      movement_type: (movement?.movement_type as "INCOME" | "EXPENSE") ?? "INCOME",
+      movement_type:
+        (movement?.movement_type as "INCOME" | "EXPENSE") ??
+        defaultValues?.movement_type ??
+        "INCOME",
       amount: movement ? Number(movement.amount) : ("" as unknown as number),
-      category: movement?.category ?? "",
-      concept: movement?.concept ?? "",
-      reference_person: movement?.reference_person ?? "",
-      received_by: movement?.received_by ?? "",
+      category: movement?.category ?? defaultValues?.category ?? "",
       delivered_by: movement?.delivered_by ?? "",
-      beneficiary: movement?.beneficiary ?? "",
-      payment_method: movement?.payment_method ?? "",
-      support_number: movement?.support_number ?? "",
+      receipt_email: movement?.receipt_email ?? "",
+      payment_method_id: movement?.payment_method_id ?? "",
       notes: movement?.notes ?? ""
     }
   })
 
   const movementType = useWatch({ control: form.control, name: "movement_type" })
-  const categories = useMemo(
-    () => (movementType === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES),
-    [movementType]
+  const defaultCategory = defaultValues?.category
+  const categories = useMemo(() => {
+    const base: readonly string[] =
+      movementType === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+    // The "Inyectar capital" entry point prefills a category outside the standard
+    // list (e.g. "Aporte de Capital") — surface it as a selectable option so the
+    // select doesn't silently fall back to a blank selection.
+    if (defaultCategory && !base.includes(defaultCategory)) {
+      return [defaultCategory, ...base]
+    }
+    return base
+  }, [movementType, defaultCategory])
+  const deliveredByLabel = movementType === "INCOME" ? "Entregado por" : "Entregado a"
+  const activePaymentMethods = useMemo(
+    () => paymentMethods.filter((pm) => pm.is_active),
+    [paymentMethods]
   )
+
+  async function handleRemoveExisting(attachmentId: string) {
+    try {
+      await removeMovementAttachment(attachmentId)
+      setExistingAttachments((prev) => prev.filter((a) => a.id !== attachmentId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el adjunto.")
+    }
+  }
 
   async function onSubmit(values: CreateMovementInput) {
     setError(null)
 
-    let attachment_url: string | null = null
-    if (supportFile) {
-      try {
-        const supabase = createSupabaseBrowserClient()
-        const ext = supportFile.name.split(".").pop() ?? "bin"
-        const path = `${crypto.randomUUID()}.${ext}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("movement-attachments")
-          .upload(path, supportFile, { upsert: false })
-        if (uploadError) throw uploadError
-        attachment_url = uploadData.path
-      } catch {
-        setError("Error al subir el comprobante. Intente nuevamente.")
-        return
-      }
-    }
+    const attachments = attachmentUpload.items.map((item) => ({
+      driveFileId: item.driveFileId,
+      driveViewLink: item.driveViewLink,
+      fileName: item.fileName,
+      mimeType: item.mimeType,
+      sizeBytes: item.sizeBytes
+    }))
 
     try {
       if (mode === "create") {
-        const created = await createMovement({ ...values, attachment_url })
+        const created = await createMovement({ ...values, attachments })
         if (onSuccess) {
           onSuccess()
         } else {
           router.push(`/movements/${created.id}`)
         }
       } else {
-        await updateMovement(movementId!, { ...values, attachment_url })
+        await updateMovement(movementId!, { ...values, attachments })
         if (onSuccess) {
           onSuccess()
         } else {
@@ -124,13 +150,48 @@ export function MovementForm(props: Props) {
         <div className="flex items-center gap-4 px-1">
           <div className="h-px flex-1 bg-border" />
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Datos Principales
+            Datos del Movimiento
           </h3>
           <div className="h-px flex-1 bg-border" />
         </div>
 
         <FieldGroup>
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <Field>
+              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                Tipo de Operación
+              </FieldLabel>
+              <NativeSelect className="w-full" size="lg" {...form.register("movement_type")}>
+                <option value="INCOME">Ingreso (Entrada)</option>
+                <option value="EXPENSE">Egreso (Gasto)</option>
+              </NativeSelect>
+            </Field>
+
+            <Field>
+              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                {deliveredByLabel}
+              </FieldLabel>
+              <Input
+                className="h-12 sm:h-14"
+                placeholder="Opcional"
+                {...form.register("delivered_by")}
+              />
+            </Field>
+
+            <Field data-invalid={!!form.formState.errors.receipt_email || undefined}>
+              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                Email de comprobante
+              </FieldLabel>
+              <Input
+                type="email"
+                className="h-12 sm:h-14"
+                placeholder="correo@ejemplo.com"
+                aria-invalid={!!form.formState.errors.receipt_email}
+                {...form.register("receipt_email")}
+              />
+              <FieldError errors={[form.formState.errors.receipt_email]} />
+            </Field>
+
             <Field data-invalid={!!form.formState.errors.movement_date || undefined}>
               <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
                 Fecha de Registro
@@ -149,16 +210,6 @@ export function MovementForm(props: Props) {
               <FieldError errors={[form.formState.errors.movement_date]} />
             </Field>
 
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                Tipo de Operación
-              </FieldLabel>
-              <NativeSelect className="w-full" size="lg" {...form.register("movement_type")}>
-                <option value="INCOME">Ingreso (Entrada)</option>
-                <option value="EXPENSE">Egreso (Gasto)</option>
-              </NativeSelect>
-            </Field>
-
             <Field data-invalid={!!form.formState.errors.amount || undefined}>
               <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
                 Monto (CLP)
@@ -172,6 +223,26 @@ export function MovementForm(props: Props) {
                 {...form.register("amount", { valueAsNumber: true })}
               />
               <FieldError errors={[form.formState.errors.amount]} />
+            </Field>
+
+            <Field>
+              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                Medio de Pago
+              </FieldLabel>
+              <NativeSelect
+                className="w-full"
+                size="lg"
+                {...form.register("payment_method_id", {
+                  setValueAs: (value: string) => (value === "" ? undefined : value)
+                })}
+              >
+                <option value="">Sin especificar</option>
+                {activePaymentMethods.map((pm) => (
+                  <option key={pm.id} value={pm.id}>
+                    {pm.name}
+                  </option>
+                ))}
+              </NativeSelect>
             </Field>
 
             <Field data-invalid={!!form.formState.errors.category || undefined}>
@@ -195,114 +266,9 @@ export function MovementForm(props: Props) {
             </Field>
           </div>
 
-          <Field data-invalid={!!form.formState.errors.concept || undefined}>
-            <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Concepto / Glosa
-            </FieldLabel>
-            <Input
-              className="h-12 sm:h-14 font-medium"
-              placeholder="Descripción breve del movimiento..."
-              aria-invalid={!!form.formState.errors.concept}
-              {...form.register("concept")}
-            />
-            <FieldError errors={[form.formState.errors.concept]} />
-          </Field>
-        </FieldGroup>
-      </div>
-
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4 px-1">
-          <div className="h-px flex-1 bg-border" />
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Personas Involucradas
-          </h3>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Field>
             <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Referente / Entidad
-            </FieldLabel>
-            <Input
-              className="h-12 sm:h-14"
-              placeholder="Opcional"
-              {...form.register("reference_person")}
-            />
-          </Field>
-
-          <Field>
-            <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Recibido por
-            </FieldLabel>
-            <Input
-              className="h-12 sm:h-14"
-              placeholder="Opcional"
-              {...form.register("received_by")}
-            />
-          </Field>
-
-          <Field>
-            <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Entregado por
-            </FieldLabel>
-            <Input
-              className="h-12 sm:h-14"
-              placeholder="Opcional"
-              {...form.register("delivered_by")}
-            />
-          </Field>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4 px-1">
-          <div className="h-px flex-1 bg-border" />
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Respaldo & Detalles
-          </h3>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <FieldGroup>
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                Beneficiario
-              </FieldLabel>
-              <Input
-                className="h-12 sm:h-14"
-                placeholder="Opcional"
-                {...form.register("beneficiary")}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                Medio de Pago
-              </FieldLabel>
-              <Input
-                className="h-12 sm:h-14"
-                placeholder="Efectivo, Transferencia, etc."
-                {...form.register("payment_method")}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                N° Documento Respaldo
-              </FieldLabel>
-              <Input
-                className="h-12 sm:h-14"
-                placeholder="Boleta, Factura, etc."
-                {...form.register("support_number")}
-              />
-            </Field>
-          </div>
-
-          <Field>
-            <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Observaciones Adicionales
+              Comentarios / Observaciones
             </FieldLabel>
             <textarea
               className="flex min-h-[100px] sm:min-h-[120px] w-full rounded-lg border border-border bg-background px-4 py-3 text-base font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
@@ -311,11 +277,61 @@ export function MovementForm(props: Props) {
             />
           </Field>
 
+          {existingAttachments.length > 0 && (
+            <Field>
+              <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                Adjuntos existentes
+              </FieldLabel>
+              <div className="flex flex-col gap-2">
+                {existingAttachments.map((att) => (
+                  <div
+                    key={att.id}
+                    className="flex items-center gap-3 rounded-xl bg-muted px-4 py-3"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+                      {att.mime_type.startsWith("image/") ? (
+                        <ImageIcon className="size-4 text-muted-foreground" />
+                      ) : (
+                        <FileText className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <a
+                      href={att.drive_view_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-w-0 flex-1 truncate text-xs font-bold text-primary hover:underline"
+                    >
+                      {att.file_name}
+                    </a>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 shrink-0"
+                      onClick={() => handleRemoveExisting(att.id)}
+                      aria-label={`Eliminar ${att.file_name}`}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </Field>
+          )}
+
           <Field>
             <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-              Comprobante (foto o archivo)
+              Comprobantes (foto o archivo)
             </FieldLabel>
-            <FileInput id="support-file" value={supportFile} onChange={setSupportFile} />
+            <AttachmentInput
+              items={attachmentUpload.items}
+              isUploading={attachmentUpload.isUploading}
+              onAddFiles={attachmentUpload.addFiles}
+              onRemove={attachmentUpload.remove}
+            />
+            {attachmentUpload.error && (
+              <p className="text-sm font-normal text-destructive">{attachmentUpload.error}</p>
+            )}
           </Field>
         </FieldGroup>
       </div>
@@ -329,7 +345,7 @@ export function MovementForm(props: Props) {
       <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border">
         <Button
           type="submit"
-          disabled={form.formState.isSubmitting}
+          disabled={form.formState.isSubmitting || attachmentUpload.isUploading}
           className="h-10 sm:h-11 px-6 sm:px-8 text-sm sm:text-base flex-1 sm:flex-none"
         >
           {form.formState.isSubmitting

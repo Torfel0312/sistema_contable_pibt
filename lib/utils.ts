@@ -46,33 +46,3 @@ export function formatCLP(amount: number): string {
 export function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 }
-
-export function toMovementFormValues(row: {
-  movement_date: string
-  movement_type: string
-  amount: number | string
-  category: string
-  concept: string
-  reference_person?: string | null
-  received_by?: string | null
-  delivered_by?: string | null
-  beneficiary?: string | null
-  payment_method?: string | null
-  support_number?: string | null
-  notes?: string | null
-}) {
-  return {
-    movement_date: row.movement_date.slice(0, 10),
-    movement_type: row.movement_type as "INCOME" | "EXPENSE",
-    amount: Number(row.amount),
-    category: row.category,
-    concept: row.concept,
-    reference_person: row.reference_person ?? null,
-    received_by: row.received_by ?? null,
-    delivered_by: row.delivered_by ?? null,
-    beneficiary: row.beneficiary ?? null,
-    payment_method: row.payment_method ?? null,
-    support_number: row.support_number ?? null,
-    notes: row.notes ?? null
-  }
-}

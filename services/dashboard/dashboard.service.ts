@@ -36,7 +36,7 @@ export const dashboardService = {
       admin
         .from("movements")
         .select(
-          "id, folio, folio_display, movement_date, movement_type, amount, category, concept, status, created_by:users!created_by_id(full_name)"
+          "id, folio, folio_display, movement_date, movement_type, amount, category, status, created_by:users!created_by_id(full_name)"
         )
         .eq("status", "ACTIVE")
         .order("movement_date", { ascending: false })

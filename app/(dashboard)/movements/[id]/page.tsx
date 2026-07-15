@@ -8,14 +8,15 @@ import { RegeneratePdfButton } from "@/components/movements/regenerate-pdf-butto
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, formatDateTime, formatCLP } from "@/lib/utils"
-import { attachmentHref } from "@/lib/storage/attachments"
 import {
   ChevronLeft,
   Edit,
   FileText,
+  ImageIcon,
   User,
   Calendar,
   Tag,
+  Mail,
   Info as InfoIcon,
   ExternalLink
 } from "lucide-react"
@@ -34,6 +35,7 @@ export default async function MovementDetailPage({ params }: Props) {
   const createdBy = row.created_by as { full_name: string; email: string } | null
   const updatedBy = row.updated_by as { full_name: string; email: string } | null
   const cancelledBy = row.cancelled_by as { full_name: string; email: string } | null
+  const paymentMethod = row.payment_methods as { name: string } | null
   const auditLog = (row.movement_audit_log ?? []) as Array<{
     id: string
     action: string
@@ -41,6 +43,13 @@ export default async function MovementDetailPage({ params }: Props) {
     note: string | null
     users: { full_name: string } | null
   }>
+  const attachments = (row.movement_attachments ?? []) as Array<{
+    id: string
+    file_name: string
+    mime_type: string
+    drive_view_link: string
+  }>
+  const deliveredByLabel = row.movement_type === "INCOME" ? "Entregado por" : "Entregado a"
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl mx-auto">
@@ -75,17 +84,6 @@ export default async function MovementDetailPage({ params }: Props) {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {row.pdf_url && (
-            <Button
-              variant="outline"
-              className="h-10 px-5"
-              render={<Link href={row.pdf_url} target="_blank" rel="noopener noreferrer" />}
-              nativeButton={false}
-            >
-              <ExternalLink className="size-4 text-primary" data-icon="inline-start" />
-              Ver PDF
-            </Button>
-          )}
           {canWrite && row.status !== "CANCELLED" && (
             <>
               <Button
@@ -119,12 +117,14 @@ export default async function MovementDetailPage({ params }: Props) {
                   valueClass="font-heading text-3xl font-black text-primary"
                 />
                 <DetailItem icon={<Tag />} label="Categoría" value={row.category} />
-                <DetailItem icon={<InfoIcon />} label="Concepto / Glosa" value={row.concept} />
-                <DetailItem
-                  icon={<User />}
-                  label="Referente / Donante"
-                  value={row.reference_person}
-                />
+                <DetailItem icon={<User />} label={deliveredByLabel} value={row.delivered_by} />
+                {row.receipt_email && (
+                  <DetailItem
+                    icon={<Mail />}
+                    label="Correo de comprobante"
+                    value={row.receipt_email}
+                  />
+                )}
               </div>
               <div className="flex flex-col gap-6">
                 <DetailItem
@@ -132,13 +132,7 @@ export default async function MovementDetailPage({ params }: Props) {
                   label="Fecha del Movimiento"
                   value={formatDate(row.movement_date)}
                 />
-                <DetailItem icon={<InfoIcon />} label="Medio de Pago" value={row.payment_method} />
-                <DetailItem
-                  icon={<FileText />}
-                  label="Número de Respaldo"
-                  value={row.support_number}
-                />
-                <DetailItem icon={<User />} label="Beneficiario" value={row.beneficiary} />
+                <DetailItem icon={<InfoIcon />} label="Medio de Pago" value={paymentMethod?.name} />
               </div>
             </div>
 
@@ -151,20 +145,30 @@ export default async function MovementDetailPage({ params }: Props) {
               </p>
             </div>
 
-            {row.attachment_url && (
-              <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
+            {attachments.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Comprobante adjunto
+                  Comprobantes adjuntos
                 </p>
-                <Link
-                  href={attachmentHref("movement-attachments", row.attachment_url) ?? "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-                >
-                  <ExternalLink className="size-4 shrink-0" />
-                  Ver comprobante
-                </Link>
+                <div className="flex flex-col gap-2">
+                  {attachments.map((att) => (
+                    <Link
+                      key={att.id}
+                      href={att.drive_view_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                    >
+                      {att.mime_type.startsWith("image/") ? (
+                        <ImageIcon className="size-4 shrink-0" />
+                      ) : (
+                        <FileText className="size-4 shrink-0" />
+                      )}
+                      {att.file_name}
+                      <ExternalLink className="size-3.5 shrink-0" />
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -214,32 +218,6 @@ export default async function MovementDetailPage({ params }: Props) {
               Historial Técnico
             </h3>
             <div className="flex flex-col gap-3">
-              <TechnicalItem
-                label="Estado PDF"
-                value={
-                  { PENDING: "Pendiente", GENERATED: "Generado", ERROR: "Error" }[row.pdf_status] ??
-                  row.pdf_status
-                }
-              />
-              <div className="flex items-center justify-between text-xs border-b border-border pb-2">
-                <span className="font-bold text-muted-foreground">Archivo PDF</span>
-                {row.pdf_url ? (
-                  <Link
-                    href={row.pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 font-bold text-primary hover:underline"
-                  >
-                    Abrir <ExternalLink className="size-3" />
-                  </Link>
-                ) : (
-                  <span className="font-bold text-foreground">—</span>
-                )}
-              </div>
-              <TechnicalItem
-                label="Sincronización"
-                value={row.synced_to_sheet ? "Completado" : "Pendiente"}
-              />
               <TechnicalItem
                 label="Notificación"
                 value={

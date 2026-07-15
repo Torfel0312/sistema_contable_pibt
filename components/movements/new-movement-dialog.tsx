@@ -13,7 +13,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { MovementForm } from "./movement-form"
 
-export function NewMovementDialog() {
+type PaymentMethodOption = { id: string; name: string; is_active: boolean }
+
+export function NewMovementDialog({
+  paymentMethods
+}: {
+  paymentMethods: PaymentMethodOption[]
+}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -37,7 +43,11 @@ export function NewMovementDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          <MovementForm mode="create" onSuccess={() => setOpen(false)} />
+          <MovementForm
+            mode="create"
+            paymentMethods={paymentMethods}
+            onSuccess={() => setOpen(false)}
+          />
         </div>
       </DialogContent>
     </Dialog>

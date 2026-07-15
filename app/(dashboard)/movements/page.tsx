@@ -6,7 +6,7 @@ import { movementsService } from "@/services/movements/movements.service"
 import { MovementsTable } from "@/components/movements/movements-table"
 import { MovementsFilters } from "@/components/movements/movements-filters"
 import { Button } from "@/components/ui/button"
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, PiggyBank, ChevronLeft, ChevronRight } from "lucide-react"
 
 type Props = {
   searchParams: Promise<{
@@ -61,10 +61,21 @@ export default async function MovementsPage({ searchParams }: Props) {
           <p className="text-sm text-muted-foreground">Registro de ingresos y egresos</p>
         </div>
         {canWrite && (
-          <Button render={<Link href="/movements/new" />} nativeButton={false} className="gap-2">
-            <Plus data-icon="inline-start" />
-            Nuevo Movimiento
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              render={<Link href="/movements/new?capitalInjection=1" />}
+              nativeButton={false}
+              className="gap-2"
+            >
+              <PiggyBank data-icon="inline-start" />
+              Inyectar capital
+            </Button>
+            <Button render={<Link href="/movements/new" />} nativeButton={false} className="gap-2">
+              <Plus data-icon="inline-start" />
+              Nuevo Movimiento
+            </Button>
+          </div>
         )}
       </div>
 
@@ -83,13 +94,10 @@ export default async function MovementsPage({ searchParams }: Props) {
           movement_type: row.movement_type,
           amount: String(row.amount),
           category: row.category,
-          concept: row.concept,
-          reference_person: row.reference_person,
-          received_by: row.received_by,
           delivered_by: row.delivered_by,
-          beneficiary: row.beneficiary,
-          payment_method: row.payment_method,
-          support_number: row.support_number,
+          receipt_email: row.receipt_email,
+          payment_method_name:
+            (row.payment_methods as { name: string } | null)?.name ?? null,
           notes: row.notes,
           cancellation_reason: row.cancellation_reason,
           status: row.status,

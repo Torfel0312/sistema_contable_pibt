@@ -14,7 +14,8 @@ import {
   FileCheck,
   SlidersHorizontal,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  CreditCard
 } from "lucide-react"
 import {
   Sidebar,
@@ -84,6 +85,12 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/settings/general", label: "General", icon: SlidersHorizontal, roles: ["ADMIN"] },
       { href: "/settings/inbound-email", label: "Correo entrante", icon: Mail, roles: ["ADMIN"] },
       { href: "/settings/permissions", label: "Permisos", icon: ShieldCheck, roles: ["ADMIN"] },
+      {
+        href: "/settings/payment-methods",
+        label: "Medios de pago",
+        icon: CreditCard,
+        roles: ["ADMIN"]
+      },
       { href: "/users", label: "Usuarios", icon: Users, roles: ["ADMIN"] },
       { href: "/audit", label: "Auditoría", icon: ClipboardList, roles: ["ADMIN"] }
     ]

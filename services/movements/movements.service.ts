@@ -65,7 +65,7 @@ export const movementsService = {
     let query = db
       .from("movements")
       .select(
-        "id, folio, folio_display, movement_date, movement_type, amount, category, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email)",
+        "id, folio, folio_display, movement_date, movement_type, amount, category, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), payment_methods:payment_method_id(name)",
         { count: "exact" }
       )
       .order("movement_date", { ascending: false })
@@ -101,7 +101,8 @@ export const movementsService = {
         updated_by:users!updated_by_id(id, full_name, email),
         cancelled_by:users!cancelled_by_id(id, full_name, email),
         movement_audit_log(*, users(id, full_name, email)),
-        movement_attachments(*)`
+        movement_attachments(*),
+        payment_methods:payment_method_id(name)`
       )
       .eq("id", id)
       .order("event_date", { referencedTable: "movement_audit_log", ascending: false })

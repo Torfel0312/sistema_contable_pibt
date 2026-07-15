@@ -15,10 +15,10 @@ export function RegeneratePdfButton({ movement }: { movement: { id: string } }) 
     const promise = regeneratePdf(movement.id)
 
     toast.promise(promise, {
-      loading: "Regenerando PDF...",
+      loading: "Reenviando notificación...",
       success: () => {
         router.refresh()
-        return "PDF regenerado"
+        return "Notificación reenviada"
       },
       error: (e: Error) => e.message
     })
@@ -28,7 +28,7 @@ export function RegeneratePdfButton({ movement }: { movement: { id: string } }) 
 
   return (
     <Button type="button" variant="outline" disabled={loading} onClick={onClick} className="h-11">
-      {loading ? "Procesando..." : "Regenerar PDF"}
+      {loading ? "Procesando..." : "Reenviar notificación"}
     </Button>
   )
 }
