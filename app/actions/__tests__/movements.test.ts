@@ -9,10 +9,24 @@ const mockUpdate = jest.fn()
 const mockCancel = jest.fn()
 const mockProcessIntegrations = jest.fn()
 const mockRevalidatePath = jest.fn()
+const mockSendVoucherEmail = jest.fn()
+const mockSettingsGetAll = jest.fn()
 
 jest.mock("@/lib/supabase/server", () => ({
   getCurrentUser: () => mockGetCurrentUser(),
   createSupabaseServerClient: () => mockCreateSupabaseServerClient()
+}))
+
+jest.mock("@/lib/supabase/admin", () => ({
+  createSupabaseAdminClient: () => ({})
+}))
+
+jest.mock("@/services/vouchers/voucher.service", () => ({
+  sendVoucherEmail: (...args: unknown[]) => mockSendVoucherEmail(...args)
+}))
+
+jest.mock("@/services/settings/settings.service", () => ({
+  settingsService: { getAll: (...args: unknown[]) => mockSettingsGetAll(...args) }
 }))
 
 jest.mock("@/lib/permissions/rbac", () => ({
@@ -77,6 +91,62 @@ describe("createMovement", () => {
     expect(mockCreate).toHaveBeenCalledWith(mockDb, movementInput, mockUser.id)
     expect(mockRevalidatePath).toHaveBeenCalledWith("/movements")
     expect(data).toEqual(created)
+  })
+
+  it("sends the receipt confirmation email once for INCOME movements with a receipt_email", async () => {
+    const created = {
+      id: "mv-1",
+      ...movementInput,
+      movement_type: "INCOME" as const,
+      receipt_email: "donante@example.com"
+    }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockCreate.mockResolvedValue(created)
+    mockProcessIntegrations.mockResolvedValue(undefined)
+    mockSettingsGetAll.mockResolvedValue({ notifications_bcc_email: "auditoria@example.com" })
+    mockSendVoucherEmail.mockResolvedValue({ ok: true, mailSent: true })
+
+    await createMovement(movementInput)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mockSendVoucherEmail).toHaveBeenCalledWith("mv-1", "donante@example.com", {
+      bcc: "auditoria@example.com"
+    })
+  })
+
+  it("does not send the receipt confirmation email for EXPENSE movements", async () => {
+    const created = { id: "mv-1", ...movementInput, movement_type: "EXPENSE" as const }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockCreate.mockResolvedValue(created)
+    mockProcessIntegrations.mockResolvedValue(undefined)
+
+    await createMovement(movementInput)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mockSendVoucherEmail).not.toHaveBeenCalled()
+  })
+
+  it("does not send the receipt confirmation email when receipt_email is missing", async () => {
+    const created = {
+      id: "mv-1",
+      ...movementInput,
+      movement_type: "INCOME" as const,
+      receipt_email: null
+    }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockCreate.mockResolvedValue(created)
+    mockProcessIntegrations.mockResolvedValue(undefined)
+
+    await createMovement(movementInput)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mockSendVoucherEmail).not.toHaveBeenCalled()
   })
 })
 

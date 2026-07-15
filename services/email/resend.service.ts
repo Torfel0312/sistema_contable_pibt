@@ -3,10 +3,12 @@ import { Resend } from "resend"
 import { AuthEmail } from "@/emails/auth-email"
 import { MovementEmail } from "@/emails/movement-email"
 import type { EmailSendResult, MovementIntegrationPayload } from "@/services/google/types"
+import { settingsService } from "@/services/settings/settings.service"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+
+export const DEFAULT_FROM_EMAIL = "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
 const ORG_SHORT = "Sistema Contable PIBT"
-export const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL ?? "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
 const TRANSACTIONAL_HEADERS = {
@@ -18,12 +20,13 @@ const TRANSACTIONAL_HEADERS = {
 export async function sendMovementEmail(
   movement: MovementIntegrationPayload
 ): Promise<EmailSendResult> {
+  const settings = await settingsService.getAll(createSupabaseAdminClient())
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail, movement.receiptEmail].filter(
-      Boolean
-    ) as string[],
+    from,
+    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail].filter(Boolean) as string[],
     replyTo: process.env.NOTIFICATION_EMAIL,
     subject: `[${movement.movementTypeLabel}] Folio ${movement.folio} - ${movement.category}`,
     react: MovementEmail({ movement }),
@@ -41,9 +44,12 @@ export async function sendInviteEmail(opts: {
   full_name: string
   action_link: string
 }): Promise<void> {
+  const settings = await settingsService.getAll(createSupabaseAdminClient())
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to: opts.to,
     subject: `Activa tu cuenta — ${ORG_SHORT}`,
     react: AuthEmail({
@@ -64,9 +70,12 @@ export async function sendResetEmail(opts: {
   full_name: string
   action_link: string
 }): Promise<void> {
+  const settings = await settingsService.getAll(createSupabaseAdminClient())
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to: opts.to,
     subject: `Restablece tu contraseña — ${ORG_SHORT}`,
     react: AuthEmail({
@@ -86,9 +95,12 @@ export async function sendForgotPasswordEmail(opts: {
   to: string
   action_link: string
 }): Promise<void> {
+  const settings = await settingsService.getAll(createSupabaseAdminClient())
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
+    from,
     to: opts.to,
     subject: `Recupera tu contraseña — ${ORG_SHORT}`,
     react: AuthEmail({

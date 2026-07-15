@@ -5,9 +5,11 @@ import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/serve
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { CancelButton } from "@/components/movements/cancel-button"
 import { RegeneratePdfButton } from "@/components/movements/regenerate-pdf-button"
+import { VoucherActions } from "@/components/vouchers/voucher-actions"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, formatDateTime, formatCLP } from "@/lib/utils"
+import type { MovementIntegrationPayload } from "@/services/google/types"
 import {
   ChevronLeft,
   Edit,
@@ -18,7 +20,8 @@ import {
   Tag,
   Mail,
   Info as InfoIcon,
-  ExternalLink
+  ExternalLink,
+  Receipt
 } from "lucide-react"
 
 type Props = { params: Promise<{ id: string }> }
@@ -52,6 +55,24 @@ export default async function MovementDetailPage({ params }: Props) {
     drive_view_link: string
   }>
   const deliveredByLabel = row.movement_type === "INCOME" ? "Entregado por" : "Entregado a"
+
+  const voucherPayload: MovementIntegrationPayload = {
+    movementId: row.id,
+    folio: row.folio_display ?? "",
+    movementTypeLabel: row.movement_type === "INCOME" ? "INGRESO" : "EGRESO",
+    movementDate: row.movement_date,
+    amount: Number(row.amount),
+    category: category?.name ?? "",
+    deliveredBy: row.delivered_by,
+    paymentMethodLabel: paymentMethod?.name ?? null,
+    receiptEmail: row.receipt_email,
+    notes: row.notes,
+    registeredBy: createdBy?.full_name ?? "",
+    user: createdBy?.full_name ?? "",
+    registeredEmail: createdBy?.email ?? "",
+    registeredAt: row.created_at,
+    organizationName: "Sistema contable PIBT"
+  }
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl mx-auto">
@@ -233,6 +254,16 @@ export default async function MovementDetailPage({ params }: Props) {
               />
             </div>
           </Card>
+
+          {row.movement_type === "INCOME" && (
+            <Card className="bg-card border border-border p-6 flex flex-col gap-4">
+              <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <Receipt className="size-3.5 text-primary" />
+                Generar comprobante
+              </h3>
+              <VoucherActions movement={voucherPayload} />
+            </Card>
+          )}
         </div>
       </div>
 

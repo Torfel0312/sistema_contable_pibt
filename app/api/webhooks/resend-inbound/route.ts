@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { DEFAULT_FROM_EMAIL } from "@/services/email/resend.service"
 import { inboundRoutesService } from "@/services/email/inbound-routes.service"
-import { FROM_EMAIL } from "@/services/email/resend.service"
+import { settingsService } from "@/services/settings/settings.service"
 
 const DOMAIN = "pibtalcahuano.com"
 
@@ -62,10 +63,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true })
     }
 
+    const settings = await settingsService.getAll(admin)
+    const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
+
     const { error } = await resend.emails.receiving.forward({
       emailId: event.data.email_id,
       to: recipients,
-      from: FROM_EMAIL
+      from
     })
 
     if (error) {

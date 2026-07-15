@@ -16,6 +16,27 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname)
   },
+  // @react-pdf/renderer and its subpackages ship as ESM-only ("type": "module"),
+  // which Jest's default CJS transform can't parse without this.
+  transpilePackages: [
+    "@react-pdf/renderer",
+    "@react-pdf/fns",
+    "@react-pdf/font",
+    "@react-pdf/image",
+    "@react-pdf/layout",
+    "@react-pdf/pdfkit",
+    "@react-pdf/primitives",
+    "@react-pdf/reconciler",
+    "@react-pdf/render",
+    "@react-pdf/stylesheet",
+    "@react-pdf/svg",
+    "@react-pdf/textkit",
+    "@react-pdf/types",
+    "color-string",
+    "color-name",
+    "colorspace",
+    "yoga-layout"
+  ],
   env: {
     NEXT_PUBLIC_COMMIT_SHA: getCommitHash(),
     NEXT_PUBLIC_COMMIT_SHA_FULL: getCommitHash(false)

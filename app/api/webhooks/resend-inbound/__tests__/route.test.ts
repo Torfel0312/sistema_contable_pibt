@@ -22,8 +22,8 @@ jest.mock("@/lib/supabase/admin", () => ({
   createSupabaseAdminClient: () => ({})
 }))
 
-jest.mock("@/services/email/resend.service", () => ({
-  FROM_EMAIL: "Sistema contable PIBT <hola@pibtalcahuano.com>"
+jest.mock("@/services/settings/settings.service", () => ({
+  settingsService: { getAll: () => Promise.resolve({ notifications_from_email: "" }) }
 }))
 
 import { POST } from "../route"
