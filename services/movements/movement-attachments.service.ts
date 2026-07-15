@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
-import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { auditService } from "@/services/audit/audit.service"
 import { deleteFileFromDrive } from "@/services/google/drive.service"
 
@@ -25,13 +24,10 @@ export const movementAttachmentsService = {
       console.warn("deleteFileFromDrive failed", { attachmentId, error })
     }
 
-    // movement_attachments RLS restricts delete to ADMIN/BURSAR — use the admin
-    // client the same way audit.service.ts does for privileged writes.
-    const admin = createSupabaseAdminClient()
-    const { error: deleteError } = await admin
-      .from("movement_attachments")
-      .delete()
-      .eq("id", attachmentId)
+    // movement_attachments RLS already allows ADMIN/BURSAR to delete directly —
+    // same roles CREATE_MOVEMENT is gated on, so the caller's own authenticated
+    // client is sufficient here, no admin bypass needed.
+    const { error: deleteError } = await db.from("movement_attachments").delete().eq("id", attachmentId)
 
     if (deleteError) throw deleteError
 
