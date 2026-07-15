@@ -99,9 +99,6 @@ export function MovementsTable({
               >
                 <ItemContent>
                   <ItemHeader>
-                    <span className="font-bold text-primary text-sm tabular-nums">
-                      #{row.folio_display}
-                    </span>
                     <span
                       className={cn(
                         "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
@@ -156,12 +153,6 @@ export function MovementsTable({
                   scope="col"
                   className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
                 >
-                  Folio
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
-                >
                   Fecha
                 </th>
                 <th
@@ -199,9 +190,6 @@ export function MovementsTable({
                   onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(row)}
                   className="cursor-pointer transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <td className="px-4 sm:px-6 py-4 font-bold text-primary text-sm">
-                    #{row.folio_display}
-                  </td>
                   <td className="px-4 sm:px-6 py-4 text-muted-foreground font-medium text-sm whitespace-nowrap tabular-nums">
                     {formatDate(row.movement_date)}
                   </td>
@@ -242,7 +230,7 @@ export function MovementsTable({
               ))}
               {!rows.length && (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={5}>
                     <Empty className="border-0 py-16">
                       <EmptyHeader>
                         <EmptyMedia variant="icon">
