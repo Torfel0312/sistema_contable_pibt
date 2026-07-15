@@ -113,10 +113,9 @@ export const settlementsService = {
           movement_type: "EXPENSE",
           amount: settlement.amount,
           category: "Rendición Ministerio",
-          concept: `Rendición: ${settlement.description}`,
-          beneficiary: ministry?.name ?? "Ministerio",
+          delivered_by: ministry?.name ?? "Ministerio",
           created_by_id: reviewerId,
-          notes: `Rendición automática desde solicitud aprobada. Ministerio: ${ministry?.name ?? ""}`
+          notes: `Rendición: ${settlement.description}. Rendición automática desde solicitud aprobada. Ministerio: ${ministry?.name ?? ""}`
         })
         .select("id")
         .single()

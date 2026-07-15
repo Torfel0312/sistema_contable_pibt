@@ -7,14 +7,9 @@ export type MovementIntegrationPayload = {
   movementDate: string
   amount: number
   category: string
-  concept: string
-  description: string
-  reference?: string | null
-  receivedBy?: string | null
   deliveredBy?: string | null
-  beneficiary?: string | null
-  paymentMethod?: string | null
-  supportNumber?: string | null
+  paymentMethodLabel?: string | null
+  receiptEmail?: string | null
   notes?: string | null
   registeredBy: string
   user: string
@@ -23,12 +18,9 @@ export type MovementIntegrationPayload = {
   organizationName?: string | null
 }
 
-export type AppsScriptResponse = {
+export type EmailSendResult = {
   ok: boolean
   message?: string
-  pdfUrl?: string
-  driveFileId?: string
-  sheetSynced?: boolean
   mailSent?: boolean
   error?: string
 }

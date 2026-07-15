@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_COMMIT_SHA: getCommitHash(),
     NEXT_PUBLIC_COMMIT_SHA_FULL: getCommitHash(false)
+  },
+  experimental: {
+    serverActions: {
+      // Default is 1MB, which rejects movement attachment uploads (up to 30MB).
+      // 35mb leaves headroom above the 30MB file cap for multipart overhead.
+      bodySizeLimit: "35mb"
+    }
   }
 }
 

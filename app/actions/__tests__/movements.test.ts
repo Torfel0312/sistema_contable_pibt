@@ -47,9 +47,12 @@ const movementInput = {
   movement_type: "EXPENSE" as const,
   movement_date: "2026-05-01",
   amount: 10000,
-  concept: "Test concept",
   category: "SUPPLIES",
-  attachment_url: null
+  delivered_by: null,
+  receipt_email: null,
+  payment_method_id: null,
+  notes: null,
+  attachments: []
 }
 
 describe("createMovement", () => {

@@ -1,19 +1,26 @@
 import { z } from "zod"
 
+const attachmentInputSchema = z.object({
+  driveFileId: z.string().min(1),
+  driveViewLink: z.string().min(1),
+  fileName: z.string().min(1),
+  mimeType: z.string().min(1),
+  sizeBytes: z.number().int().positive()
+})
+
 export const movementBaseSchema = z.object({
   movement_date: z.string().date("La fecha no tiene un formato válido"),
   movement_type: z.enum(["INCOME", "EXPENSE"]),
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
-  category: z.string().min(1, "La categoria es requerida"),
-  concept: z.string().min(3, "El concepto es requerido"),
-  reference_person: z.string().optional().nullable(),
-  received_by: z.string().optional().nullable(),
+  category: z.string().min(1, "La categoría es requerida"),
   delivered_by: z.string().optional().nullable(),
-  beneficiary: z.string().optional().nullable(),
-  payment_method: z.string().optional().nullable(),
-  support_number: z.string().optional().nullable(),
+  receipt_email: z
+    .union([z.literal(""), z.string().email("Correo inválido")])
+    .optional()
+    .nullable(),
+  payment_method_id: z.string().uuid().optional().nullable(),
   notes: z.string().optional().nullable(),
-  attachment_url: z.string().min(1).optional().nullable()
+  attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
 })
 
 export const createMovementSchema = movementBaseSchema
@@ -32,6 +39,7 @@ export const movementFiltersSchema = z.object({
   status: z.enum(["ACTIVE", "CANCELLED", "ALL"]).optional().default("ALL")
 })
 
+export type AttachmentInput = z.infer<typeof attachmentInputSchema>
 export type CreateMovementInput = z.infer<typeof createMovementSchema>
 export type UpdateMovementInput = z.infer<typeof updateMovementSchema>
 export type CancelMovementInput = z.infer<typeof cancelMovementSchema>

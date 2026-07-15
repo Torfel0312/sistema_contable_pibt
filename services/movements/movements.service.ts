@@ -4,6 +4,7 @@ import { auditService } from "@/services/audit/audit.service"
 import { increment_and_get_folio } from "@/lib/utils/folio"
 import { sanitizePostgrestSearch } from "@/lib/utils/postgrest"
 import type {
+  AttachmentInput,
   CancelMovementInput,
   CreateMovementInput,
   UpdateMovementInput
@@ -15,6 +16,33 @@ function normalizeOptional(value?: string | null) {
   if (!value) return null
   const trimmed = value.trim()
   return trimmed.length ? trimmed : null
+}
+
+// Best-effort: attachments are inserted after the movement row already exists.
+// If this fails, the movement itself is not rolled back (same non-transactional
+// tolerance already used elsewhere in this codebase, e.g. folio increment + insert) —
+// the error is logged server-side instead of blocking the movement response.
+async function insertMovementAttachments(
+  db: DB,
+  movementId: string,
+  attachments: AttachmentInput[],
+  userId: string
+) {
+  const { error } = await db.from("movement_attachments").insert(
+    attachments.map((attachment) => ({
+      movement_id: movementId,
+      drive_file_id: attachment.driveFileId,
+      drive_view_link: attachment.driveViewLink,
+      file_name: attachment.fileName,
+      mime_type: attachment.mimeType,
+      size_bytes: attachment.sizeBytes,
+      created_by_id: userId
+    }))
+  )
+
+  if (error) {
+    console.error("insertMovementAttachments failed", { movementId, error })
+  }
 }
 
 const PAGE_SIZE = 50
@@ -37,7 +65,7 @@ export const movementsService = {
     let query = db
       .from("movements")
       .select(
-        "id, folio, folio_display, movement_date, movement_type, amount, category, concept, reference_person, received_by, delivered_by, beneficiary, payment_method, support_number, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email)",
+        "id, folio, folio_display, movement_date, movement_type, amount, category, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email)",
         { count: "exact" }
       )
       .order("movement_date", { ascending: false })
@@ -54,7 +82,7 @@ export const movementsService = {
       const s = sanitizePostgrestSearch(filters.search)
       if (s) {
         query = query.or(
-          `folio_display.ilike.%${s}%,concept.ilike.%${s}%,category.ilike.%${s}%,reference_person.ilike.%${s}%,beneficiary.ilike.%${s}%`
+          `folio_display.ilike.%${s}%,category.ilike.%${s}%,delivered_by.ilike.%${s}%`
         )
       }
     }
@@ -72,10 +100,12 @@ export const movementsService = {
         created_by:users!created_by_id(id, full_name, email),
         updated_by:users!updated_by_id(id, full_name, email),
         cancelled_by:users!cancelled_by_id(id, full_name, email),
-        movement_audit_log(*, users(id, full_name, email))`
+        movement_audit_log(*, users(id, full_name, email)),
+        movement_attachments(*)`
       )
       .eq("id", id)
       .order("event_date", { referencedTable: "movement_audit_log", ascending: false })
+      .order("created_at", { referencedTable: "movement_attachments", ascending: true })
       .single()
 
     if (error) throw error
@@ -94,15 +124,10 @@ export const movementsService = {
         movement_type: input.movement_type,
         amount: input.amount,
         category: input.category.trim(),
-        concept: input.concept.trim(),
-        reference_person: normalizeOptional(input.reference_person),
-        received_by: normalizeOptional(input.received_by),
         delivered_by: normalizeOptional(input.delivered_by),
-        beneficiary: normalizeOptional(input.beneficiary),
-        payment_method: normalizeOptional(input.payment_method),
-        support_number: normalizeOptional(input.support_number),
+        receipt_email: normalizeOptional(input.receipt_email),
+        payment_method_id: input.payment_method_id ?? null,
         notes: normalizeOptional(input.notes),
-        attachment_url: input.attachment_url ?? null,
         created_by_id: userId
       })
       .select()
@@ -117,6 +142,10 @@ export const movementsService = {
       new_value: movement,
       note: "Movimiento registrado exitosamente"
     })
+
+    if (input.attachments.length) {
+      await insertMovementAttachments(db, movement.id, input.attachments, userId)
+    }
 
     return movement
   },
@@ -139,15 +168,10 @@ export const movementsService = {
         movement_type: input.movement_type,
         amount: input.amount,
         category: input.category.trim(),
-        concept: input.concept.trim(),
-        reference_person: normalizeOptional(input.reference_person),
-        received_by: normalizeOptional(input.received_by),
         delivered_by: normalizeOptional(input.delivered_by),
-        beneficiary: normalizeOptional(input.beneficiary),
-        payment_method: normalizeOptional(input.payment_method),
-        support_number: normalizeOptional(input.support_number),
+        receipt_email: normalizeOptional(input.receipt_email),
+        payment_method_id: input.payment_method_id ?? null,
         notes: normalizeOptional(input.notes),
-        attachment_url: input.attachment_url ?? null,
         updated_by_id: userId,
         updated_at: new Date().toISOString()
       })
@@ -165,6 +189,11 @@ export const movementsService = {
       new_value: updated,
       note: "Información del movimiento actualizada"
     })
+
+    // Only NEW attachments are appended here — existing ones aren't resent.
+    if (input.attachments.length) {
+      await insertMovementAttachments(db, id, input.attachments, userId)
+    }
 
     return updated
   },
