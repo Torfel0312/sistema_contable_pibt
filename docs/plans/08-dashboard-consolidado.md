@@ -11,9 +11,10 @@ Etapa de cierre: mostrar en un lugar visible la reserva de indemnización (Etapa
 Sin schema nuevo — es pura composición de datos ya calculados en etapas anteriores.
 
 ### Archivos clave
-- `services/dashboard/dashboard.service.ts` — `getSummary()` se extiende para traer ambas fuentes de datos en paralelo vía `Promise.all` (mismo patrón que ya usa hoy).
-- `app/(dashboard)/dashboard/page.tsx`.
+- `services/dashboard/dashboard.service.ts` — `getSummary()` se extiende para traer ambas fuentes de datos en paralelo vía `Promise.all` (mismo patrón que ya usa hoy), pero **solo si el usuario tiene el rol adecuado** (ver más abajo) — no calcular/traer estos datos para roles que no los van a ver.
+- `app/(dashboard)/dashboard/page.tsx` — ambos widgets se renderizan condicionalmente por rol, mismo patrón `can()`/gate por rol que ya usan otras páginas (ej. `components/dashboard/app-sidebar.tsx`).
 - Dos componentes nuevos en `components/dashboard/`: `severance-reserve-card.tsx`, `ministry-leftover-widget.tsx`.
+- **Audiencia confirmada: restringido a ADMIN/BURSAR/FINANCE** — MINISTER no ve ninguno de los dos widgets (la reserva de indemnización es una cifra sensible de planificación, no corresponde para todos los roles).
 
 ## Depende de / Alimenta a
 
@@ -22,7 +23,7 @@ Sin schema nuevo — es pura composición de datos ya calculados en etapas anter
 
 ## Preguntas abiertas
 
-1. ¿Estos dos widgets deberían ser visibles para todos los que ven el dashboard, o restringidos (ej. solo ADMIN/BURSAR/FINANCE), dado que la reserva de indemnización es una cifra sensible de planificación? Confirmar audiencia prevista con el cliente.
+Ninguna pendiente — audiencia confirmada (ADMIN/BURSAR/FINANCE).
 
 ## Actualización de `docs/flows.md`
 

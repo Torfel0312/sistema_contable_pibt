@@ -11,7 +11,7 @@ Importante: esto **no** debe resucitar la capa de períodos/asignación presupue
 ## Diseño
 
 ### Schema
-Ninguno nuevo — se reusan tablas existentes. Nuevo RPC de Postgres `get_ministry_leftover_summary(p_ministry_id UUID DEFAULT NULL)` que calcula:
+Ninguno nuevo — se reusan tablas existentes. Nuevo RPC de Postgres `get_ministry_leftover_summary(p_ministry_id UUID DEFAULT NULL, p_as_of DATE DEFAULT CURRENT_DATE)` que calcula, considerando solo movimientos/rendiciones hasta `p_as_of` (concepto de corte "hasta la fecha", confirmado por el cliente — no un rango con inicio y fin):
 
 ```
 remanente = monto_transferido − SUM(monto de rendiciones aprobadas)
@@ -32,8 +32,7 @@ por solicitud, agregado por ministerio, con dos filtros deliberados:
 
 ## Preguntas abiertas
 
-1. El cliente mencionó "al final de un período" — como los períodos ya no existen en el schema, se recomienda un simple filtro de rango de fechas en el widget en vez de resucitar el concepto de período — confirmar que es aceptable.
-2. ¿Un remanente negativo (gasto por sobre lo transferido) se muestra tal cual o se recorta a cero? Se recomienda mostrar el valor con signo real (es en sí mismo una alerta útil) — confirmar con el cliente.
+Ninguna pendiente: el filtro es "hasta la fecha" (un solo parámetro de corte, no un rango con inicio y fin — confirmado, ver `p_as_of` arriba), y el remanente negativo se muestra con su monto real y signo, sin recortar a cero (confirmado).
 
 ## Actualización de `docs/flows.md`
 

@@ -8,7 +8,7 @@ Cuando alguien entrega dinero en efectivo o de forma presencial en tesorería, h
 
 Por separado: al recibir una transferencia o ingreso, se quiere notificar a quien envió el dinero que quedó registrado correctamente — mismo remitente controlado — para su tranquilidad. El correo de salida debe ser configurable, y debe existir una copia de respaldo (BCC) hacia un correo de un tercero para auditoría.
 
-Exploración confirmó: no existe generación de PDF en el repo (`package.json` no tiene `@react-pdf/renderer`/`puppeteer`/`pdf-lib`/`jspdf`); no existe uso de `navigator.share` en ningún lado. El único PDF hoy es el que genera el webhook externo de Google Apps Script (`pdf_url`/`drive_file_id`), poblado de forma asíncrona después de crear el movimiento y mostrado como link externo — es una capacidad paralela e independiente, no algo que este voucher reemplace.
+Exploración confirmó: no existe generación de PDF en el repo (`package.json` no tiene `@react-pdf/renderer`/`puppeteer`/`pdf-lib`/`jspdf`); no existe uso de `navigator.share` en ningún lado. La Etapa 1 elimina por completo Google Sheets y el webhook de Apps Script (generación de PDF por plantilla + sync a Sheets) — Google Drive se mantiene, pero solo como almacenamiento de adjuntos vía API directa (`services/google/drive.service.ts`), no como generador de documentos. Por lo tanto el voucher de esta etapa no es una capacidad "paralela" a algo existente, es la **única** generación de PDF del sistema — y, dado que Drive ya queda integrado en la Etapa 1, podría evaluarse más adelante subir también el voucher generado a esa misma carpeta de Drive en vez de (o además de) adjuntarlo al email; no es necesario para esta etapa, solo una posibilidad a tener en cuenta.
 
 ## Diseño
 
@@ -33,8 +33,9 @@ Extender el formulario de `app/(dashboard)/settings/general/page.tsx` con estos 
 
 ## Preguntas abiertas
 
-1. Confirmar que el dominio `tesoreria@pibtalcahuano.com` ya está verificado en Resend — si no, los envíos fallan silenciosamente o rebotan.
-2. `navigator.share({files:[...]})` tiene soporte inconsistente (débil o ausente en varios navegadores de escritorio) — confirmar que un botón simple de "Descargar PDF" como fallback es aceptable cuando `navigator.canShare({files})` retorna `false`, en vez de prometer share nativo en todos lados.
+Ninguna pendiente:
+- El remitente configurable no está atado a una sola casilla — puede usarse cualquier dirección bajo el dominio `@pibtalcahuano.com` (ej. `tesoreria@`, `voucher@`, etc.), siempre que el dominio esté verificado en Resend (verificar el dominio una sola vez, no cada dirección).
+- Fallback confirmado: cuando `navigator.canShare({files})` retorna `false`, se muestra un botón simple de "Descargar PDF" en vez de prometer share nativo en todos lados.
 
 ## Actualización de `docs/flows.md`
 

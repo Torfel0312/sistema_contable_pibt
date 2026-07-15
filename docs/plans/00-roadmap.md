@@ -10,7 +10,7 @@ Este documento es el índice y mapa de dependencias. Cada etapa tiene su propio 
 
 ```
 Etapa 1 (movimientos) ─┬─→ Etapa 2 (categorías)
-                        └─→ Etapa 3 (comprobantes)      ← independiente, corre en paralelo a la 2
+                       └─→ Etapa 3 (comprobantes)      ← independiente, corre en paralelo a la 2
 
 Etapa 2 ──→ Etapa 4 (solicitudes: método de financiamiento)
                         │
@@ -23,7 +23,7 @@ Etapa 6 + Etapa 7 ──→ Etapa 8 (dashboard consolidado)
 
 **Dos reordenamientos respecto al orden en que el cliente los planteó**, ambos con una razón técnica concreta:
 
-1. **Categorías (Etapa 2) se adelanta**, antes de Remuneraciones y antes del rework de Rendiciones — porque ambas etapas posteriores *generan datos categorizados*: los dos movimientos de remuneraciones necesitan la categoría "Sueldos/remuneraciones" (nombrada por el propio cliente), y el insert automático de movimiento al aprobar una rendición necesita un `category_id` real en cuanto `category` deje de ser texto libre.
+1. **Categorías (Etapa 2) se adelanta**, antes de Remuneraciones y antes del rework de Rendiciones — porque ambas etapas posteriores *generan datos categorizados*: los movimientos de remuneraciones necesitan la categoría "Remuneraciones" (nombrada por el propio cliente), y el insert automático de movimiento al aprobar una rendición necesita un `category_id` real en cuanto `category` deje de ser texto libre.
 2. **Método de financiamiento (Etapa 4) se adelanta a Rendiciones (Etapa 5)**, aunque el cliente los planteó como pedidos separados — porque hoy `settlementsService.review()` inserta un movimiento de reembolso **sin condición** al aprobar. Si una solicitud ya generó un movimiento real al momento de la transferencia (Etapa 4, camino "transferencia anticipada"), aprobar su rendición NO debe volver a insertar un segundo movimiento — el dinero ya salió de la cuenta. Construir la 4 antes de la 5 evita tener que tocar esa misma lógica de doble-registro dos veces.
 
 **Remanente (Etapa 7) no necesita esperar a Rendiciones (Etapa 5)** — su consulta debe filtrar rendiciones por lista-blanca (`status = 'APPROVED'`), no por lista-negra (`status != 'REJECTED'`). Esa es una decisión de implementación explícita, no un detalle menor: es lo que permite que las etapas 5 y 7 sean paralelizables sin pisarse.
@@ -38,18 +38,18 @@ Etapa 6 + Etapa 7 ──→ Etapa 8 (dashboard consolidado)
 
 | Etapa | Documento | Resumen |
 |---|---|---|
-| 1 | [`01-movimientos-saldo-inicial-y-adjuntos.md`](./01-movimientos-saldo-inicial-y-adjuntos.md) | Saldo inicial como movimiento, formulario simplificado, adjuntos múltiples |
+| 1 | [`01-movimientos-saldo-inicial-y-adjuntos.md`](./01-movimientos-saldo-inicial-y-adjuntos.md) | Inyección de capital (cubre saldo inicial) como movimiento normal, formulario simplificado, adjuntos múltiples |
 | 2 | [`02-categorias-de-movimientos.md`](./02-categorias-de-movimientos.md) | Catálogo de categorías/subcategorías por tipo de movimiento, con archivado |
 | 3 | [`03-comprobantes-y-notificaciones.md`](./03-comprobantes-y-notificaciones.md) | Voucher PDF al momento + compartir nativo + email de confirmación al remitente |
 | 4 | [`04-solicitudes-metodo-financiamiento.md`](./04-solicitudes-metodo-financiamiento.md) | Ministro elige reembolso vs. transferencia anticipada; transferencia genera movimiento real |
-| 5 | [`05-rendiciones-de-ministerio.md`](./05-rendiciones-de-ministerio.md) | Borrador/envío/revisión con comentarios, adjuntos múltiples, rendición excepcional por tesorería |
+| 5 | [`05-rendiciones-de-ministerio.md`](./05-rendiciones-de-ministerio.md) | Borrador opcional, estado "en revisión", cancelación, devolución con comentarios, adjuntos múltiples |
 | 6 | [`06-remuneraciones-pastor.md`](./06-remuneraciones-pastor.md) | Sección nueva de remuneraciones: sueldo + imposiciones + reserva de indemnización |
 | 7 | [`07-remanente-por-ministerio.md`](./07-remanente-por-ministerio.md) | Cálculo de dinero transferido y no rendido, por solicitud y por ministerio |
 | 8 | [`08-dashboard-consolidado.md`](./08-dashboard-consolidado.md) | Widgets de reserva de indemnización y remanente por ministerio en el dashboard |
 
 ## Infraestructura transversal (construir una vez, reusar en varias etapas)
 
-1. **Patrón de adjuntos múltiples genérico** — el hook `hooks/use-attachment-upload.ts` y el componente `components/ui/attachment-input.tsx` de la Etapa 1 se diseñan deliberadamente genéricos (parametrizados por bucket + id del padre), para reusarlos tal cual en `settlement_attachments`/`intention_attachments` (Etapa 5) sin duplicar la lógica de subida.
+1. **Patrón de adjuntos múltiples genérico** — el hook `hooks/use-attachment-upload.ts` y el componente `components/ui/attachment-input.tsx` de la Etapa 1 se diseñan deliberadamente genéricos (parametrizados por el "destino" de subida + id del padre), reusados tal cual en `settlement_attachments`/`intention_attachments` (Etapa 5). **Confirmado: todos los adjuntos del sistema van a Google Drive** (mismo `services/google/drive.service.ts` de la Etapa 1) — no hay Supabase Storage de por medio para nada nuevo (`invoice-attachments`, de la feature de boletas ya existente, no se toca y sigue en Supabase Storage por ahora). Si el cliente decide separar backends más adelante, se revisa entonces.
 2. **Scaffold de catálogo con archivado (soft-delete)** — `ministries` (ya existe) y `movement_categories`/`movement_subcategories` (Etapa 2) comparten la misma forma (`list`/`getById`/`create`/`update` que alterna `is_active`). Si aparece un tercer catálogo similar, vale la pena extraer un factory compartido.
 3. **Helper de "movimiento de sistema" que bypassa RLS** — el patrón de `settlementsService.review()` (cliente admin + incremento de folio + audit log, para que reviewers sin permiso directo de insertar movimientos igual puedan generar uno) se repite en la Etapa 4 (`registerTransfer`) y potencialmente en la Etapa 6 (remuneraciones). Vale la pena extraer `services/movements/create-system-movement.ts` en vez de triplicar la lógica.
 4. **Remitente y BCC de notificaciones configurables** — la Etapa 3 elimina la constante duplicada `process.env.RESEND_FROM_EMAIL ?? "..."` que hoy vive por separado en `services/email/resend.service.ts` y `services/email/workflow-emails.service.ts`, migrándola a `app_settings`. Verificar que quede como una sola fuente, no una tercera copia.
