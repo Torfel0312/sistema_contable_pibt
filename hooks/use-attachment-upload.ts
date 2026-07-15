@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { uploadMovementAttachment } from "@/app/actions/movements"
+import { uploadMovementAttachment, deleteUnattachedDriveAttachment } from "@/app/actions/movements"
 import { MAX_ATTACHMENTS_PER_ENTITY, MAX_ATTACHMENT_SIZE_BYTES } from "@/lib/constants/attachments"
 
 export type PendingAttachment = {
@@ -14,7 +14,9 @@ export type PendingAttachment = {
   previewUrl?: string // for images, via URL.createObjectURL — only used client-side, never sent to server
 }
 
-export function useAttachmentUpload() {
+// existingCount is the number of attachments already persisted on the movement
+// (edit mode) — the cap must apply to existing + new combined, not just new ones.
+export function useAttachmentUpload(existingCount: number = 0) {
   const [items, setItems] = useState<PendingAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,11 +28,11 @@ export function useAttachmentUpload() {
 
       setError(null)
 
-      const currentCount = items.length
+      const currentCount = existingCount + items.length
       const accepted: File[] = []
       for (const file of list) {
         if (currentCount + accepted.length >= MAX_ATTACHMENTS_PER_ENTITY) {
-          setError(`Solo se permiten hasta ${MAX_ATTACHMENTS_PER_ENTITY} adjuntos`)
+          setError(`Solo se permiten hasta ${MAX_ATTACHMENTS_PER_ENTITY} adjuntos por movimiento`)
           break
         }
         if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
@@ -76,13 +78,24 @@ export function useAttachmentUpload() {
         setIsUploading(false)
       }
     },
-    [items.length]
+    [items.length, existingCount]
   )
 
   const remove = useCallback((id: string) => {
     setItems((prev) => {
       const target = prev.find((item) => item.id === id)
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      if (target) {
+        // This item was never persisted to a movement (only local-only pending
+        // attachments live in this hook's state) — clean up the now-unreferenced
+        // Drive file. Fire-and-forget: don't block the UI on it, just log failures.
+        deleteUnattachedDriveAttachment(target.driveFileId).catch((error: unknown) => {
+          console.warn("deleteUnattachedDriveAttachment failed", {
+            driveFileId: target.driveFileId,
+            error
+          })
+        })
+      }
       return prev.filter((item) => item.id !== id)
     })
   }, [])

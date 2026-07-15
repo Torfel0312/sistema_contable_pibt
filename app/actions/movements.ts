@@ -7,7 +7,7 @@ import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { movementsService } from "@/services/movements/movements.service"
 import { movementAttachmentsService } from "@/services/movements/movement-attachments.service"
 import { processMovementIntegrations } from "@/services/google/movement-postprocess"
-import { uploadFileToDrive } from "@/services/google/drive.service"
+import { uploadFileToDrive, deleteFileFromDrive } from "@/services/google/drive.service"
 import { MAX_ATTACHMENT_SIZE_BYTES } from "@/lib/constants/attachments"
 import type {
   CreateMovementInput,
@@ -123,6 +123,23 @@ export async function uploadMovementAttachment(
   } catch (error) {
     console.error("uploadFileToDrive failed", error)
     return { error: "No se pudo subir el archivo a Google Drive" }
+  }
+}
+
+// Cleans up a Drive file for an attachment that was uploaded but never persisted
+// to a movement (e.g. the user clicked "remove" before submitting the form). There
+// is no DB row to touch here — persisted attachments must go through
+// removeMovementAttachment, which handles the DB row + Drive deletion together.
+export async function deleteUnattachedDriveAttachment(driveFileId: string): Promise<void> {
+  const user = await getCurrentUser()
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_MOVEMENT)) {
+    throw new Error("Sin permisos para eliminar adjuntos")
+  }
+
+  try {
+    await deleteFileFromDrive(driveFileId)
+  } catch (error) {
+    console.error("deleteUnattachedDriveAttachment failed", { driveFileId, error })
   }
 }
 

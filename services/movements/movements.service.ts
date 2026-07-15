@@ -42,7 +42,21 @@ async function insertMovementAttachments(
 
   if (error) {
     console.error("insertMovementAttachments failed", { movementId, error })
+    return
   }
+
+  // Mirror movement-attachments.service.ts's remove(): one audit entry per file
+  // for a clean, granular audit trail of every alta/baja.
+  await Promise.all(
+    attachments.map((attachment) =>
+      auditService.logMovement({
+        movement_id: movementId,
+        user_id: userId,
+        action: "Adjunto agregado",
+        note: attachment.fileName
+      })
+    )
+  )
 }
 
 const PAGE_SIZE = 50

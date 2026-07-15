@@ -17,6 +17,7 @@ import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
+import { MAX_ATTACHMENTS_PER_ENTITY } from "@/lib/constants/attachments"
 import { createMovement, updateMovement, removeMovementAttachment } from "@/app/actions/movements"
 import { FileText, ImageIcon, X } from "lucide-react"
 
@@ -65,7 +66,9 @@ export function MovementForm(props: Props) {
   const [existingAttachments, setExistingAttachments] = useState<ExistingAttachment[]>(
     movement?.movement_attachments ?? []
   )
-  const attachmentUpload = useAttachmentUpload()
+  const attachmentUpload = useAttachmentUpload(existingAttachments.length)
+  const totalAttachments = existingAttachments.length + attachmentUpload.items.length
+  const attachmentsAtCap = totalAttachments >= MAX_ATTACHMENTS_PER_ENTITY
 
   const form = useForm<MovementFormInput, unknown, CreateMovementInput>({
     resolver: zodResolver(createMovementSchema),
@@ -85,23 +88,32 @@ export function MovementForm(props: Props) {
   })
 
   const movementType = useWatch({ control: form.control, name: "movement_type" })
-  const defaultCategory = defaultValues?.category
+  const currentCategory = useWatch({ control: form.control, name: "category" })
+  const currentPaymentMethodId = useWatch({ control: form.control, name: "payment_method_id" })
   const categories = useMemo(() => {
     const base: readonly string[] =
       movementType === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
-    // The "Inyectar capital" entry point prefills a category outside the standard
-    // list (e.g. "Aporte de Capital") — surface it as a selectable option so the
-    // select doesn't silently fall back to a blank selection.
-    if (defaultCategory && !base.includes(defaultCategory)) {
-      return [defaultCategory, ...base]
+    // The current value may not be in the static list — e.g. the "Inyectar capital"
+    // entry point prefills "Aporte de Capital", or an existing movement (edit mode)
+    // was created with a category no longer part of the standard catalog. Surface it
+    // as a selectable option so the select never silently falls back to blank/mismatched.
+    if (currentCategory && !base.includes(currentCategory)) {
+      return [currentCategory, ...base]
     }
     return base
-  }, [movementType, defaultCategory])
+  }, [movementType, currentCategory])
   const deliveredByLabel = movementType === "INCOME" ? "Entregado por" : "Entregado a"
-  const activePaymentMethods = useMemo(
-    () => paymentMethods.filter((pm) => pm.is_active),
-    [paymentMethods]
-  )
+  const paymentMethodOptions = useMemo(() => {
+    const active = paymentMethods.filter((pm) => pm.is_active)
+    // Same guard as categories: an existing movement (edit mode) may point to a
+    // payment method that's since been archived (is_active: false) and filtered out
+    // of the active list — inject it so the select keeps showing/saving the real value.
+    if (currentPaymentMethodId && !active.some((pm) => pm.id === currentPaymentMethodId)) {
+      const current = paymentMethods.find((pm) => pm.id === currentPaymentMethodId)
+      if (current) return [current, ...active]
+    }
+    return active
+  }, [paymentMethods, currentPaymentMethodId])
 
   async function handleRemoveExisting(attachmentId: string) {
     try {
@@ -237,7 +249,7 @@ export function MovementForm(props: Props) {
                 })}
               >
                 <option value="">Sin especificar</option>
-                {activePaymentMethods.map((pm) => (
+                {paymentMethodOptions.map((pm) => (
                   <option key={pm.id} value={pm.id}>
                     {pm.name}
                   </option>
@@ -326,6 +338,8 @@ export function MovementForm(props: Props) {
             <AttachmentInput
               items={attachmentUpload.items}
               isUploading={attachmentUpload.isUploading}
+              disabled={attachmentsAtCap}
+              maxReachedMessage={`Alcanzaste el máximo de ${MAX_ATTACHMENTS_PER_ENTITY} adjuntos para este movimiento`}
               onAddFiles={attachmentUpload.addFiles}
               onRemove={attachmentUpload.remove}
             />

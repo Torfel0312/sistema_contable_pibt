@@ -14,6 +14,8 @@ function formatSize(bytes: number): string {
 type AttachmentInputProps = {
   items: PendingAttachment[]
   isUploading?: boolean
+  disabled?: boolean
+  maxReachedMessage?: string
   onAddFiles: (files: FileList | File[]) => void
   onRemove: (id: string) => void
   className?: string
@@ -22,6 +24,8 @@ type AttachmentInputProps = {
 export function AttachmentInput({
   items,
   isUploading,
+  disabled,
+  maxReachedMessage,
   onAddFiles,
   onRemove,
   className
@@ -29,11 +33,17 @@ export function AttachmentInput({
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <label className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted">
+        <label
+          className={cn(
+            "flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted",
+            disabled && "pointer-events-none cursor-not-allowed opacity-50"
+          )}
+        >
           <input
             type="file"
             accept="image/*"
             capture="environment"
+            disabled={disabled}
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) onAddFiles([file])
@@ -44,11 +54,17 @@ export function AttachmentInput({
           <Camera className="size-4" />
           Tomar foto
         </label>
-        <label className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted">
+        <label
+          className={cn(
+            "flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted",
+            disabled && "pointer-events-none cursor-not-allowed opacity-50"
+          )}
+        >
           <input
             type="file"
             accept="image/*,application/pdf"
             multiple
+            disabled={disabled}
             onChange={(e) => {
               if (e.target.files?.length) onAddFiles(e.target.files)
               e.target.value = ""
@@ -59,6 +75,12 @@ export function AttachmentInput({
           Elegir archivos
         </label>
       </div>
+
+      {disabled && maxReachedMessage && (
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          {maxReachedMessage}
+        </p>
+      )}
 
       {isUploading && (
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">

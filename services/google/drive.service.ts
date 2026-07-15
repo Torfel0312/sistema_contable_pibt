@@ -24,16 +24,9 @@ export async function uploadFileToDrive(input: {
   const driveFileId = res.data.id
   if (!driveFileId) throw new Error("Google Drive no devolvió un id de archivo")
 
-  // best-effort: make the file link-viewable in case the target folder isn't already shared broadly enough
-  try {
-    await drive.permissions.create({
-      fileId: driveFileId,
-      requestBody: { role: "reader", type: "anyone" }
-    })
-  } catch {
-    // non-fatal: if the folder already grants access via domain/user sharing, this may fail harmlessly
-  }
-
+  // Access is governed by the target Drive folder's own sharing settings (set up
+  // once, outside this codebase) — do NOT grant per-file public/anyone access here,
+  // these are financial receipts/attachments.
   return {
     driveFileId,
     driveViewLink: res.data.webViewLink ?? `https://drive.google.com/file/d/${driveFileId}/view`
