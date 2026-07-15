@@ -64,7 +64,7 @@ export function MovementsFilters({ initialSearch, initialMovementType, initialSt
             aria-label="Buscar movimientos"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por folio, categoría, entregado por/a..."
+            placeholder="Buscar por folio, entregado por/a..."
             className="pl-9"
           />
         </div>

@@ -14,11 +14,17 @@ import { Button } from "@/components/ui/button"
 import { MovementForm } from "./movement-form"
 
 type PaymentMethodOption = { id: string; name: string; is_active: boolean }
+type CategoryOption = { id: string; movement_type: "INCOME" | "EXPENSE"; name: string; is_active: boolean; is_system: boolean }
+type SubcategoryOption = { id: string; category_id: string; name: string; is_active: boolean }
 
 export function NewMovementDialog({
-  paymentMethods
+  paymentMethods,
+  categories,
+  subcategories
 }: {
   paymentMethods: PaymentMethodOption[]
+  categories: CategoryOption[]
+  subcategories: SubcategoryOption[]
 }) {
   const [open, setOpen] = useState(false)
 
@@ -46,6 +52,8 @@ export function NewMovementDialog({
           <MovementForm
             mode="create"
             paymentMethods={paymentMethods}
+            categories={categories}
+            subcategories={subcategories}
             onSuccess={() => setOpen(false)}
           />
         </div>

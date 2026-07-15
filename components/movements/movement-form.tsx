@@ -1,12 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useWatch, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { createMovementSchema } from "@/lib/validators/movement"
 import type { CreateMovementInput } from "@/lib/validators/movement"
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/types/movements"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -33,7 +32,8 @@ type EditMovement = {
   movement_date: string
   movement_type: string
   amount: number | string
-  category: string
+  category_id: string
+  subcategory_id?: string | null
   delivered_by?: string | null
   receipt_email?: string | null
   payment_method_id?: string | null
@@ -42,12 +42,22 @@ type EditMovement = {
 }
 
 type PaymentMethodOption = { id: string; name: string; is_active: boolean }
+type CategoryOption = {
+  id: string
+  movement_type: "INCOME" | "EXPENSE"
+  name: string
+  is_active: boolean
+  is_system: boolean
+}
+type SubcategoryOption = { id: string; category_id: string; name: string; is_active: boolean }
 
 type Props = (
   | { mode: "create"; onSuccess?: () => void }
   | { mode: "edit"; movement: EditMovement; onSuccess?: () => void }
 ) & {
   paymentMethods: PaymentMethodOption[]
+  categories: CategoryOption[]
+  subcategories: SubcategoryOption[]
   defaultValues?: Partial<CreateMovementInput>
   /** Capital injection is always an income with no external counterparty — hides
    * the type/delivered-by/receipt-email fields instead of just prefilling them. */
@@ -60,7 +70,8 @@ function toDateValue(value?: string) {
 }
 
 export function MovementForm(props: Props) {
-  const { mode, onSuccess, paymentMethods, defaultValues, isCapitalInjection } = props
+  const { mode, onSuccess, paymentMethods, categories, subcategories, defaultValues, isCapitalInjection } =
+    props
   const movement = mode === "edit" ? props.movement : undefined
   const movementId = movement?.id
 
@@ -82,7 +93,8 @@ export function MovementForm(props: Props) {
         defaultValues?.movement_type ??
         "INCOME",
       amount: movement ? Number(movement.amount) : ("" as unknown as number),
-      category: movement?.category ?? defaultValues?.category ?? "",
+      category_id: movement?.category_id ?? defaultValues?.category_id ?? "",
+      subcategory_id: movement?.subcategory_id ?? defaultValues?.subcategory_id ?? "",
       delivered_by: movement?.delivered_by ?? "",
       receipt_email: movement?.receipt_email ?? "",
       payment_method_id: movement?.payment_method_id ?? "",
@@ -91,20 +103,30 @@ export function MovementForm(props: Props) {
   })
 
   const movementType = useWatch({ control: form.control, name: "movement_type" })
-  const currentCategory = useWatch({ control: form.control, name: "category" })
+  const currentCategoryId = useWatch({ control: form.control, name: "category_id" })
+  const currentSubcategoryId = useWatch({ control: form.control, name: "subcategory_id" })
   const currentPaymentMethodId = useWatch({ control: form.control, name: "payment_method_id" })
-  const categories = useMemo(() => {
-    const base: readonly string[] =
-      movementType === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
-    // The current value may not be in the static list — e.g. the "Inyectar capital"
-    // entry point prefills "Aporte de Capital", or an existing movement (edit mode)
-    // was created with a category no longer part of the standard catalog. Surface it
-    // as a selectable option so the select never silently falls back to blank/mismatched.
-    if (currentCategory && !base.includes(currentCategory)) {
-      return [currentCategory, ...base]
+  const categoryOptions = useMemo(() => {
+    const active = categories.filter((c) => c.movement_type === movementType && c.is_active)
+    // The current value may not be in the active list — e.g. an existing movement
+    // (edit mode) was created with a category later archived. Surface it as a
+    // selectable option so the select never silently falls back to blank/mismatched.
+    if (currentCategoryId && !active.some((c) => c.id === currentCategoryId)) {
+      const current = categories.find((c) => c.id === currentCategoryId)
+      if (current) return [current, ...active]
     }
-    return base
-  }, [movementType, currentCategory])
+    return active
+  }, [categories, movementType, currentCategoryId])
+  const subcategoryOptions = useMemo(() => {
+    const active = subcategories.filter((s) => s.category_id === currentCategoryId && s.is_active)
+    // Same guard: an existing movement (edit mode) may point to a subcategory
+    // that's since been archived — inject it so the select keeps showing/saving it.
+    if (currentSubcategoryId && !active.some((s) => s.id === currentSubcategoryId)) {
+      const current = subcategories.find((s) => s.id === currentSubcategoryId)
+      if (current) return [current, ...active]
+    }
+    return active
+  }, [subcategories, currentCategoryId, currentSubcategoryId])
   const deliveredByLabel = movementType === "INCOME" ? "Entregado por" : "Entregado a"
   const paymentMethodOptions = useMemo(() => {
     const active = paymentMethods.filter((pm) => pm.is_active)
@@ -117,6 +139,20 @@ export function MovementForm(props: Props) {
     }
     return active
   }, [paymentMethods, currentPaymentMethodId])
+
+  // A subcategory belongs to a specific category — if the selected category
+  // changes (either the user picking a new one, or the movement_type switch
+  // clearing it out of range), any previously-selected subcategory no longer
+  // applies and must be cleared rather than silently lingering.
+  useEffect(() => {
+    const stillValid = subcategories.some(
+      (s) => s.id === currentSubcategoryId && s.category_id === currentCategoryId
+    )
+    if (currentSubcategoryId && !stillValid) {
+      form.setValue("subcategory_id", "")
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCategoryId])
 
   async function handleRemoveExisting(attachmentId: string) {
     try {
@@ -266,25 +302,47 @@ export function MovementForm(props: Props) {
               </NativeSelect>
             </Field>
 
-            <Field data-invalid={!!form.formState.errors.category || undefined}>
+            <Field data-invalid={!!form.formState.errors.category_id || undefined}>
               <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
                 Categoría
               </FieldLabel>
               <NativeSelect
                 className="w-full"
                 size="lg"
-                aria-invalid={!!form.formState.errors.category}
-                {...form.register("category")}
+                aria-invalid={!!form.formState.errors.category_id}
+                {...form.register("category_id")}
               >
                 <option value="">Seleccione Categoría</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
+                {categoryOptions.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
                   </option>
                 ))}
               </NativeSelect>
-              <FieldError errors={[form.formState.errors.category]} />
+              <FieldError errors={[form.formState.errors.category_id]} />
             </Field>
+
+            {subcategoryOptions.length > 0 && (
+              <Field>
+                <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  Subcategoría
+                </FieldLabel>
+                <NativeSelect
+                  className="w-full"
+                  size="lg"
+                  {...form.register("subcategory_id", {
+                    setValueAs: (value: string) => (value === "" ? undefined : value)
+                  })}
+                >
+                  <option value="">Sin subcategoría</option>
+                  {subcategoryOptions.map((subcategory) => (
+                    <option key={subcategory.id} value={subcategory.id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
           </div>
 
           <Field>
