@@ -3,6 +3,7 @@ import { MovementForm } from "@/components/movements/movement-form"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { paymentMethodsService } from "@/services/payment-methods/payment-methods.service"
+import { categoriesService, subcategoriesService } from "@/services/categories/categories.service"
 
 type Props = {
   searchParams: Promise<{ capitalInjection?: string }>
@@ -18,7 +19,18 @@ export default async function NewMovementPage({ searchParams }: Props) {
   const isCapitalInjection = capitalInjection === "1"
 
   const db = await createSupabaseServerClient()
-  const paymentMethods = await paymentMethodsService.list(db)
+  const [paymentMethods, categories, subcategories] = await Promise.all([
+    paymentMethodsService.list(db),
+    categoriesService.list(db),
+    subcategoriesService.list(db)
+  ])
+
+  // Defensive: the "Aporte de Capital" category is seeded by migration and
+  // should always exist, but fall back to no default rather than crashing
+  // the "Inyectar capital" quick-entry flow if it's ever missing/renamed.
+  const capitalInjectionCategoryId = isCapitalInjection
+    ? categories.find((c) => c.name === "Aporte de Capital" && c.movement_type === "INCOME")?.id
+    : undefined
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
@@ -36,10 +48,12 @@ export default async function NewMovementPage({ searchParams }: Props) {
         <MovementForm
           mode="create"
           paymentMethods={paymentMethods}
+          categories={categories}
+          subcategories={subcategories}
           isCapitalInjection={isCapitalInjection}
           defaultValues={
             isCapitalInjection
-              ? { movement_type: "INCOME", category: "Aporte de Capital" }
+              ? { movement_type: "INCOME", category_id: capitalInjectionCategoryId }
               : undefined
           }
         />

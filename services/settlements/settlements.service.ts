@@ -105,6 +105,22 @@ export const settlementsService = {
       const folio = await increment_and_get_folio()
 
       const adminClient = getAdmin()
+
+      // movements.category_id is a required FK now (Etapa 2 replaced the free-text
+      // category column). Look up the system category seeded for this workflow by
+      // its exact seeded name rather than hardcoding an id.
+      const { data: settlementCategory, error: categoryErr } = await adminClient
+        .from("movement_categories")
+        .select("id")
+        .eq("name", "Rendiciones de Ministerio")
+        .eq("is_system", true)
+        .single()
+      if (categoryErr || !settlementCategory) {
+        throw new Error(
+          "No se encontró la categoría del sistema 'Rendiciones de Ministerio'"
+        )
+      }
+
       const { data: movement, error: movErr } = await adminClient
         .from("movements")
         .insert({
@@ -112,7 +128,7 @@ export const settlementsService = {
           movement_date: now.slice(0, 10),
           movement_type: "EXPENSE",
           amount: settlement.amount,
-          category: "Rendición Ministerio",
+          category_id: settlementCategory.id,
           delivered_by: ministry?.name ?? "Ministerio",
           created_by_id: reviewerId,
           notes: `Rendición: ${settlement.description}. Rendición automática desde solicitud aprobada. Ministerio: ${ministry?.name ?? ""}`

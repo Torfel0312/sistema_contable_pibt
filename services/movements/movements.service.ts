@@ -79,7 +79,7 @@ export const movementsService = {
     let query = db
       .from("movements")
       .select(
-        "id, folio, folio_display, movement_date, movement_type, amount, category, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), payment_methods:payment_method_id(name)",
+        "id, folio, folio_display, movement_date, movement_type, amount, category_id, subcategory_id, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), payment_methods:payment_method_id(name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)",
         { count: "exact" }
       )
       .order("movement_date", { ascending: false })
@@ -95,9 +95,12 @@ export const movementsService = {
     if (filters.search?.trim()) {
       const s = sanitizePostgrestSearch(filters.search)
       if (s) {
-        query = query.or(
-          `folio_display.ilike.%${s}%,category.ilike.%${s}%,delivered_by.ilike.%${s}%`
-        )
+        // category is no longer a plain text column on movements (it's now
+        // category_id, a FK to movement_categories) so it can't be ilike'd
+        // directly here. PostgREST .or() filters can't reach into an
+        // embedded relation's column, so category name search is dropped
+        // rather than attempting a fragile embedded-filter workaround.
+        query = query.or(`folio_display.ilike.%${s}%,delivered_by.ilike.%${s}%`)
       }
     }
 
@@ -116,7 +119,9 @@ export const movementsService = {
         cancelled_by:users!cancelled_by_id(id, full_name, email),
         movement_audit_log(*, users(id, full_name, email)),
         movement_attachments(*),
-        payment_methods:payment_method_id(name)`
+        payment_methods:payment_method_id(name),
+        movement_categories:category_id(name),
+        movement_subcategories:subcategory_id(name)`
       )
       .eq("id", id)
       .order("event_date", { referencedTable: "movement_audit_log", ascending: false })
@@ -138,7 +143,8 @@ export const movementsService = {
         movement_date: input.movement_date,
         movement_type: input.movement_type,
         amount: input.amount,
-        category: input.category.trim(),
+        category_id: input.category_id,
+        subcategory_id: input.subcategory_id ?? null,
         delivered_by: normalizeOptional(input.delivered_by),
         receipt_email: normalizeOptional(input.receipt_email),
         payment_method_id: input.payment_method_id ?? null,
@@ -182,7 +188,8 @@ export const movementsService = {
         movement_date: input.movement_date,
         movement_type: input.movement_type,
         amount: input.amount,
-        category: input.category.trim(),
+        category_id: input.category_id,
+        subcategory_id: input.subcategory_id ?? null,
         delivered_by: normalizeOptional(input.delivered_by),
         receipt_email: normalizeOptional(input.receipt_email),
         payment_method_id: input.payment_method_id ?? null,

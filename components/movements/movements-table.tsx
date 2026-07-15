@@ -30,7 +30,8 @@ export type SerializedMovement = {
   movement_date: string
   movement_type: string
   amount: string
-  category: string
+  category_name: string
+  subcategory_name: string | null
   delivered_by: string | null
   receipt_email: string | null
   payment_method_name: string | null
@@ -112,7 +113,12 @@ export function MovementsTable({
                       {MOVEMENT_TYPE_LABEL[row.movement_type] ?? row.movement_type}
                     </span>
                   </ItemHeader>
-                  <ItemTitle className="text-sm">{row.category}</ItemTitle>
+                  <ItemTitle className="text-sm">
+                    {row.category_name}
+                    {row.subcategory_name && (
+                      <span className="text-muted-foreground"> › {row.subcategory_name}</span>
+                    )}
+                  </ItemTitle>
                   <ItemDescription>
                     {formatDate(row.movement_date)} ·{" "}
                     <span className="font-bold text-foreground tabular-nums">
@@ -216,7 +222,8 @@ export function MovementsTable({
                   </td>
                   <td className="px-4 sm:px-6 py-4">
                     <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                      {row.category}
+                      {row.category_name}
+                      {row.subcategory_name ? ` › ${row.subcategory_name}` : ""}
                     </span>
                   </td>
                   <td className="px-4 sm:px-6 py-4">
@@ -306,7 +313,14 @@ export function MovementsTable({
 
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <Field label="Fecha" value={formatDate(selected.movement_date)} />
-                <Field label="Categoría" value={selected.category} />
+                <Field
+                  label="Categoría"
+                  value={
+                    selected.subcategory_name
+                      ? `${selected.category_name} › ${selected.subcategory_name}`
+                      : selected.category_name
+                  }
+                />
                 <Field label="Responsable" value={selected.created_by.full_name} />
                 <Field
                   label={selected.movement_type === "INCOME" ? "Entregado por" : "Entregado a"}

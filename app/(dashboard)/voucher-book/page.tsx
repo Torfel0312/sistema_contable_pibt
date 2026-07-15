@@ -3,6 +3,7 @@ import { MovementForm } from "@/components/movements/movement-form"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { paymentMethodsService } from "@/services/payment-methods/payment-methods.service"
+import { categoriesService, subcategoriesService } from "@/services/categories/categories.service"
 
 export default async function VoucherBookPage() {
   const user = await getCurrentUser()
@@ -11,7 +12,11 @@ export default async function VoucherBookPage() {
   }
 
   const db = await createSupabaseServerClient()
-  const paymentMethods = await paymentMethodsService.list(db)
+  const [paymentMethods, categories, subcategories] = await Promise.all([
+    paymentMethodsService.list(db),
+    categoriesService.list(db),
+    subcategoriesService.list(db)
+  ])
 
   return (
     <section className="mx-auto max-w-5xl flex flex-col gap-8">
@@ -25,7 +30,12 @@ export default async function VoucherBookPage() {
       </div>
 
       <div className="rounded-xl bg-card border border-border p-6 sm:p-10">
-        <MovementForm mode="create" paymentMethods={paymentMethods} />
+        <MovementForm
+          mode="create"
+          paymentMethods={paymentMethods}
+          categories={categories}
+          subcategories={subcategories}
+        />
       </div>
     </section>
   )

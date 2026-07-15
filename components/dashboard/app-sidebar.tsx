@@ -15,7 +15,8 @@ import {
   SlidersHorizontal,
   Mail,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  Tags
 } from "lucide-react"
 import {
   Sidebar,
@@ -90,6 +91,12 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Medios de pago",
         icon: CreditCard,
         roles: ["ADMIN"]
+      },
+      {
+        href: "/settings/categories",
+        label: "Categorías",
+        icon: Tags,
+        roles: ["ADMIN", "BURSAR"]
       },
       { href: "/users", label: "Usuarios", icon: Users, roles: ["ADMIN"] },
       { href: "/audit", label: "Auditoría", icon: ClipboardList, roles: ["ADMIN"] }

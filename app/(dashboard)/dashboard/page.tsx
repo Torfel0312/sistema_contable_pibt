@@ -156,7 +156,10 @@ export default async function DashboardPage({
               movement_date: row.movement_date,
               movement_type: row.movement_type,
               amount: String(row.amount),
-              category: row.category,
+              category_name:
+                (row.movement_categories as { name: string } | null)?.name ?? "—",
+              subcategory_name:
+                (row.movement_subcategories as { name: string } | null)?.name ?? null,
               delivered_by: null,
               receipt_email: null,
               payment_method_name: null,

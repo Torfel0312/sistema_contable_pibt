@@ -9,7 +9,7 @@ function toPayload(m: {
   movement_date: string
   movement_type: "INCOME" | "EXPENSE"
   amount: number
-  category: string
+  category_name: string
   delivered_by: string | null
   receipt_email: string | null
   notes: string | null
@@ -23,7 +23,7 @@ function toPayload(m: {
     movementTypeLabel: m.movement_type === "INCOME" ? "INGRESO" : "EGRESO",
     movementDate: m.movement_date,
     amount: Number(m.amount),
-    category: m.category,
+    category: m.category_name,
     deliveredBy: m.delivered_by,
     paymentMethodLabel: m.payment_method_label,
     receiptEmail: m.receipt_email,
@@ -41,13 +41,16 @@ export async function processMovementIntegrations(movementId: string, userId: st
 
   const { data: movement, error } = await admin
     .from("movements")
-    .select("*, created_by:users!created_by_id(full_name, email)")
+    .select(
+      "*, created_by:users!created_by_id(full_name, email), movement_categories:category_id(name)"
+    )
     .eq("id", movementId)
     .single()
 
   if (error || !movement) throw new Error("Movement not found for integration")
 
   const created_by = movement.created_by as { full_name: string; email: string }
+  const category = movement.movement_categories as { name: string } | null
 
   let paymentMethodLabel: string | null = null
   if (movement.payment_method_id) {
@@ -59,7 +62,12 @@ export async function processMovementIntegrations(movementId: string, userId: st
     paymentMethodLabel = paymentMethod?.name ?? null
   }
 
-  const payload = toPayload({ ...movement, created_by, payment_method_label: paymentMethodLabel })
+  const payload = toPayload({
+    ...movement,
+    created_by,
+    category_name: category?.name ?? "",
+    payment_method_label: paymentMethodLabel
+  })
 
   const mail = await sendMovementEmail(payload).catch((mailError) => ({
     ok: false,

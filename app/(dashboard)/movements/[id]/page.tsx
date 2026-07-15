@@ -36,6 +36,8 @@ export default async function MovementDetailPage({ params }: Props) {
   const updatedBy = row.updated_by as { full_name: string; email: string } | null
   const cancelledBy = row.cancelled_by as { full_name: string; email: string } | null
   const paymentMethod = row.payment_methods as { name: string } | null
+  const category = row.movement_categories as { name: string } | null
+  const subcategory = row.movement_subcategories as { name: string } | null
   const auditLog = (row.movement_audit_log ?? []) as Array<{
     id: string
     action: string
@@ -116,7 +118,10 @@ export default async function MovementDetailPage({ params }: Props) {
                   value={formatCLP(Number(row.amount))}
                   valueClass="font-heading text-3xl font-black text-primary"
                 />
-                <DetailItem icon={<Tag />} label="Categoría" value={row.category} />
+                <DetailItem icon={<Tag />} label="Categoría" value={category?.name} />
+                {subcategory?.name && (
+                  <DetailItem icon={<Tag />} label="Subcategoría" value={subcategory.name} />
+                )}
                 <DetailItem icon={<User />} label={deliveredByLabel} value={row.delivered_by} />
                 {row.receipt_email && (
                   <DetailItem

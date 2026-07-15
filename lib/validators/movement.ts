@@ -12,7 +12,8 @@ export const movementBaseSchema = z.object({
   movement_date: z.string().date("La fecha no tiene un formato válido"),
   movement_type: z.enum(["INCOME", "EXPENSE"]),
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
-  category: z.string().min(1, "La categoría es requerida"),
+  category_id: z.string().uuid("Selecciona una categoría"),
+  subcategory_id: z.string().uuid().optional().nullable(),
   delivered_by: z.string().optional().nullable(),
   receipt_email: z
     .union([z.literal(""), z.string().email("Correo inválido")])
