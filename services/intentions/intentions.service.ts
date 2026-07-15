@@ -66,7 +66,8 @@ export const intentionsService = {
         amount: input.amount,
         description: input.description,
         purpose: input.purpose ?? null,
-        date_needed: input.date_needed ?? null
+        date_needed: input.date_needed ?? null,
+        funding_method: input.funding_method
       })
       .select()
       .single()

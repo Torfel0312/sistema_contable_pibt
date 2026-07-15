@@ -69,6 +69,7 @@ export type Database = {
           created_at: string
           date_needed: string | null
           description: string
+          funding_method: Database["public"]["Enums"]["intention_funding_method"]
           id: string
           ministry_id: string
           purpose: string | null
@@ -85,6 +86,7 @@ export type Database = {
           created_at?: string
           date_needed?: string | null
           description: string
+          funding_method: Database["public"]["Enums"]["intention_funding_method"]
           id?: string
           ministry_id: string
           purpose?: string | null
@@ -101,6 +103,7 @@ export type Database = {
           created_at?: string
           date_needed?: string | null
           description?: string
+          funding_method?: Database["public"]["Enums"]["intention_funding_method"]
           id?: string
           ministry_id?: string
           purpose?: string | null
@@ -285,6 +288,7 @@ export type Database = {
           created_at: string
           id: string
           intention_id: string
+          movement_id: string | null
           notes: string | null
           reference: string | null
           registered_by: string
@@ -295,6 +299,7 @@ export type Database = {
           created_at?: string
           id?: string
           intention_id: string
+          movement_id?: string | null
           notes?: string | null
           reference?: string | null
           registered_by: string
@@ -305,6 +310,7 @@ export type Database = {
           created_at?: string
           id?: string
           intention_id?: string
+          movement_id?: string | null
           notes?: string | null
           reference?: string | null
           registered_by?: string
@@ -316,6 +322,13 @@ export type Database = {
             columns: ["intention_id"]
             isOneToOne: true
             referencedRelation: "budget_intentions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intention_transfers_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
             referencedColumns: ["id"]
           },
           {
@@ -964,6 +977,7 @@ export type Database = {
     }
     Enums: {
       comment_entity: "INTENTION" | "SETTLEMENT"
+      intention_funding_method: "REIMBURSEMENT" | "TRANSFER"
       intention_status: "PENDING" | "APPROVED" | "REJECTED"
       invoice_status: "PENDING" | "SETTLED"
       movement_status: "ACTIVE" | "CANCELLED"
@@ -1107,6 +1121,7 @@ export const Constants = {
   public: {
     Enums: {
       comment_entity: ["INTENTION", "SETTLEMENT"],
+      intention_funding_method: ["REIMBURSEMENT", "TRANSFER"],
       intention_status: ["PENDING", "APPROVED", "REJECTED"],
       invoice_status: ["PENDING", "SETTLED"],
       movement_status: ["ACTIVE", "CANCELLED"],

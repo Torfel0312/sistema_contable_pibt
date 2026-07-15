@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { attachmentInputSchema } from "@/lib/validators/movement"
 
 export const createIntentionSchema = z.object({
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
@@ -7,7 +8,8 @@ export const createIntentionSchema = z.object({
   date_needed: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido")
-    .optional()
+    .optional(),
+  funding_method: z.enum(["REIMBURSEMENT", "TRANSFER"])
 })
 
 export const reviewIntentionSchema = z.object({
@@ -19,7 +21,8 @@ export const registerTransferSchema = z.object({
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
   transfer_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
   reference: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
 })
 
 export const addCommentSchema = z.object({
