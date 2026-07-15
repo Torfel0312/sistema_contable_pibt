@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { movementsService } from "@/services/movements/movements.service"
 import { movementAttachmentsService } from "@/services/movements/movement-attachments.service"
 import { processMovementIntegrations } from "@/services/google/movement-postprocess"
 import { uploadFileToDrive, deleteFileFromDrive } from "@/services/google/drive.service"
+import { sendVoucherEmail } from "@/services/vouchers/voucher.service"
+import { settingsService } from "@/services/settings/settings.service"
 import { MAX_ATTACHMENT_SIZE_BYTES } from "@/lib/constants/attachments"
 import type {
   CreateMovementInput,
@@ -36,6 +39,23 @@ export async function createMovement(input: CreateMovementInput) {
   const db = await createSupabaseServerClient()
   const created = await movementsService.create(db, input, user.id)
   scheduleIntegrations(created.id, user.id)
+
+  if (created.movement_type === "INCOME" && created.receipt_email) {
+    after(async () => {
+      try {
+        const settings = await settingsService.getAll(createSupabaseAdminClient())
+        await sendVoucherEmail(created.id, created.receipt_email!, {
+          bcc: settings.notifications_bcc_email || undefined
+        })
+      } catch (error) {
+        console.error("sendVoucherEmail (auto receipt confirmation) failed", {
+          movementId: created.id,
+          error
+        })
+      }
+    })
+  }
+
   revalidatePath("/movements")
   return created
 }
