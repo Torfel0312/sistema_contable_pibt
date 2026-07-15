@@ -59,7 +59,7 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
       a.href = url
       a.download = `comprobante-${movement.folio}.pdf`
       a.click()
-      URL.revokeObjectURL(url)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
     } catch {
       toast.error("No se pudo generar el comprobante")
     } finally {

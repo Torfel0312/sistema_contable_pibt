@@ -4,6 +4,7 @@ import { Resend } from "resend"
 import { VoucherDocument } from "@/components/vouchers/voucher-document"
 import { ReceiptConfirmationEmail } from "@/emails/receipt-confirmation-email"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { DEFAULT_FROM_EMAIL } from "@/services/email/resend.service"
 import type { EmailSendResult, MovementIntegrationPayload } from "@/services/google/types"
 import { settingsService } from "@/services/settings/settings.service"
 
@@ -72,7 +73,7 @@ export async function sendVoucherEmail(
   const pdfBuffer = await renderVoucherPdf(payload)
 
   const settings = await settingsService.getAll(createSupabaseAdminClient())
-  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({

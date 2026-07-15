@@ -6,6 +6,8 @@ import type { EmailSendResult, MovementIntegrationPayload } from "@/services/goo
 import { settingsService } from "@/services/settings/settings.service"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
+export const DEFAULT_FROM_EMAIL = "Sistema contable PIBT <hola@pibtalcahuano.com>"
+
 const ORG_SHORT = "Sistema Contable PIBT"
 
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
@@ -19,14 +21,12 @@ export async function sendMovementEmail(
   movement: MovementIntegrationPayload
 ): Promise<EmailSendResult> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
-  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail, movement.receiptEmail].filter(
-      Boolean
-    ) as string[],
+    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail].filter(Boolean) as string[],
     replyTo: process.env.NOTIFICATION_EMAIL,
     subject: `[${movement.movementTypeLabel}] Folio ${movement.folio} - ${movement.category}`,
     react: MovementEmail({ movement }),
@@ -45,7 +45,7 @@ export async function sendInviteEmail(opts: {
   action_link: string
 }): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
-  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
@@ -71,7 +71,7 @@ export async function sendResetEmail(opts: {
   action_link: string
 }): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
-  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
@@ -96,7 +96,7 @@ export async function sendForgotPasswordEmail(opts: {
   action_link: string
 }): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
-  const from = settings.notifications_from_email || "Sistema contable PIBT <hola@pibtalcahuano.com>"
+  const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
