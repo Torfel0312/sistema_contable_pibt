@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Download, Mail, Share2 } from "lucide-react"
+import { Eye, Mail, Share2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,9 +38,17 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 100)
 }
 
+function previewBlob(blob: Blob) {
+  const url = URL.createObjectURL(blob)
+  window.open(url, "_blank")
+  // Revoked later, not immediately — the new tab needs time to load the PDF
+  // before the object URL disappears.
+  setTimeout(() => URL.revokeObjectURL(url), 30000)
+}
+
 export function VoucherActions({ movement }: { movement: MovementIntegrationPayload }) {
   const [sharing, setSharing] = useState(false)
-  const [downloading, setDownloading] = useState(false)
+  const [previewing, setPreviewing] = useState(false)
   const [emailDialogOpen, setEmailDialogOpen] = useState(false)
   const [email, setEmail] = useState(movement.receiptEmail ?? "")
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -72,15 +80,15 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
     }
   }
 
-  async function onDownload() {
-    setDownloading(true)
+  async function onPreview() {
+    setPreviewing(true)
     try {
       const blob = await buildVoucherBlob(movement)
-      downloadBlob(blob, `comprobante-${movement.folio}.pdf`)
+      previewBlob(blob)
     } catch {
       toast.error("No se pudo generar el comprobante")
     } finally {
-      setDownloading(false)
+      setPreviewing(false)
     }
   }
 
@@ -116,9 +124,9 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
         {sharing ? "Generando..." : "Compartir comprobante"}
       </Button>
 
-      <Button type="button" variant="outline" disabled={downloading} onClick={onDownload}>
-        <Download className="size-4" data-icon="inline-start" />
-        {downloading ? "Generando..." : "Descargar PDF"}
+      <Button type="button" variant="outline" disabled={previewing} onClick={onPreview}>
+        <Eye className="size-4" data-icon="inline-start" />
+        {previewing ? "Generando..." : "Ver comprobante"}
       </Button>
 
       <Button type="button" variant="outline" onClick={() => setEmailDialogOpen(true)}>
