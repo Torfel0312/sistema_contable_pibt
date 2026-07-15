@@ -39,7 +39,7 @@ export const settlementsService = {
     const { data, error } = await db
       .from("expense_settlements")
       .select(
-        "*, budget_intentions(id, ministry_id, amount, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
+        "*, budget_intentions(id, ministry_id, amount, funding_method, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
       )
       .eq("id", id)
       .single()
@@ -98,52 +98,71 @@ export const settlementsService = {
       const intention = settlement.budget_intentions
       const ministry = intention?.ministries
 
-      // Movement INSERT requires service_role: movements_insert RLS only allows ADMIN/BURSAR,
-      // but FINANCE reviewers must also be able to approve. Admin client is used here explicitly.
-      const { createSupabaseAdminClient: getAdmin } = await import("@/lib/supabase/admin")
-      const { increment_and_get_folio } = await import("@/lib/utils/folio")
-      const folio = await increment_and_get_folio()
+      if (intention?.funding_method === "TRANSFER") {
+        // TRANSFER-funded intentions already moved the money out of the account when
+        // the transfer was registered (Task 2's registerTransfer). Approving the
+        // settlement here must reuse that movement instead of creating a second one,
+        // otherwise the outflow would be recorded twice.
+        const { data: transfer, error: transferErr } = await db
+          .from("intention_transfers")
+          .select("movement_id")
+          .eq("intention_id", intention.id)
+          .maybeSingle()
+        if (transferErr) throw transferErr
+        if (!transfer?.movement_id) {
+          throw new Error(
+            "Esta solicitud usa transferencia anticipada pero no tiene un movimiento de transferencia registrado; no se puede aprobar la rendición"
+          )
+        }
+        movementId = transfer.movement_id
+      } else {
+        // Movement INSERT requires service_role: movements_insert RLS only allows ADMIN/BURSAR,
+        // but FINANCE reviewers must also be able to approve. Admin client is used here explicitly.
+        const { createSupabaseAdminClient: getAdmin } = await import("@/lib/supabase/admin")
+        const { increment_and_get_folio } = await import("@/lib/utils/folio")
+        const folio = await increment_and_get_folio()
 
-      const adminClient = getAdmin()
+        const adminClient = getAdmin()
 
-      // movements.category_id is a required FK now (Etapa 2 replaced the free-text
-      // category column). Look up the system category seeded for this workflow by
-      // its exact seeded name rather than hardcoding an id.
-      const { data: settlementCategory, error: categoryErr } = await adminClient
-        .from("movement_categories")
-        .select("id")
-        .eq("name", "Rendiciones de Ministerio")
-        .eq("is_system", true)
-        .single()
-      if (categoryErr || !settlementCategory) {
-        throw new Error(
-          "No se encontró la categoría del sistema 'Rendiciones de Ministerio'"
-        )
-      }
+        // movements.category_id is a required FK now (Etapa 2 replaced the free-text
+        // category column). Look up the system category seeded for this workflow by
+        // its exact seeded name rather than hardcoding an id.
+        const { data: settlementCategory, error: categoryErr } = await adminClient
+          .from("movement_categories")
+          .select("id")
+          .eq("name", "Rendiciones de Ministerio")
+          .eq("is_system", true)
+          .single()
+        if (categoryErr || !settlementCategory) {
+          throw new Error(
+            "No se encontró la categoría del sistema 'Rendiciones de Ministerio'"
+          )
+        }
 
-      const { data: movement, error: movErr } = await adminClient
-        .from("movements")
-        .insert({
-          folio,
-          movement_date: now.slice(0, 10),
-          movement_type: "EXPENSE",
-          amount: settlement.amount,
-          category_id: settlementCategory.id,
-          delivered_by: ministry?.name ?? "Ministerio",
-          created_by_id: reviewerId,
-          notes: `Rendición: ${settlement.description}. Rendición automática desde solicitud aprobada. Ministerio: ${ministry?.name ?? ""}`
+        const { data: movement, error: movErr } = await adminClient
+          .from("movements")
+          .insert({
+            folio,
+            movement_date: now.slice(0, 10),
+            movement_type: "EXPENSE",
+            amount: settlement.amount,
+            category_id: settlementCategory.id,
+            delivered_by: ministry?.name ?? "Ministerio",
+            created_by_id: reviewerId,
+            notes: `Rendición: ${settlement.description}. Rendición automática desde solicitud aprobada. Ministerio: ${ministry?.name ?? ""}`
+          })
+          .select("id")
+          .single()
+        if (movErr) throw movErr
+        movementId = movement.id
+
+        await auditService.logMovement({
+          movement_id: movementId,
+          action: "MOVEMENT_CREATED_FROM_SETTLEMENT",
+          user_id: reviewerId,
+          new_value: { settlement_id: id, amount: settlement.amount }
         })
-        .select("id")
-        .single()
-      if (movErr) throw movErr
-      movementId = movement.id
-
-      await auditService.logMovement({
-        movement_id: movementId,
-        action: "MOVEMENT_CREATED_FROM_SETTLEMENT",
-        user_id: reviewerId,
-        new_value: { settlement_id: id, amount: settlement.amount }
-      })
+      }
     }
 
     const { data, error } = await db

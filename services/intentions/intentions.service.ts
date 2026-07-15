@@ -138,20 +138,6 @@ export const intentionsService = {
     input: RegisterTransferInput,
     userId: string
   ) {
-    const { data, error } = await db
-      .from("intention_transfers")
-      .insert({
-        intention_id: intentionId,
-        amount: input.amount,
-        transfer_date: input.transfer_date,
-        reference: input.reference ?? null,
-        notes: input.notes ?? null,
-        registered_by: userId
-      })
-      .select()
-      .single()
-    if (error) throw error
-
     const intention = await this.getById(db, intentionId)
 
     const { data: category, error: categoryErr } = await db
@@ -193,11 +179,20 @@ export const intentionsService = {
       new_value: { intention_id: intentionId, amount: input.amount }
     })
 
-    const { error: updateTransferErr } = await db
+    const { data, error } = await db
       .from("intention_transfers")
-      .update({ movement_id: movement.id })
-      .eq("id", data.id)
-    if (updateTransferErr) throw updateTransferErr
+      .insert({
+        intention_id: intentionId,
+        amount: input.amount,
+        transfer_date: input.transfer_date,
+        reference: input.reference ?? null,
+        notes: input.notes ?? null,
+        registered_by: userId,
+        movement_id: movement.id
+      })
+      .select()
+      .single()
+    if (error) throw error
 
     await auditService.logSystem({
       entity: "INTENTION_TRANSFER",
