@@ -94,7 +94,12 @@ export function MovementForm(props: Props) {
         "INCOME",
       amount: movement ? Number(movement.amount) : ("" as unknown as number),
       category_id: movement?.category_id ?? defaultValues?.category_id ?? "",
-      subcategory_id: movement?.subcategory_id ?? defaultValues?.subcategory_id ?? "",
+      // undefined (not ""), unlike category_id: subcategory is optional and its
+      // <select> only mounts when the chosen category actually has subcategories
+      // (see subcategoryOptions below) — an unregistered "" default would still
+      // get submitted as-is and fail the uuid().optional().nullable() validator,
+      // with no visible error since the field never renders in that case.
+      subcategory_id: movement?.subcategory_id ?? defaultValues?.subcategory_id ?? undefined,
       delivered_by: movement?.delivered_by ?? "",
       receipt_email: movement?.receipt_email ?? "",
       payment_method_id: movement?.payment_method_id ?? "",
@@ -140,16 +145,31 @@ export function MovementForm(props: Props) {
     return active
   }, [paymentMethods, currentPaymentMethodId])
 
+  // Switching movement type invalidates the selected category (categories are
+  // scoped per type) — reset it so a stale INCOME category can't be submitted
+  // alongside movement_type: EXPENSE (the FK doesn't enforce that match).
+  useEffect(() => {
+    const stillValid = categories.some(
+      (c) => c.id === currentCategoryId && c.movement_type === movementType
+    )
+    if (currentCategoryId && !stillValid) {
+      form.setValue("category_id", "")
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movementType])
+
   // A subcategory belongs to a specific category — if the selected category
   // changes (either the user picking a new one, or the movement_type switch
-  // clearing it out of range), any previously-selected subcategory no longer
-  // applies and must be cleared rather than silently lingering.
+  // above clearing it out of range), any previously-selected subcategory no
+  // longer applies and must be cleared rather than silently lingering.
+  // undefined (not ""), same reasoning as the defaultValues comment above —
+  // the field may not be registered if the new category has no subcategories.
   useEffect(() => {
     const stillValid = subcategories.some(
       (s) => s.id === currentSubcategoryId && s.category_id === currentCategoryId
     )
     if (currentSubcategoryId && !stillValid) {
-      form.setValue("subcategory_id", "")
+      form.setValue("subcategory_id", undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCategoryId])
