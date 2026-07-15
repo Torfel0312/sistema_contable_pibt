@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Mail, Share2 } from "lucide-react"
+import { Download, Mail, Share2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,8 +29,18 @@ async function buildVoucherBlob(movement: MovementIntegrationPayload): Promise<B
   return pdf(<VoucherDocument movement={movement} />).toBlob()
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 100)
+}
+
 export function VoucherActions({ movement }: { movement: MovementIntegrationPayload }) {
   const [sharing, setSharing] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [emailDialogOpen, setEmailDialogOpen] = useState(false)
   const [email, setEmail] = useState(movement.receiptEmail ?? "")
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -54,16 +64,23 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
         return
       }
 
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `comprobante-${movement.folio}.pdf`
-      a.click()
-      setTimeout(() => URL.revokeObjectURL(url), 100)
+      downloadBlob(blob, `comprobante-${movement.folio}.pdf`)
     } catch {
       toast.error("No se pudo generar el comprobante")
     } finally {
       setSharing(false)
+    }
+  }
+
+  async function onDownload() {
+    setDownloading(true)
+    try {
+      const blob = await buildVoucherBlob(movement)
+      downloadBlob(blob, `comprobante-${movement.folio}.pdf`)
+    } catch {
+      toast.error("No se pudo generar el comprobante")
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -97,6 +114,11 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
       <Button type="button" variant="outline" disabled={sharing} onClick={onShare}>
         <Share2 className="size-4" data-icon="inline-start" />
         {sharing ? "Generando..." : "Compartir comprobante"}
+      </Button>
+
+      <Button type="button" variant="outline" disabled={downloading} onClick={onDownload}>
+        <Download className="size-4" data-icon="inline-start" />
+        {downloading ? "Generando..." : "Descargar PDF"}
       </Button>
 
       <Button type="button" variant="outline" onClick={() => setEmailDialogOpen(true)}>
