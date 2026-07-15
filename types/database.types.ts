@@ -464,6 +464,57 @@ export type Database = {
           },
         ]
       }
+      movement_attachments: {
+        Row: {
+          created_at: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id: string
+          mime_type: string
+          movement_id: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id?: string
+          mime_type: string
+          movement_id: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          created_by_id?: string
+          drive_file_id?: string
+          drive_view_link?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          movement_id?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movement_attachments_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movement_attachments_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movement_audit_log: {
         Row: {
           action: string
@@ -515,17 +566,13 @@ export type Database = {
       movements: {
         Row: {
           amount: number
-          attachment_url: string | null
-          beneficiary: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by_id: string | null
           category: string
-          concept: string
           created_at: string
           created_by_id: string
           delivered_by: string | null
-          drive_file_id: string | null
           folio: number
           folio_display: string
           id: string
@@ -535,32 +582,21 @@ export type Database = {
           notification_error: string | null
           notification_sent_at: string | null
           notification_status: Database["public"]["Enums"]["notification_status"]
-          payment_method: string | null
-          pdf_error: string | null
-          pdf_status: Database["public"]["Enums"]["pdf_status"]
-          pdf_url: string | null
-          received_by: string | null
-          reference_person: string | null
+          payment_method_id: string | null
+          receipt_email: string | null
           status: Database["public"]["Enums"]["movement_status"]
-          support_number: string | null
-          sync_error: string | null
-          synced_to_sheet: boolean
           updated_at: string | null
           updated_by_id: string | null
         }
         Insert: {
           amount: number
-          attachment_url?: string | null
-          beneficiary?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by_id?: string | null
           category: string
-          concept: string
           created_at?: string
           created_by_id: string
           delivered_by?: string | null
-          drive_file_id?: string | null
           folio: number
           folio_display?: string
           id?: string
@@ -570,32 +606,21 @@ export type Database = {
           notification_error?: string | null
           notification_sent_at?: string | null
           notification_status?: Database["public"]["Enums"]["notification_status"]
-          payment_method?: string | null
-          pdf_error?: string | null
-          pdf_status?: Database["public"]["Enums"]["pdf_status"]
-          pdf_url?: string | null
-          received_by?: string | null
-          reference_person?: string | null
+          payment_method_id?: string | null
+          receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
-          support_number?: string | null
-          sync_error?: string | null
-          synced_to_sheet?: boolean
           updated_at?: string | null
           updated_by_id?: string | null
         }
         Update: {
           amount?: number
-          attachment_url?: string | null
-          beneficiary?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by_id?: string | null
           category?: string
-          concept?: string
           created_at?: string
           created_by_id?: string
           delivered_by?: string | null
-          drive_file_id?: string | null
           folio?: number
           folio_display?: string
           id?: string
@@ -605,16 +630,9 @@ export type Database = {
           notification_error?: string | null
           notification_sent_at?: string | null
           notification_status?: Database["public"]["Enums"]["notification_status"]
-          payment_method?: string | null
-          pdf_error?: string | null
-          pdf_status?: Database["public"]["Enums"]["pdf_status"]
-          pdf_url?: string | null
-          received_by?: string | null
-          reference_person?: string | null
+          payment_method_id?: string | null
+          receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
-          support_number?: string | null
-          sync_error?: string | null
-          synced_to_sheet?: boolean
           updated_at?: string | null
           updated_by_id?: string | null
         }
@@ -634,8 +652,50 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "movements_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "movements_updated_by_id_fkey"
             columns: ["updated_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -806,7 +866,6 @@ export type Database = {
       movement_status: "ACTIVE" | "CANCELLED"
       movement_type: "INCOME" | "EXPENSE"
       notification_status: "PENDING" | "SENT" | "ERROR"
-      pdf_status: "PENDING" | "GENERATED" | "ERROR"
       settlement_status: "PENDING" | "APPROVED" | "REJECTED"
       user_role: "ADMIN" | "BURSAR" | "FINANCE" | "MINISTER"
       user_status:
@@ -950,7 +1009,6 @@ export const Constants = {
       movement_status: ["ACTIVE", "CANCELLED"],
       movement_type: ["INCOME", "EXPENSE"],
       notification_status: ["PENDING", "SENT", "ERROR"],
-      pdf_status: ["PENDING", "GENERATED", "ERROR"],
       settlement_status: ["PENDING", "APPROVED", "REJECTED"],
       user_role: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"],
       user_status: [

@@ -2,6 +2,7 @@ type Props = { params: Promise<{ id: string }> }
 import { notFound, redirect } from "next/navigation"
 import { MovementForm } from "@/components/movements/movement-form"
 import { movementsService } from "@/services/movements/movements.service"
+import { paymentMethodsService } from "@/services/payment-methods/payment-methods.service"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 
@@ -13,7 +14,10 @@ export default async function EditMovementPage({ params }: Props) {
   }
 
   const db = await createSupabaseServerClient()
-  const movement = await movementsService.findById(db, id).catch(() => null)
+  const [movement, paymentMethods] = await Promise.all([
+    movementsService.findById(db, id).catch(() => null),
+    paymentMethodsService.list(db)
+  ])
   if (!movement) notFound()
   if (movement.status === "CANCELLED") redirect(`/movements/${id}`)
 
@@ -29,7 +33,7 @@ export default async function EditMovementPage({ params }: Props) {
       </div>
 
       <div className="rounded-xl bg-card border border-border p-6 sm:p-10">
-        <MovementForm mode="edit" movement={movement} />
+        <MovementForm mode="edit" movement={movement} paymentMethods={paymentMethods} />
       </div>
     </div>
   )

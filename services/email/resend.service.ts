@@ -2,7 +2,7 @@ import { Resend } from "resend"
 
 import { AuthEmail } from "@/emails/auth-email"
 import { MovementEmail } from "@/emails/movement-email"
-import type { AppsScriptResponse, MovementIntegrationPayload } from "@/services/google/types"
+import type { EmailSendResult, MovementIntegrationPayload } from "@/services/google/types"
 
 const ORG_SHORT = "Sistema Contable PIBT"
 export const FROM_EMAIL =
@@ -17,13 +17,15 @@ const TRANSACTIONAL_HEADERS = {
 
 export async function sendMovementEmail(
   movement: MovementIntegrationPayload
-): Promise<AppsScriptResponse> {
+): Promise<EmailSendResult> {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
-    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail].filter(Boolean) as string[],
+    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail, movement.receiptEmail].filter(
+      Boolean
+    ) as string[],
     replyTo: process.env.NOTIFICATION_EMAIL,
-    subject: `[${movement.movementTypeLabel}] Folio ${movement.folio} - ${movement.concept}`,
+    subject: `[${movement.movementTypeLabel}] Folio ${movement.folio} - ${movement.category}`,
     react: MovementEmail({ movement }),
     headers: TRANSACTIONAL_HEADERS
   })

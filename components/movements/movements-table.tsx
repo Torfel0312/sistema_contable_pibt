@@ -31,13 +31,9 @@ export type SerializedMovement = {
   movement_type: string
   amount: string
   category: string
-  concept: string
-  reference_person: string | null
-  received_by: string | null
   delivered_by: string | null
-  beneficiary: string | null
-  payment_method: string | null
-  support_number: string | null
+  receipt_email: string | null
+  payment_method_name: string | null
   notes: string | null
   cancellation_reason: string | null
   status: string
@@ -116,7 +112,7 @@ export function MovementsTable({
                       {MOVEMENT_TYPE_LABEL[row.movement_type] ?? row.movement_type}
                     </span>
                   </ItemHeader>
-                  <ItemTitle className="text-sm">{row.concept || row.category}</ItemTitle>
+                  <ItemTitle className="text-sm">{row.category}</ItemTitle>
                   <ItemDescription>
                     {formatDate(row.movement_date)} ·{" "}
                     <span className="font-bold text-foreground tabular-nums">
@@ -311,18 +307,13 @@ export function MovementsTable({
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <Field label="Fecha" value={formatDate(selected.movement_date)} />
                 <Field label="Categoría" value={selected.category} />
-                <div className="col-span-2">
-                  <Field label="Concepto / Glosa" value={selected.concept} />
-                </div>
-                <Field label="Referente / Entidad" value={selected.reference_person} />
                 <Field label="Responsable" value={selected.created_by.full_name} />
-                <Field label="Recibido por" value={selected.received_by} />
-                <Field label="Entregado por" value={selected.delivered_by} />
-                <Field label="Beneficiario" value={selected.beneficiary} />
-                <Field label="Medio de pago" value={selected.payment_method} />
-                <div className="col-span-2">
-                  <Field label="N° Documento Respaldo" value={selected.support_number} />
-                </div>
+                <Field
+                  label={selected.movement_type === "INCOME" ? "Entregado por" : "Entregado a"}
+                  value={selected.delivered_by}
+                />
+                <Field label="Medio de pago" value={selected.payment_method_name} />
+                <Field label="Correo de comprobante" value={selected.receipt_email} />
               </div>
 
               {selected.notes && (

@@ -12,17 +12,13 @@ const baseMovement: MovementIntegrationPayload = {
   movementTypeLabel: "INGRESO",
   amount: 150000,
   category: "Diezmos",
-  concept: "Diezmo mayo",
-  description: "Diezmo mayo 2026",
   registeredBy: "Marcelo Fuentes",
   registeredEmail: "marcelo@example.com",
   registeredAt: "2026-05-01T10:00:00Z",
   user: "Marcelo Fuentes",
-  reference: null,
-  receivedBy: null,
   deliveredBy: null,
-  paymentMethod: null,
-  supportNumber: null,
+  paymentMethodLabel: null,
+  receiptEmail: null,
   notes: null
 }
 
@@ -31,10 +27,10 @@ describe("MovementEmail", () => {
     expect(() => render(MovementEmail({ movement: baseMovement }))).not.toThrow()
   })
 
-  it("includes folio and concept in output", () => {
+  it("includes folio and category in output", () => {
     const html = render(MovementEmail({ movement: baseMovement }))
     expect(html).toContain("000042")
-    expect(html).toContain("Diezmo mayo")
+    expect(html).toContain("Diezmos")
   })
 
   it("formats amount as CLP currency", () => {
@@ -49,14 +45,35 @@ describe("MovementEmail", () => {
 
   it("omits optional fields when null", () => {
     const html = render(MovementEmail({ movement: baseMovement }))
-    expect(html).not.toContain("Referente")
+    expect(html).not.toContain("Entregado por")
+    expect(html).not.toContain("Entregado a")
     expect(html).not.toContain("Observaciones")
+    expect(html).not.toContain("Comprobante enviado a")
   })
 
-  it("shows optional fields when present", () => {
-    const movement = { ...baseMovement, reference: "Ref-123", notes: "Nota especial" }
+  it("shows optional fields when present, with direction-aware label", () => {
+    const movement = {
+      ...baseMovement,
+      deliveredBy: "Juan Pérez",
+      notes: "Nota especial",
+      receiptEmail: "donante@example.com"
+    }
     const html = render(MovementEmail({ movement }))
-    expect(html).toContain("Ref-123")
+    expect(html).toContain("Entregado por")
+    expect(html).toContain("Juan Pérez")
     expect(html).toContain("Nota especial")
+    expect(html).toContain("Comprobante enviado a")
+    expect(html).toContain("donante@example.com")
+  })
+
+  it("uses 'Entregado a' label for EXPENSE movements", () => {
+    const movement = {
+      ...baseMovement,
+      movementTypeLabel: "EGRESO" as const,
+      deliveredBy: "Ministerio Jóvenes"
+    }
+    const html = render(MovementEmail({ movement }))
+    expect(html).toContain("Entregado a")
+    expect(html).not.toContain("Entregado por")
   })
 })
