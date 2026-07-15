@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, CreditCard, Archive, ArchiveRestore } from "lucide-react"
+import { Plus, CreditCard, Archive, ArchiveRestore, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -38,8 +38,14 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(initialPaymentMethods)
   const [open, setOpen] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [editing, setEditing] = useState<PaymentMethod | null>(null)
 
   const form = useForm<CreatePaymentMethodInput>({
+    resolver: zodResolver(createPaymentMethodSchema),
+    defaultValues: { name: "" }
+  })
+
+  const editForm = useForm<CreatePaymentMethodInput>({
     resolver: zodResolver(createPaymentMethodSchema),
     defaultValues: { name: "" }
   })
@@ -53,6 +59,25 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
       toast.success("Medio de pago creado")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear medio de pago")
+    }
+  }
+
+  function openEdit(pm: PaymentMethod) {
+    editForm.reset({ name: pm.name })
+    setEditing(pm)
+  }
+
+  async function handleRename(values: CreatePaymentMethodInput) {
+    if (!editing) return
+    try {
+      await updatePaymentMethod(editing.id, { name: values.name.trim() })
+      setPaymentMethods((prev) =>
+        prev.map((p) => (p.id === editing.id ? { ...p, name: values.name.trim() } : p))
+      )
+      toast.success("Medio de pago actualizado")
+      setEditing(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al renombrar medio de pago")
     }
   }
 
@@ -139,7 +164,16 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
                   </span>
                 </div>
               </ItemContent>
-              <ItemActions>
+              <ItemActions className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEdit(pm)}
+                  className="gap-1.5"
+                >
+                  <Pencil className="size-3.5" />
+                  Editar
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -164,6 +198,32 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
           ))}
         </ItemGroup>
       )}
+
+      <Dialog
+        open={!!editing}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditing(null)
+            editForm.reset()
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renombrar medio de pago</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={editForm.handleSubmit(handleRename)} className="space-y-4 pt-2">
+            <Field>
+              <FieldLabel htmlFor="edit-name">Nombre *</FieldLabel>
+              <Input id="edit-name" {...editForm.register("name")} />
+              <FieldError errors={[editForm.formState.errors.name]} />
+            </Field>
+            <Button type="submit" className="w-full" disabled={editForm.formState.isSubmitting}>
+              {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
