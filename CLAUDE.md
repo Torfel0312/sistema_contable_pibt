@@ -21,6 +21,9 @@ pnpm run ci
 # Tests (jest, passWithNoTests — allowed to fail)
 pnpm test
 
+# E2E tests (Playwright, local only — see e2e/README.md)
+pnpm test:e2e
+
 # Supabase local stack (CLI is a devDependency)
 pnpm supabase <sub command>      # e.g. pnpm supabase status, pnpm supabase db reset
 
@@ -33,7 +36,7 @@ pnpm email:dev
 
 Always use `pnpm`, never `npm`.
 
-`pnpm run ci` runs lint + typecheck. There are no mandatory automated tests yet — jest is configured with `--passWithNoTests`.
+`pnpm run ci` runs lint + typecheck. There are no mandatory automated tests yet — jest is configured with `--passWithNoTests`. `pnpm test:e2e` runs the Playwright suite (`e2e/`) against a locally running `pnpm dev` + seeded local Supabase — it is **not** run in CI, is not a regression gate, and doubles as a design-reference screenshot generator (`docs/screenshots/`, committed to the repo). See `e2e/README.md` for setup.
 
 ## Architecture
 
