@@ -57,38 +57,79 @@ stateDiagram-v2
 
 ## Settlement Flow (Rendición de Fondos)
 
-After receiving a transfer, the ministry submits expense receipts for treasury review.
+After receiving a transfer (or spending out of pocket, for REIMBURSEMENT requests), the ministry
+submits one or more settlements with receipts for treasury review. A single request can have
+several settlements (e.g. a partial purchase) — the UI groups requests as "open" or "closed" based
+on whether every settlement has reached a terminal state and treasury has closed the request out.
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT : Minister starts a settlement (optional draft)
+    [*] --> PENDING : Minister submits directly (no draft)
+    DRAFT --> PENDING : Minister submits
+    DRAFT --> CANCELLED : Minister cancels
+    PENDING --> IN_REVIEW : Treasury takes it for review
+    PENDING --> CANCELLED : Minister cancels
+    IN_REVIEW --> APPROVED : Treasury approves
+    IN_REVIEW --> REJECTED : Treasury rejects
+    IN_REVIEW --> RETURNED_FOR_CORRECTION : Treasury returns with comments
+    RETURNED_FOR_CORRECTION --> PENDING : Minister resubmits
+    RETURNED_FOR_CORRECTION --> CANCELLED : Minister cancels
+    APPROVED --> [*]
+    REJECTED --> [*]
+    CANCELLED --> [*]
+```
+
+`IN_REVIEW` is a lock: once treasury takes a settlement into review, the minister can no longer
+edit or cancel it until a decision is made (approve, reject, or return for correction).
 
 ```mermaid
 sequenceDiagram
     actor Minister as Ministry (MINISTER)
-    actor Treasury as Treasury (BURSAR/FINANCE)
+    actor Treasury as Treasury (BURSAR/ADMIN)
     participant System as System
     participant Email as Resend (Email)
 
-    Note over Minister: Transfer has been registered
+    Minister->>System: Submit settlement + attachments (draft or direct, see 01-file-uploading)
+    System->>System: Insert expense_settlements (status: DRAFT or PENDING, is_late if >30 days from expense_date)
+    opt Was a draft
+        Minister->>System: Submit draft for review (DRAFT -> PENDING)
+    end
 
-    Minister->>System: Submit settlement + proof (attachment upload, see 01-file-uploading)
-    System->>System: Insert expense_settlements (status: PENDING, is_late if >30 days from expense_date)
-
-    Treasury->>System: Review settlement → Approve or Reject
-    Note over System: Already-reviewed settlements are rejected with 409 (no double review)
+    Treasury->>System: Take for review (PENDING -> IN_REVIEW)
+    Treasury->>System: Approve, reject, or return for correction
 
     alt Approved
-        System->>System: Admin client inserts movements row (folio via increment_and_get_folio RPC, category "Rendición Ministerio")
+        alt REIMBURSEMENT
+            System->>System: Admin client inserts movements row (folio via increment_and_get_folio RPC, category "Rendiciones de Ministerio")
+        else TRANSFER
+            System->>System: Reuse the movement already created when the transfer was registered (no second movement)
+        end
         System->>System: Link movement_id back onto the settlement; audit-log both
         System->>Email: Notify ministry (settlement approved)
-        Email-->>Minister: Email — settlement approved
     else Rejected
         System->>Email: Notify ministry (settlement rejected)
-        Email-->>Minister: Email — settlement rejected, resubmit
-        Minister->>System: Resubmit corrected settlement
+    else Returned for correction
+        System->>System: Insert request_comments row (entity_type SETTLEMENT)
+        System->>Email: Notify ministry (settlement returned, with comment)
+        Minister->>System: Resubmit (RETURNED_FOR_CORRECTION -> PENDING)
     end
 ```
 
-Note: `expense_settlements.status` is also `PENDING | APPROVED | REJECTED` — no `SETTLED` value.
-Approval is the point where a real `movements` row gets created; it bypasses normal RLS via the
+Note: cancellation (minister-initiated) is only allowed from `DRAFT`, `PENDING`, or
+`RETURNED_FOR_CORRECTION` — never from `IN_REVIEW`. Approval is still the point where a real
+`movements` row gets created for `REIMBURSEMENT` requests; it bypasses normal RLS via the
 service-role client because `movements` inserts are otherwise restricted to ADMIN/BURSAR.
+
+### Cierre de solicitud — adjunto del comprobante de devolución
+
+Once every settlement under a request has reached a terminal state (`APPROVED` or `CANCELLED`,
+with at least one `APPROVED`), treasury can close the request out: attach the proof of the closing
+transfer (`intention_attachments`, scoped to the request rather than any single settlement, since
+one closing transfer can cover several settlements) and set
+`budget_intentions.settlement_closed_at`. A closed request is immutable — no further settlements
+or transfers are expected — and is what the requests list uses to move a request from "open" to
+"closed".
 
 ---
 

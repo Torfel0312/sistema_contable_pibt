@@ -72,6 +72,15 @@ export function IntentionsClient({
 
   const isMinister = canSubmit
 
+  // Closed = rejected outright, or its settlement flow was closed out by tesorería
+  // (settlement_closed_at set). Everything else still needs someone's attention.
+  const closedIntentions = intentions.filter(
+    (i) => i.status === "REJECTED" || !!i.settlement_closed_at
+  )
+  const openIntentions = intentions.filter(
+    (i) => i.status !== "REJECTED" && !i.settlement_closed_at
+  )
+
   type IntentionFormValues = Omit<CreateIntentionInput, "amount"> & { amount: string }
   const form = useForm<IntentionFormValues, unknown, CreateIntentionInput>({
     resolver: zodResolver(createIntentionSchema) as Resolver<
@@ -237,44 +246,77 @@ export function IntentionsClient({
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup>
-          {intentions.map((intention) => (
-            <Item
-              key={intention.id}
-              className="cursor-pointer hover:bg-muted/40 transition-colors"
-              onClick={() => router.push(`/requests/${intention.id}`)}
-            >
-              <ItemContent>
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">{STATUS_ICONS[intention.status]}</div>
-                  <div className="flex-1 min-w-0">
-                    <ItemTitle className="flex items-center gap-2">
-                      {formatCLP(intention.amount)}
-                    </ItemTitle>
-                    <ItemDescription>{intention.purpose}</ItemDescription>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {FUNDING_METHOD_LABELS[intention.funding_method]}
-                    </p>
-                    {!isMinister && intention.ministries && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {intention.ministries.name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </ItemContent>
-              <ItemActions>
-                <div className="text-right">
-                  <p className="text-xs font-medium">{STATUS_LABELS[intention.status]}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(intention.created_at)}
-                  </p>
-                </div>
-              </ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
+        <>
+          {openIntentions.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold text-muted-foreground">Abiertas</h2>
+              <ItemGroup>
+                {openIntentions.map((intention) => (
+                  <IntentionRow
+                    key={intention.id}
+                    intention={intention}
+                    isMinister={isMinister}
+                    onClick={() => router.push(`/requests/${intention.id}`)}
+                  />
+                ))}
+              </ItemGroup>
+            </div>
+          )}
+          {closedIntentions.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold text-muted-foreground">Cerradas</h2>
+              <ItemGroup className="opacity-75">
+                {closedIntentions.map((intention) => (
+                  <IntentionRow
+                    key={intention.id}
+                    intention={intention}
+                    isMinister={isMinister}
+                    onClick={() => router.push(`/requests/${intention.id}`)}
+                  />
+                ))}
+              </ItemGroup>
+            </div>
+          )}
+        </>
       )}
     </div>
+  )
+}
+
+function IntentionRow({
+  intention,
+  isMinister,
+  onClick
+}: {
+  intention: Intention
+  isMinister: boolean
+  onClick: () => void
+}) {
+  return (
+    <Item className="cursor-pointer hover:bg-muted/40 transition-colors" onClick={onClick}>
+      <ItemContent>
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5">{STATUS_ICONS[intention.status]}</div>
+          <div className="flex-1 min-w-0">
+            <ItemTitle className="flex items-center gap-2">
+              {formatCLP(intention.amount)}
+            </ItemTitle>
+            <ItemDescription>{intention.purpose}</ItemDescription>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {FUNDING_METHOD_LABELS[intention.funding_method]}
+            </p>
+            {!isMinister && intention.ministries && (
+              <p className="text-xs text-muted-foreground mt-0.5">{intention.ministries.name}</p>
+            )}
+          </div>
+        </div>
+      </ItemContent>
+      <ItemActions>
+        <div className="text-right">
+          <p className="text-xs font-medium">{STATUS_LABELS[intention.status]}</p>
+          <p className="text-xs text-muted-foreground">{formatDate(intention.created_at)}</p>
+        </div>
+      </ItemActions>
+    </Item>
   )
 }

@@ -17,9 +17,12 @@ export async function GET() {
     const assignment = await ministriesService.getMinistryForUser(db, user.id)
     if (!assignment) return NextResponse.json({ count: 0, items: [] })
 
-    const [intentionsPending, settlementsPending] = await Promise.all([
+    // Only DRAFT and RETURNED_FOR_CORRECTION need the minister's own action — PENDING and
+    // IN_REVIEW are already out of their hands, waiting on tesorería.
+    const [intentionsPending, settlementsDraft, settlementsReturned] = await Promise.all([
       intentionsService.list(db, { ministryId: assignment.ministry_id, status: "APPROVED" }),
-      settlementsService.list(db, { status: "PENDING", submittedBy: user.id })
+      settlementsService.list(db, { status: "DRAFT", submittedBy: user.id }),
+      settlementsService.list(db, { status: "RETURNED_FOR_CORRECTION", submittedBy: user.id })
     ])
 
     const items = [
@@ -30,8 +33,15 @@ export async function GET() {
         href: `/requests/${i.id}`,
         created_at: i.updated_at
       })),
-      ...settlementsPending.map((s) => ({
-        type: "SETTLEMENT_PENDING" as const,
+      ...settlementsDraft.map((s) => ({
+        type: "SETTLEMENT_DRAFT" as const,
+        id: s.id,
+        description: s.description,
+        href: `/requests/${s.intention_id}`,
+        created_at: s.created_at
+      })),
+      ...settlementsReturned.map((s) => ({
+        type: "SETTLEMENT_RETURNED" as const,
         id: s.id,
         description: s.description,
         href: `/requests/${s.intention_id}`,
