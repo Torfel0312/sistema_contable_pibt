@@ -831,7 +831,7 @@ export function IntentionDetailClient({
                         ))}
                       </div>
                     )}
-                    {s.review_message && (
+                    {s.review_message && (s.status === "APPROVED" || s.status === "REJECTED") && (
                       <p className="text-xs bg-muted/50 rounded px-2 py-1">
                         <span className="font-medium">Revisor: </span>
                         {s.review_message}

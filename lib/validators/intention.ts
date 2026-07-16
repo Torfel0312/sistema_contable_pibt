@@ -16,8 +16,8 @@ export const createIntentionSchema = z.object({
   amount: requestAmountSchema,
   purpose: z.string().min(5, "El propósito debe tener al menos 5 caracteres"),
   date_needed: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido")
+    .literal("")
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"))
     .optional(),
   funding_method: z.enum(["REIMBURSEMENT", "TRANSFER"])
 })
