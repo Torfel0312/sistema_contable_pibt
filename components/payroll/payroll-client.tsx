@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useFieldArray, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -50,15 +50,27 @@ function PayrollLineFields({
   index,
   form,
   onRemove,
-  removable
+  removable,
+  onUploadingChange
 }: {
   index: number
   form: ReturnType<typeof useForm<PayrollFormValues, unknown, CreatePayrollInput>>
   onRemove: () => void
   removable: boolean
+  onUploadingChange: (index: number, isUploading: boolean) => void
 }) {
   const attachmentUpload = useAttachmentUpload()
   const errors = form.formState.errors.lines?.[index]
+
+  // Each line has its own independent Drive-upload hook, so the submit button
+  // can't just check a single isUploading flag — it needs to know if ANY line
+  // still has an upload in flight, otherwise a submit mid-upload would silently
+  // create the payroll record without that line's attachment.
+  useEffect(() => {
+    onUploadingChange(index, attachmentUpload.isUploading)
+    return () => onUploadingChange(index, false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attachmentUpload.isUploading, index])
 
   // Attachments live in local hook state (Drive upload is async and pre-submission,
   // same pattern as every other attachment flow in this app) — synced into the form's
@@ -238,6 +250,10 @@ export function PayrollClient({
     }
   })
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "lines" })
+  const [uploadingLines, setUploadingLines] = useState<Record<number, boolean>>({})
+  const anyLineUploading = Object.values(uploadingLines).some(Boolean)
+  const handleUploadingChange = (index: number, isUploading: boolean) =>
+    setUploadingLines((prev) => ({ ...prev, [index]: isUploading }))
 
   const adjustForm = useForm<SeveranceAdjustmentInput>({
     resolver: zodResolver(severanceAdjustmentSchema),
@@ -358,7 +374,10 @@ export function PayrollClient({
             open={payrollOpen}
             onOpenChange={(o) => {
               setPayrollOpen(o)
-              if (!o) form.reset({ period: "", liquidacion_reference: "", lines: [emptyLine()] })
+              if (!o) {
+                form.reset({ period: "", liquidacion_reference: "", lines: [emptyLine()] })
+                setUploadingLines({})
+              }
             }}
           >
             <DialogTrigger
@@ -415,6 +434,7 @@ export function PayrollClient({
                       form={form}
                       onRemove={() => remove(index)}
                       removable={fields.length > 1}
+                      onUploadingChange={handleUploadingChange}
                     />
                   ))}
                 </div>
@@ -429,8 +449,16 @@ export function PayrollClient({
                   Agregar otra transferencia
                 </Button>
 
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Guardando..." : "Registrar"}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={form.formState.isSubmitting || anyLineUploading}
+                >
+                  {form.formState.isSubmitting
+                    ? "Guardando..."
+                    : anyLineUploading
+                      ? "Subiendo comprobantes..."
+                      : "Registrar"}
                 </Button>
               </form>
             </DialogContent>

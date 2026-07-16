@@ -13,7 +13,10 @@ export const payrollLineSchema = z.object({
 export const createPayrollSchema = z.object({
   period: z.string().date("La fecha no tiene un formato válido"),
   liquidacion_reference: z.string().optional().nullable(),
-  lines: z.array(payrollLineSchema).min(1, "Agrega al menos una transferencia")
+  lines: z
+    .array(payrollLineSchema)
+    .min(1, "Agrega al menos una transferencia")
+    .max(20, "Máximo 20 transferencias por registro")
 })
 
 export const severanceAdjustmentSchema = z.object({

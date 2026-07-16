@@ -1187,7 +1187,7 @@ export type Database = {
           p_liquidacion_reference: string
           p_period: string
         }
-        Returns: string
+        Returns: Json
       }
     }
     Enums: {
