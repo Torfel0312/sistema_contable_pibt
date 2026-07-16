@@ -866,6 +866,80 @@ export type Database = {
           },
         ]
       }
+      payroll_movements: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          movement_id: string
+          payroll_record_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          movement_id: string
+          payroll_record_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          movement_id?: string
+          payroll_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_movements_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_movements_payroll_record_id_fkey"
+            columns: ["payroll_record_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_records: {
+        Row: {
+          created_at: string
+          created_by_id: string
+          id: string
+          liquidacion_reference: string | null
+          period: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_id: string
+          id?: string
+          liquidacion_reference?: string | null
+          period: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_id?: string
+          id?: string
+          liquidacion_reference?: string | null
+          period?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_comments: {
         Row: {
           created_at: string
@@ -966,6 +1040,38 @@ export type Database = {
             columns: ["settlement_id"]
             isOneToOne: false
             referencedRelation: "expense_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      severance_reserve_adjustments: {
+        Row: {
+          amount_delta: number
+          created_at: string
+          created_by_id: string
+          id: string
+          note: string
+        }
+        Insert: {
+          amount_delta: number
+          created_at?: string
+          created_by_id: string
+          id?: string
+          note: string
+        }
+        Update: {
+          amount_delta?: number
+          created_at?: string
+          created_by_id?: string
+          id?: string
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "severance_reserve_adjustments_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1073,6 +1179,16 @@ export type Database = {
       }
       get_pending_reminders: { Args: never; Returns: Json }
       increment_and_get_folio: { Args: never; Returns: number }
+      register_payroll: {
+        Args: {
+          p_category_id: string
+          p_created_by_id: string
+          p_lines: Json
+          p_liquidacion_reference: string
+          p_period: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       comment_entity: "INTENTION" | "SETTLEMENT"

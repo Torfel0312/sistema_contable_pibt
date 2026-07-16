@@ -16,7 +16,8 @@ import {
   Mail,
   ShieldCheck,
   CreditCard,
-  Tags
+  Tags,
+  Wallet
 } from "lucide-react"
 import {
   Sidebar,
@@ -65,6 +66,12 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Rendiciones",
         icon: Receipt,
         roles: ["ADMIN", "BURSAR", "FINANCE"]
+      },
+      {
+        href: "/payroll",
+        label: "Remuneraciones",
+        icon: Wallet,
+        roles: ["ADMIN"]
       }
     ]
   },
