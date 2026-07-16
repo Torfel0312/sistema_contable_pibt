@@ -1,13 +1,21 @@
 import { z } from "zod"
+import { attachmentInputSchema } from "@/lib/validators/movement"
+
+export const REQUEST_AMOUNT_MIN = 10000
+export const REQUEST_AMOUNT_MAX = 5000000
 
 export const createIntentionSchema = z.object({
-  amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
+  amount: z.coerce
+    .number()
+    .min(REQUEST_AMOUNT_MIN, `El monto mínimo es $${REQUEST_AMOUNT_MIN.toLocaleString("es-CL")}`)
+    .max(REQUEST_AMOUNT_MAX, `El monto máximo es $${REQUEST_AMOUNT_MAX.toLocaleString("es-CL")}`),
   description: z.string().min(5, "La descripción debe tener al menos 5 caracteres"),
   purpose: z.string().optional(),
   date_needed: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido")
-    .optional()
+    .optional(),
+  funding_method: z.enum(["REIMBURSEMENT", "TRANSFER"])
 })
 
 export const reviewIntentionSchema = z.object({
@@ -19,7 +27,8 @@ export const registerTransferSchema = z.object({
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
   transfer_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
   reference: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
 })
 
 export const addCommentSchema = z.object({

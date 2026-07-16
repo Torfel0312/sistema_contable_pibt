@@ -8,6 +8,7 @@ import { createMovementSchema } from "@/lib/validators/movement"
 import type { CreateMovementInput } from "@/lib/validators/movement"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { format } from "date-fns"
@@ -291,13 +292,19 @@ export function MovementForm(props: Props) {
               <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
                 Monto (CLP)
               </FieldLabel>
-              <Input
-                type="number"
-                min="1"
-                className="h-12 sm:h-14 text-lg font-bold"
-                placeholder="0"
-                aria-invalid={!!form.formState.errors.amount}
-                {...form.register("amount", { valueAsNumber: true })}
+              <Controller
+                name="amount"
+                control={form.control}
+                render={({ field }) => (
+                  <CurrencyInput
+                    className="h-12 sm:h-14 text-lg font-bold"
+                    placeholder="0"
+                    aria-invalid={!!form.formState.errors.amount}
+                    value={field.value as number | string | undefined}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
               <FieldError errors={[form.formState.errors.amount]} />
             </Field>

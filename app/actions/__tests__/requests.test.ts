@@ -53,7 +53,8 @@ const mockUser = {
 }
 const requestInput = {
   amount: 5000,
-  description: "Test request long enough"
+  description: "Test request long enough",
+  funding_method: "TRANSFER" as const
 }
 
 describe("createRequest", () => {

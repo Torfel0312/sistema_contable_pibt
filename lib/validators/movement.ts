@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-const attachmentInputSchema = z.object({
+export const attachmentInputSchema = z.object({
   driveFileId: z.string().min(1),
   driveViewLink: z.string().min(1),
   fileName: z.string().min(1),

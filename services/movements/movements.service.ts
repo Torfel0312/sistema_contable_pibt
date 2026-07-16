@@ -22,7 +22,7 @@ function normalizeOptional(value?: string | null) {
 // If this fails, the movement itself is not rolled back (same non-transactional
 // tolerance already used elsewhere in this codebase, e.g. folio increment + insert) —
 // the error is logged server-side instead of blocking the movement response.
-async function insertMovementAttachments(
+export async function insertMovementAttachments(
   db: DB,
   movementId: string,
   attachments: AttachmentInput[],

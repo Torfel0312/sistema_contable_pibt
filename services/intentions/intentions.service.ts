@@ -6,6 +6,8 @@ import {
   sendIntentionReviewNotification,
   sendTransferNotification
 } from "@/services/email/workflow-emails.service"
+import { insertMovementAttachments } from "@/services/movements/movements.service"
+import { increment_and_get_folio } from "@/lib/utils/folio"
 import type {
   CreateIntentionInput,
   ReviewIntentionInput,
@@ -66,7 +68,8 @@ export const intentionsService = {
         amount: input.amount,
         description: input.description,
         purpose: input.purpose ?? null,
-        date_needed: input.date_needed ?? null
+        date_needed: input.date_needed ?? null,
+        funding_method: input.funding_method
       })
       .select()
       .single()
@@ -135,6 +138,47 @@ export const intentionsService = {
     input: RegisterTransferInput,
     userId: string
   ) {
+    const intention = await this.getById(db, intentionId)
+
+    const { data: category, error: categoryErr } = await db
+      .from("movement_categories")
+      .select("id")
+      .eq("name", "Transferencias a Ministerios")
+      .eq("is_system", true)
+      .single()
+    if (categoryErr || !category) {
+      throw new Error("No se encontró la categoría del sistema 'Transferencias a Ministerios'")
+    }
+
+    const folio = await increment_and_get_folio()
+
+    const { data: movement, error: movErr } = await db
+      .from("movements")
+      .insert({
+        folio,
+        movement_date: input.transfer_date,
+        movement_type: "EXPENSE",
+        amount: input.amount,
+        category_id: category.id,
+        delivered_by: intention.users?.full_name ?? "Ministro",
+        created_by_id: userId,
+        notes: `Transferencia por concepto de solicitud del ministerio: ${intention.ministries?.name ?? ""}`
+      })
+      .select("id")
+      .single()
+    if (movErr) throw movErr
+
+    if (input.attachments?.length) {
+      await insertMovementAttachments(db, movement.id, input.attachments, userId)
+    }
+
+    await auditService.logMovement({
+      movement_id: movement.id,
+      action: "MOVEMENT_CREATED_FROM_TRANSFER",
+      user_id: userId,
+      new_value: { intention_id: intentionId, amount: input.amount }
+    })
+
     const { data, error } = await db
       .from("intention_transfers")
       .insert({
@@ -143,7 +187,8 @@ export const intentionsService = {
         transfer_date: input.transfer_date,
         reference: input.reference ?? null,
         notes: input.notes ?? null,
-        registered_by: userId
+        registered_by: userId,
+        movement_id: movement.id
       })
       .select()
       .single()
@@ -157,7 +202,6 @@ export const intentionsService = {
       new_value: { amount: input.amount, transfer_date: input.transfer_date }
     })
 
-    const intention = await this.getById(db, intentionId)
     const ministerUser = intention.users
     if (ministerUser?.email) {
       await sendTransferNotification(intention, ministerUser).catch(() => null)

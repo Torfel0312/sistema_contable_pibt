@@ -17,8 +17,10 @@ import {
   Plus
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { IntentionProgress } from "@/components/intentions/intention-progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { DatePicker } from "@/components/ui/date-picker"
+import { AttachmentInput } from "@/components/ui/attachment-input"
+import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
 import { formatDate, formatDateTime, formatCLP } from "@/lib/utils"
 import {
   reviewIntentionSchema,
@@ -84,6 +88,7 @@ export function IntentionDetailClient({
   const [reviewOpen, setReviewOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const [settlementOpen, setSettlementOpen] = useState(false)
+  const attachmentUpload = useAttachmentUpload()
 
   const reviewForm = useForm<ReviewIntentionInput>({
     resolver: zodResolver(reviewIntentionSchema),
@@ -150,10 +155,18 @@ export function IntentionDetailClient({
 
   async function handleRegisterTransfer(values: RegisterTransferInput) {
     try {
+      const attachments = attachmentUpload.items.map((item) => ({
+        driveFileId: item.driveFileId,
+        driveViewLink: item.driveViewLink,
+        fileName: item.fileName,
+        mimeType: item.mimeType,
+        sizeBytes: item.sizeBytes
+      }))
       const transferData = await registerTransfer(intention.id, {
         ...values,
         reference: values.reference || undefined,
-        notes: values.notes || undefined
+        notes: values.notes || undefined,
+        attachments
       })
       setCurrentTransfer(transferData as unknown as Transfer)
       setTransferOpen(false)
@@ -197,6 +210,14 @@ export function IntentionDetailClient({
         Volver
       </Button>
 
+      <IntentionProgress
+        status={intention.status}
+        fundingMethod={intention.funding_method}
+        hasTransfer={!!currentTransfer}
+        hasSettlement={settlements.length > 0}
+        hasApprovedSettlement={settlements.some((s) => s.status === "APPROVED")}
+      />
+
       {/* Header */}
       <Card className="p-5 space-y-4">
         <div className="flex items-start justify-between">
@@ -219,6 +240,10 @@ export function IntentionDetailClient({
           <div>
             <span className="text-muted-foreground">Descripción: </span>
             {intention.description}
+          </div>
+          <div>
+            <span className="text-muted-foreground">Método de financiamiento: </span>
+            {intention.funding_method === "TRANSFER" ? "Transferencia anticipada" : "Reembolso"}
           </div>
           {intention.purpose && (
             <div>
@@ -313,7 +338,7 @@ export function IntentionDetailClient({
       </Card>
 
       {/* Transfer section */}
-      {intention.status === "APPROVED" && (
+      {intention.status === "APPROVED" && intention.funding_method === "TRANSFER" && (
         <Card className="p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
@@ -339,7 +364,19 @@ export function IntentionDetailClient({
                   >
                     <Field>
                       <FieldLabel>Monto (CLP) *</FieldLabel>
-                      <Input type="number" min={1} {...transferForm.register("amount")} />
+                      <Controller
+                        control={transferForm.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={(value) =>
+                              field.onChange(value === undefined ? "" : String(value))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
                       <FieldError errors={[transferForm.formState.errors.amount]} />
                     </Field>
                     <Field>
@@ -377,6 +414,20 @@ export function IntentionDetailClient({
                         {...transferForm.register("notes")}
                       />
                       <FieldError errors={[transferForm.formState.errors.notes]} />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Comprobante de transferencia</FieldLabel>
+                      <AttachmentInput
+                        items={attachmentUpload.items}
+                        isUploading={attachmentUpload.isUploading}
+                        onAddFiles={attachmentUpload.addFiles}
+                        onRemove={attachmentUpload.remove}
+                      />
+                      {attachmentUpload.error && (
+                        <p className="text-sm font-normal text-destructive">
+                          {attachmentUpload.error}
+                        </p>
+                      )}
                     </Field>
                     <Button
                       type="submit"
@@ -423,7 +474,8 @@ export function IntentionDetailClient({
       )}
 
       {/* Settlement section */}
-      {intention.status === "APPROVED" && currentTransfer && (
+      {intention.status === "APPROVED" &&
+        (intention.funding_method === "REIMBURSEMENT" || currentTransfer) && (
         <Card className="p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
@@ -469,7 +521,19 @@ export function IntentionDetailClient({
                   >
                     <Field>
                       <FieldLabel>Monto del gasto (CLP) *</FieldLabel>
-                      <Input type="number" min={1} {...settlementForm.register("amount")} />
+                      <Controller
+                        control={settlementForm.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={(value) =>
+                              field.onChange(value === undefined ? "" : String(value))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
                       <FieldError errors={[settlementForm.formState.errors.amount]} />
                     </Field>
                     <Field>

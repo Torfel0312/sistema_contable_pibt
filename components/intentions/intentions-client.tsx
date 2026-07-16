@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Plus, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import {
   ItemActions
 } from "@/components/ui/item"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { DatePicker } from "@/components/ui/date-picker"
 import { formatDate, formatCLP } from "@/lib/utils"
 import { createIntentionSchema } from "@/lib/validators/intention"
@@ -47,6 +49,11 @@ const STATUS_LABELS = {
   PENDING: "Pendiente",
   APPROVED: "Aprobada",
   REJECTED: "Rechazada"
+}
+
+const FUNDING_METHOD_LABELS = {
+  REIMBURSEMENT: "Reembolso",
+  TRANSFER: "Transferencia anticipada"
 }
 
 export function IntentionsClient({
@@ -75,7 +82,8 @@ export function IntentionsClient({
       amount: "",
       description: "",
       purpose: "",
-      date_needed: ""
+      date_needed: "",
+      funding_method: "REIMBURSEMENT"
     }
   })
 
@@ -92,7 +100,8 @@ export function IntentionsClient({
         amount: "",
         description: "",
         purpose: "",
-        date_needed: ""
+        date_needed: "",
+        funding_method: "REIMBURSEMENT"
       })
       toast.success("Solicitud enviada al equipo de tesorería")
     } catch (err) {
@@ -123,7 +132,8 @@ export function IntentionsClient({
                   amount: "",
                   description: "",
                   purpose: "",
-                  date_needed: ""
+                  date_needed: "",
+                  funding_method: "REIMBURSEMENT"
                 })
             }}
           >
@@ -142,14 +152,22 @@ export function IntentionsClient({
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <Field>
                   <FieldLabel htmlFor="int-amount">Monto solicitado (CLP) *</FieldLabel>
-                  <Input
-                    id="int-amount"
-                    type="number"
-                    min={1}
-                    step={1000}
-                    placeholder="100000"
-                    {...form.register("amount")}
+                  <Controller
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <CurrencyInput
+                        id="int-amount"
+                        placeholder="100.000"
+                        value={field.value}
+                        onChange={(value) => field.onChange(value === undefined ? "" : String(value))}
+                        onBlur={field.onBlur}
+                      />
+                    )}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Entre $10.000 y $5.000.000
+                  </p>
                   <FieldError errors={[form.formState.errors.amount]} />
                 </Field>
                 <Field>
@@ -190,6 +208,22 @@ export function IntentionsClient({
                   />
                   <FieldError errors={[form.formState.errors.date_needed]} />
                 </Field>
+                <Field>
+                  <FieldLabel htmlFor="int-funding-method">Método de financiamiento *</FieldLabel>
+                  <NativeSelect
+                    id="int-funding-method"
+                    className="w-full"
+                    {...form.register("funding_method")}
+                  >
+                    <NativeSelectOption value="REIMBURSEMENT">
+                      Reembolso (gasto primero, rindo después)
+                    </NativeSelectOption>
+                    <NativeSelectOption value="TRANSFER">
+                      Transferencia anticipada (la iglesia transfiere primero)
+                    </NativeSelectOption>
+                  </NativeSelect>
+                  <FieldError errors={[form.formState.errors.funding_method]} />
+                </Field>
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Enviando..." : "Enviar solicitud"}
                 </Button>
@@ -229,6 +263,9 @@ export function IntentionsClient({
                       {formatCLP(intention.amount)}
                     </ItemTitle>
                     <ItemDescription>{intention.description}</ItemDescription>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {FUNDING_METHOD_LABELS[intention.funding_method]}
+                    </p>
                     {!isMinister && intention.ministries && (
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {intention.ministries.name}

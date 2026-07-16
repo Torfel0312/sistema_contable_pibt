@@ -10,6 +10,7 @@ import { attachmentHref } from "@/lib/storage/attachments"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
@@ -254,12 +255,19 @@ export function SettlementsClient({ initialInvoices }: { initialInvoices: Invoic
                     >
                       Monto Total
                     </FieldLabel>
-                    <Input
-                      id="invoice-amount"
-                      type="number"
-                      placeholder="0"
-                      className="h-12 bg-muted border-none rounded-xl px-5 text-lg font-bold"
-                      {...form.register("amount")}
+                    <Controller
+                      control={form.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <CurrencyInput
+                          id="invoice-amount"
+                          placeholder="0"
+                          className="h-12 bg-muted border-none rounded-xl px-5 text-lg font-bold"
+                          value={field.value as number | string | undefined}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
+                      )}
                     />
                     <FieldError errors={[form.formState.errors.amount]} />
                   </Field>
