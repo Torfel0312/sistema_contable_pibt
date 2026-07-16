@@ -168,6 +168,42 @@ stateDiagram-v2
 
 ---
 
+## Payroll Registration Flow (Remuneraciones)
+
+ADMIN-only feature (`MANAGE_PAYROLL`). UBACH sends a monthly liquidación externally (not
+tracked in the app); the ADMIN registers the resulting transfers — salary, contributions,
+and optionally other related payments — as a single monthly `payroll_records` row with N
+linked movements (`payroll_movements`), one per transfer. The number of transfers is not
+fixed at 2: the client confirmed there can be more.
+
+```mermaid
+flowchart TD
+    A([ADMIN registers monthly payroll]) --> B[Zod validates period + 1..N line items]
+    B --> C["register_payroll() RPC — SECURITY DEFINER, atomic"]
+    C --> D[Insert payroll_records row, period normalized to month start]
+    C --> E["For each line: increment folio → insert movements (EXPENSE, category Remuneraciones)"]
+    E --> F[Insert payroll_movements linking record ↔ movement ↔ kind]
+    F --> G[Attachments uploaded to Drive per movement, same pattern as Etapa 1]
+    G --> H([System audit log entry: PAYROLL_REGISTERED])
+```
+
+One `payroll_records` row per calendar month (unique index on `period`, always the 1st of
+the month) — attempting a second registration for the same month fails at the DB level.
+
+### Reserva de indemnización (severance reserve)
+
+Append-only ledger, same philosophy as `movement_audit_log` — never edited destructively,
+only appended to. Current balance is always derived, never stored as a mutable field.
+
+```mermaid
+flowchart LR
+    A([ADMIN adjusts reserve]) --> B[Zod validates amount_delta ≠ 0 + required note]
+    B --> C[Insert severance_reserve_adjustments row]
+    C --> D([Balance = SUM of all amount_delta])
+```
+
+---
+
 ## Scheduled Reminders
 
 A Supabase cron job (`supabase/migrations/20260426000002_reminder_cron.sql`) runs periodically
