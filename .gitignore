@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# playwright — run reports/traces are disposable; docs/screenshots/ IS committed
+# (design-reference captures, not test output)
+/test-results/
+/playwright-report/
+/blob-report/
+
 # next.js
 /.next/
 /out/
