@@ -8,7 +8,7 @@ export function IntentionReviewEmail({
   action,
   detailUrl
 }: {
-  intention: { amount: number; description: string }
+  intention: { amount: number; purpose: string }
   minister: { full_name: string }
   action: "APPROVED" | "REJECTED"
   detailUrl: string
@@ -31,7 +31,7 @@ export function IntentionReviewEmail({
         <DataTable
           rows={[
             ["Monto", formatAmount(intention.amount)],
-            ["Descripción", intention.description]
+            ["Propósito", intention.purpose]
           ]}
         />
       </Section>

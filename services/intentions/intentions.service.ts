@@ -66,8 +66,7 @@ export const intentionsService = {
         ministry_id: ministryId,
         requested_by: userId,
         amount: input.amount,
-        description: input.description,
-        purpose: input.purpose ?? null,
+        purpose: input.purpose,
         date_needed: input.date_needed ?? null,
         funding_method: input.funding_method
       })

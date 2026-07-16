@@ -31,6 +31,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { formatDate, formatCLP } from "@/lib/utils"
 import { createIntentionSchema } from "@/lib/validators/intention"
 import type { CreateIntentionInput } from "@/lib/validators/intention"
+import { MIN_REQUEST_AMOUNT, MAX_REQUEST_AMOUNT } from "@/lib/constants/requests"
 import type { intentionsService } from "@/services/intentions/intentions.service"
 import type { ministriesService } from "@/services/ministries/ministries.service"
 import { createRequest } from "@/app/actions/requests"
@@ -80,7 +81,6 @@ export function IntentionsClient({
     >,
     defaultValues: {
       amount: "",
-      description: "",
       purpose: "",
       date_needed: "",
       funding_method: "REIMBURSEMENT"
@@ -91,14 +91,12 @@ export function IntentionsClient({
     try {
       const created = await createRequest({
         ...values,
-        purpose: values.purpose || undefined,
         date_needed: values.date_needed || undefined
       })
       setIntentions((prev) => [created as unknown as Intention, ...prev])
       setOpen(false)
       form.reset({
         amount: "",
-        description: "",
         purpose: "",
         date_needed: "",
         funding_method: "REIMBURSEMENT"
@@ -130,7 +128,6 @@ export function IntentionsClient({
               if (!o)
                 form.reset({
                   amount: "",
-                  description: "",
                   purpose: "",
                   date_needed: "",
                   funding_method: "REIMBURSEMENT"
@@ -166,24 +163,16 @@ export function IntentionsClient({
                     )}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Entre $10.000 y $5.000.000
+                    Entre ${MIN_REQUEST_AMOUNT.toLocaleString("es-CL")} y $
+                    {MAX_REQUEST_AMOUNT.toLocaleString("es-CL")}
                   </p>
                   <FieldError errors={[form.formState.errors.amount]} />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="int-description">Descripción *</FieldLabel>
-                  <Input
-                    id="int-description"
-                    placeholder="Ej: Materiales para campamento de jóvenes"
-                    {...form.register("description")}
-                  />
-                  <FieldError errors={[form.formState.errors.description]} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="int-purpose">Propósito</FieldLabel>
+                  <FieldLabel htmlFor="int-purpose">Propósito *</FieldLabel>
                   <Input
                     id="int-purpose"
-                    placeholder="Categoría o finalidad del gasto"
+                    placeholder="Ej: Materiales para campamento de jóvenes"
                     {...form.register("purpose")}
                   />
                   <FieldError errors={[form.formState.errors.purpose]} />
@@ -262,7 +251,7 @@ export function IntentionsClient({
                     <ItemTitle className="flex items-center gap-2">
                       {formatCLP(intention.amount)}
                     </ItemTitle>
-                    <ItemDescription>{intention.description}</ItemDescription>
+                    <ItemDescription>{intention.purpose}</ItemDescription>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {FUNDING_METHOD_LABELS[intention.funding_method]}
                     </p>
