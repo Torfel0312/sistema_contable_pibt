@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Plus, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import {
   Dialog,
   DialogContent,
@@ -151,14 +152,22 @@ export function IntentionsClient({
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <Field>
                   <FieldLabel htmlFor="int-amount">Monto solicitado (CLP) *</FieldLabel>
-                  <Input
-                    id="int-amount"
-                    type="number"
-                    min={1}
-                    step={1000}
-                    placeholder="100000"
-                    {...form.register("amount")}
+                  <Controller
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <CurrencyInput
+                        id="int-amount"
+                        placeholder="100.000"
+                        value={field.value}
+                        onChange={(value) => field.onChange(value === undefined ? "" : String(value))}
+                        onBlur={field.onBlur}
+                      />
+                    )}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Entre $10.000 y $5.000.000
+                  </p>
                   <FieldError errors={[form.formState.errors.amount]} />
                 </Field>
                 <Field>

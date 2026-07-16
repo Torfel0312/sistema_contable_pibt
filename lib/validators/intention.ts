@@ -1,8 +1,14 @@
 import { z } from "zod"
 import { attachmentInputSchema } from "@/lib/validators/movement"
 
+export const REQUEST_AMOUNT_MIN = 10000
+export const REQUEST_AMOUNT_MAX = 5000000
+
 export const createIntentionSchema = z.object({
-  amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
+  amount: z.coerce
+    .number()
+    .min(REQUEST_AMOUNT_MIN, `El monto mínimo es $${REQUEST_AMOUNT_MIN.toLocaleString("es-CL")}`)
+    .max(REQUEST_AMOUNT_MAX, `El monto máximo es $${REQUEST_AMOUNT_MAX.toLocaleString("es-CL")}`),
   description: z.string().min(5, "La descripción debe tener al menos 5 caracteres"),
   purpose: z.string().optional(),
   date_needed: z

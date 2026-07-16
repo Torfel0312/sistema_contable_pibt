@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card"
 import { IntentionProgress } from "@/components/intentions/intention-progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import {
   Dialog,
   DialogContent,
@@ -363,7 +364,19 @@ export function IntentionDetailClient({
                   >
                     <Field>
                       <FieldLabel>Monto (CLP) *</FieldLabel>
-                      <Input type="number" min={1} {...transferForm.register("amount")} />
+                      <Controller
+                        control={transferForm.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={(value) =>
+                              field.onChange(value === undefined ? "" : String(value))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
                       <FieldError errors={[transferForm.formState.errors.amount]} />
                     </Field>
                     <Field>
@@ -508,7 +521,19 @@ export function IntentionDetailClient({
                   >
                     <Field>
                       <FieldLabel>Monto del gasto (CLP) *</FieldLabel>
-                      <Input type="number" min={1} {...settlementForm.register("amount")} />
+                      <Controller
+                        control={settlementForm.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={(value) =>
+                              field.onChange(value === undefined ? "" : String(value))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
                       <FieldError errors={[settlementForm.formState.errors.amount]} />
                     </Field>
                     <Field>
