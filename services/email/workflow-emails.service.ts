@@ -22,7 +22,7 @@ const TRANSACTIONAL_HEADERS = {
 export async function sendIntentionNotification(intention: {
   id: string
   amount: number
-  description: string
+  purpose: string
   token: string
 }): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())
@@ -44,7 +44,7 @@ export async function sendIntentionNotification(intention: {
 }
 
 export async function sendIntentionReviewNotification(
-  intention: { id: string; amount: number; description: string },
+  intention: { id: string; amount: number; purpose: string },
   minister: { email: string; full_name: string },
   action: "APPROVED" | "REJECTED"
 ): Promise<void> {
@@ -70,7 +70,7 @@ export async function sendIntentionReviewNotification(
 }
 
 export async function sendTransferNotification(
-  intention: { id: string; amount: number; description: string },
+  intention: { id: string; amount: number; purpose: string },
   minister: { email: string; full_name: string }
 ): Promise<void> {
   const settings = await settingsService.getAll(createSupabaseAdminClient())

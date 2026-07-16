@@ -6,7 +6,7 @@ export function IntentionNotificationEmail({
   intention,
   reviewUrl
 }: {
-  intention: { amount: number; description: string }
+  intention: { amount: number; purpose: string }
   reviewUrl: string
 }) {
   return (
@@ -20,7 +20,7 @@ export function IntentionNotificationEmail({
         <DataTable
           rows={[
             ["Monto solicitado", formatAmount(intention.amount)],
-            ["Descripción", intention.description]
+            ["Propósito", intention.purpose]
           ]}
         />
       </Section>

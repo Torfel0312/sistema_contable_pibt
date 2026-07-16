@@ -1,16 +1,20 @@
 import { z } from "zod"
 import { attachmentInputSchema } from "@/lib/validators/movement"
+import {
+  MIN_REQUEST_AMOUNT,
+  MAX_REQUEST_AMOUNT,
+  REQUEST_AMOUNT_MIN_MESSAGE,
+  REQUEST_AMOUNT_MAX_MESSAGE
+} from "@/lib/constants/requests"
 
-export const REQUEST_AMOUNT_MIN = 10000
-export const REQUEST_AMOUNT_MAX = 5000000
+const requestAmountSchema = z.coerce
+  .number()
+  .min(MIN_REQUEST_AMOUNT, REQUEST_AMOUNT_MIN_MESSAGE)
+  .max(MAX_REQUEST_AMOUNT, REQUEST_AMOUNT_MAX_MESSAGE)
 
 export const createIntentionSchema = z.object({
-  amount: z.coerce
-    .number()
-    .min(REQUEST_AMOUNT_MIN, `El monto mínimo es $${REQUEST_AMOUNT_MIN.toLocaleString("es-CL")}`)
-    .max(REQUEST_AMOUNT_MAX, `El monto máximo es $${REQUEST_AMOUNT_MAX.toLocaleString("es-CL")}`),
-  description: z.string().min(5, "La descripción debe tener al menos 5 caracteres"),
-  purpose: z.string().optional(),
+  amount: requestAmountSchema,
+  purpose: z.string().min(5, "El propósito debe tener al menos 5 caracteres"),
   date_needed: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido")
@@ -24,7 +28,7 @@ export const reviewIntentionSchema = z.object({
 })
 
 export const registerTransferSchema = z.object({
-  amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
+  amount: requestAmountSchema,
   transfer_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
   reference: z.string().optional(),
   notes: z.string().optional(),

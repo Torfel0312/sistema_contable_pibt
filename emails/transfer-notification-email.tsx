@@ -7,7 +7,7 @@ export function TransferNotificationEmail({
   minister,
   detailUrl
 }: {
-  intention: { amount: number; description: string }
+  intention: { amount: number; purpose: string }
   minister: { full_name: string }
   detailUrl: string
 }) {
@@ -26,7 +26,7 @@ export function TransferNotificationEmail({
         <DataTable
           rows={[
             ["Monto", formatAmount(intention.amount)],
-            ["Descripción", intention.description]
+            ["Propósito", intention.purpose]
           ]}
         />
       </Section>

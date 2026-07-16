@@ -26,7 +26,7 @@ export async function GET() {
       ...intentionsPending.map((i) => ({
         type: "INTENTION_APPROVED" as const,
         id: i.id,
-        description: i.description,
+        description: i.purpose,
         href: `/requests/${i.id}`,
         created_at: i.updated_at
       })),

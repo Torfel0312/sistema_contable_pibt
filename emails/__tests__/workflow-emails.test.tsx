@@ -8,7 +8,7 @@ import { TransferNotificationEmail } from "../transfer-notification-email"
 
 const render = (el: React.ReactElement) => renderToStaticMarkup(el)
 
-const intention = { amount: 200000, description: "Compra de sillas" }
+const intention = { amount: 200000, purpose: "Compra de sillas" }
 const minister = { full_name: "Ana González" }
 const detailUrl = "https://example.com/requests/1"
 

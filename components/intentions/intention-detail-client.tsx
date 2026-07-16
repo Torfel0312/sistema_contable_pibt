@@ -238,19 +238,13 @@ export function IntentionDetailClient({
 
         <div className="grid gap-2 text-sm">
           <div>
-            <span className="text-muted-foreground">Descripción: </span>
-            {intention.description}
+            <span className="text-muted-foreground">Propósito: </span>
+            {intention.purpose}
           </div>
           <div>
             <span className="text-muted-foreground">Método de financiamiento: </span>
             {intention.funding_method === "TRANSFER" ? "Transferencia anticipada" : "Reembolso"}
           </div>
-          {intention.purpose && (
-            <div>
-              <span className="text-muted-foreground">Propósito: </span>
-              {intention.purpose}
-            </div>
-          )}
           {intention.date_needed && (
             <div>
               <span className="text-muted-foreground">Fecha requerida: </span>

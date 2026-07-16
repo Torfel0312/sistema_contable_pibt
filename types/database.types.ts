@@ -68,11 +68,10 @@ export type Database = {
           amount: number
           created_at: string
           date_needed: string | null
-          description: string
           funding_method: Database["public"]["Enums"]["intention_funding_method"]
           id: string
           ministry_id: string
-          purpose: string | null
+          purpose: string
           requested_by: string
           review_message: string | null
           reviewed_at: string | null
@@ -85,11 +84,10 @@ export type Database = {
           amount: number
           created_at?: string
           date_needed?: string | null
-          description: string
           funding_method: Database["public"]["Enums"]["intention_funding_method"]
           id?: string
           ministry_id: string
-          purpose?: string | null
+          purpose: string
           requested_by: string
           review_message?: string | null
           reviewed_at?: string | null
@@ -102,11 +100,10 @@ export type Database = {
           amount?: number
           created_at?: string
           date_needed?: string | null
-          description?: string
           funding_method?: Database["public"]["Enums"]["intention_funding_method"]
           id?: string
           ministry_id?: string
-          purpose?: string | null
+          purpose?: string
           requested_by?: string
           review_message?: string | null
           reviewed_at?: string | null
