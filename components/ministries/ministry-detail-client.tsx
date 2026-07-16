@@ -21,10 +21,11 @@ import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
-import { formatDate } from "@/lib/utils"
+import { formatDate, formatCLP } from "@/lib/utils"
 import { updateMinistrySchema, assignMinisterSchema } from "@/lib/validators/ministry"
 import type { UpdateMinistryInput, AssignMinisterInput } from "@/lib/validators/ministry"
 import { assignMinister, unassignMinister, updateMinistry } from "@/app/actions/ministries"
+import type { MinistryLeftoverRow } from "@/services/ministries/ministry-leftover.service"
 
 type Ministry = {
   id: string
@@ -54,13 +55,15 @@ type Props = {
   users: MinistryUser[]
   assignments: Assignment[]
   currentAssignment: Assignment | null
+  leftover: MinistryLeftoverRow[]
 }
 
 export function MinistryDetailClient({
   ministry: initialMinistry,
   users,
   assignments: initialAssignments,
-  currentAssignment: initialCurrent
+  currentAssignment: initialCurrent,
+  leftover
 }: Props) {
   const [ministry, setMinistry] = useState<Ministry>(initialMinistry)
   const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
@@ -364,6 +367,55 @@ export function MinistryDetailClient({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <Separator />
+
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-base font-medium">Remanente</h2>
+          <p className="text-xs text-muted-foreground">
+            Transferido menos rendido (aprobado), a la fecha
+          </p>
+        </div>
+
+        {leftover.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Sin solicitudes con transferencia anticipada.
+          </p>
+        ) : (
+          <>
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wide">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-medium">Solicitud</th>
+                    <th className="px-4 py-2 text-right font-medium">Transferido</th>
+                    <th className="px-4 py-2 text-right font-medium">Rendido</th>
+                    <th className="px-4 py-2 text-right font-medium">Remanente</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {leftover.map((row) => (
+                    <tr key={row.intention_id} className="bg-card">
+                      <td className="px-4 py-3">{row.purpose}</td>
+                      <td className="px-4 py-3 text-right">{formatCLP(row.transferred_amount)}</td>
+                      <td className="px-4 py-3 text-right">{formatCLP(row.settled_amount)}</td>
+                      <td
+                        className={`px-4 py-3 text-right font-medium ${row.leftover > 0 ? "text-amber-600" : row.leftover < 0 ? "text-destructive" : ""}`}
+                      >
+                        {formatCLP(row.leftover)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm font-medium text-right">
+              Total: {formatCLP(leftover.reduce((sum, row) => sum + row.leftover, 0))}
+            </p>
+          </>
         )}
       </section>
 

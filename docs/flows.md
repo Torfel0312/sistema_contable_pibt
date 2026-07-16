@@ -204,6 +204,35 @@ flowchart LR
 
 ---
 
+## Ministry Leftover Calculation (Remanente por Ministerio)
+
+Per request, and aggregated by ministry: how much of a TRANSFER-funded request's money was
+never accounted for in an approved settlement. Cutoff is "as of a date" (`p_as_of`, default
+today) — not a start/end range.
+
+```
+remanente = monto_transferido − SUM(rendiciones APROBADAS hasta la fecha de corte)
+```
+
+```mermaid
+flowchart TD
+    A([Ministry detail page loads]) --> B["get_ministry_leftover_summary(ministry_id, as_of) RPC"]
+    B --> C[Filter: funding_method = TRANSFER only]
+    C --> D[Filter: settlement status = APPROVED — explicit whitelist, not a blacklist]
+    D --> E[Group by intention, then by ministry]
+    E --> F([Table: per-request leftover + ministry total])
+```
+
+Two deliberate filters, both from the plan: `funding_method = 'TRANSFER'` (leftover only
+makes sense on the advance-transfer path — REIMBURSEMENT never has money sitting with the
+ministry), and `status = 'APPROVED'` as an explicit whitelist rather than `!= 'REJECTED'`.
+The whitelist is what keeps this calculation independent of the settlement state machine
+Etapa 5 introduced — `DRAFT`/`RETURNED_FOR_CORRECTION` never accidentally count as
+"accounted for." Negative leftover (over-spent) is shown with its real sign, never clamped
+to zero.
+
+---
+
 ## Scheduled Reminders
 
 A Supabase cron job (`supabase/migrations/20260426000002_reminder_cron.sql`) runs periodically
