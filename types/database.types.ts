@@ -1172,6 +1172,10 @@ export type Database = {
         Args: { p_from?: string; p_to?: string }
         Returns: Json
       }
+      get_ministry_leftover_summary: {
+        Args: { p_as_of?: string; p_ministry_id?: string }
+        Returns: Json
+      }
       get_my_active_ministries: { Args: never; Returns: string[] }
       get_my_role: {
         Args: never
