@@ -36,14 +36,21 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     settlementsService.list(db, { intentionId: id })
   ])
 
+  const settlementComments = await settlementsService.getCommentsBySettlementIds(
+    db,
+    settlements.map((s) => s.id)
+  )
+
   return (
     <IntentionDetailClient
       intention={intention}
       comments={comments}
       transfer={transfer}
       settlements={settlements}
+      settlementComments={settlementComments}
       canReview={canReview}
       canSubmit={canSubmit}
+      currentUserId={user.id}
     />
   )
 }

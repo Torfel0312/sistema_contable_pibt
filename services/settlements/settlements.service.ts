@@ -1,12 +1,62 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { auditService } from "@/services/audit/audit.service"
-import { sendSettlementReviewNotification } from "@/services/email/workflow-emails.service"
-import type { CreateSettlementInput, ReviewSettlementInput } from "@/lib/validators/settlement"
+import {
+  sendSettlementReviewNotification,
+  sendSettlementReturnedNotification
+} from "@/services/email/workflow-emails.service"
+import type {
+  CreateSettlementInput,
+  ReviewSettlementInput,
+  CloseIntentionInput
+} from "@/lib/validators/settlement"
 
 type DB = SupabaseClient<Database>
 
 const LATE_THRESHOLD_DAYS = 30
+const CANCELLABLE_STATUSES = ["DRAFT", "PENDING", "RETURNED_FOR_CORRECTION"] as const
+const RESUBMITTABLE_STATUSES = ["DRAFT", "RETURNED_FOR_CORRECTION"] as const
+
+async function insertSettlementAttachments(
+  db: DB,
+  settlementId: string,
+  attachments: CreateSettlementInput["attachments"],
+  userId: string
+) {
+  if (!attachments.length) return
+  const { error } = await db.from("settlement_attachments").insert(
+    attachments.map((attachment) => ({
+      settlement_id: settlementId,
+      drive_file_id: attachment.driveFileId,
+      drive_view_link: attachment.driveViewLink,
+      file_name: attachment.fileName,
+      mime_type: attachment.mimeType,
+      size_bytes: attachment.sizeBytes,
+      created_by_id: userId
+    }))
+  )
+  if (error) throw error
+}
+
+async function insertIntentionAttachments(
+  db: DB,
+  intentionId: string,
+  attachments: CloseIntentionInput["attachments"],
+  userId: string
+) {
+  const { error } = await db.from("intention_attachments").insert(
+    attachments.map((attachment) => ({
+      intention_id: intentionId,
+      drive_file_id: attachment.driveFileId,
+      drive_view_link: attachment.driveViewLink,
+      file_name: attachment.fileName,
+      mime_type: attachment.mimeType,
+      size_bytes: attachment.sizeBytes,
+      created_by_id: userId
+    }))
+  )
+  if (error) throw error
+}
 
 export const settlementsService = {
   async list(
@@ -21,14 +71,24 @@ export const settlementsService = {
     let query = db
       .from("expense_settlements")
       .select(
-        "*, budget_intentions(id, ministry_id, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
+        "*, settlement_attachments(*), budget_intentions(id, ministry_id, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
       )
       .order("created_at", { ascending: false })
 
     if (filters?.intentionId) query = query.eq("intention_id", filters.intentionId)
     if (filters?.submittedBy) query = query.eq("submitted_by", filters.submittedBy)
     if (filters?.status)
-      query = query.eq("status", filters.status as "PENDING" | "APPROVED" | "REJECTED")
+      query = query.eq(
+        "status",
+        filters.status as
+          | "DRAFT"
+          | "PENDING"
+          | "IN_REVIEW"
+          | "APPROVED"
+          | "REJECTED"
+          | "RETURNED_FOR_CORRECTION"
+          | "CANCELLED"
+      )
 
     const { data, error } = await query
     if (error) throw error
@@ -39,7 +99,7 @@ export const settlementsService = {
     const { data, error } = await db
       .from("expense_settlements")
       .select(
-        "*, budget_intentions(id, ministry_id, amount, funding_method, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
+        "*, settlement_attachments(*), budget_intentions(id, ministry_id, amount, funding_method, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
       )
       .eq("id", id)
       .single()
@@ -61,18 +121,141 @@ export const settlementsService = {
         description: input.description,
         expense_date: input.expense_date,
         is_late: isLate,
-        attachment_url: input.attachment_url ?? null
+        status: input.isDraft ? "DRAFT" : "PENDING"
       })
       .select()
       .single()
     if (error) throw error
+
+    if (input.attachments.length) {
+      await insertSettlementAttachments(db, data.id, input.attachments, userId)
+    }
 
     await auditService.logSystem({
       entity: "EXPENSE_SETTLEMENT",
       action: "SETTLEMENT_CREATED",
       user_id: userId,
       entity_id: data.id,
-      new_value: { amount: data.amount, intention_id: input.intention_id, is_late: isLate }
+      new_value: {
+        amount: data.amount,
+        intention_id: input.intention_id,
+        is_late: isLate,
+        status: data.status
+      }
+    })
+
+    return data
+  },
+
+  // DRAFT or RETURNED_FOR_CORRECTION -> PENDING. Only the minister who owns the
+  // settlement can submit it; RLS already scopes the UPDATE to submitted_by =
+  // auth.uid(), this just gives a friendly error instead of a silent no-op.
+  async submit(db: DB, id: string, userId: string) {
+    const { data: current, error: fetchError } = await db
+      .from("expense_settlements")
+      .select("status, submitted_by")
+      .eq("id", id)
+      .single()
+    if (fetchError) throw fetchError
+
+    if (current.submitted_by !== userId) {
+      throw new Error("Solo quien envió la rendición puede enviarla a revisión")
+    }
+    if (!RESUBMITTABLE_STATUSES.includes(current.status as (typeof RESUBMITTABLE_STATUSES)[number])) {
+      return { alreadyActioned: true }
+    }
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("expense_settlements")
+      .update({ status: "PENDING", updated_at: now })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "EXPENSE_SETTLEMENT",
+      action: "SETTLEMENT_SUBMITTED",
+      user_id: userId,
+      entity_id: id,
+      previous_value: { status: current.status },
+      new_value: { status: "PENDING" }
+    })
+
+    return { alreadyActioned: false, data }
+  },
+
+  // PENDING -> IN_REVIEW. Tesorería takes a settlement into review, locking it
+  // against edits/cancellation from the minister's side.
+  async startReview(db: DB, id: string, reviewerId: string) {
+    const { data: current, error: fetchError } = await db
+      .from("expense_settlements")
+      .select("status")
+      .eq("id", id)
+      .single()
+    if (fetchError) throw fetchError
+
+    if (current.status !== "PENDING") {
+      return { alreadyActioned: true }
+    }
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("expense_settlements")
+      .update({ status: "IN_REVIEW", updated_at: now })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "EXPENSE_SETTLEMENT",
+      action: "SETTLEMENT_IN_REVIEW",
+      user_id: reviewerId,
+      entity_id: id,
+      previous_value: { status: "PENDING" },
+      new_value: { status: "IN_REVIEW" }
+    })
+
+    return { alreadyActioned: false, data }
+  },
+
+  // Only reachable from DRAFT, PENDING or RETURNED_FOR_CORRECTION — once
+  // IN_REVIEW, the settlement is locked until tesorería decides.
+  async cancel(db: DB, id: string, userId: string) {
+    const { data: current, error: fetchError } = await db
+      .from("expense_settlements")
+      .select("status, submitted_by")
+      .eq("id", id)
+      .single()
+    if (fetchError) throw fetchError
+
+    if (current.submitted_by !== userId) {
+      throw new Error("Solo quien envió la rendición puede cancelarla")
+    }
+    if (!CANCELLABLE_STATUSES.includes(current.status as (typeof CANCELLABLE_STATUSES)[number])) {
+      throw new Error(
+        "Esta rendición ya está en revisión o tiene una decisión final; no se puede cancelar"
+      )
+    }
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("expense_settlements")
+      .update({ status: "CANCELLED", updated_at: now })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "EXPENSE_SETTLEMENT",
+      action: "SETTLEMENT_CANCELLED",
+      user_id: userId,
+      entity_id: id,
+      previous_value: { status: current.status },
+      new_value: { status: "CANCELLED" }
     })
 
     return data
@@ -83,12 +266,58 @@ export const settlementsService = {
 
     const { data: current } = await db
       .from("expense_settlements")
-      .select("status, users!expense_settlements_submitted_by_fkey(email, full_name)")
+      .select(
+        "status, intention_id, amount, description, users!expense_settlements_submitted_by_fkey(email, full_name)"
+      )
       .eq("id", id)
       .single()
 
-    if (current?.status !== "PENDING") {
+    if (current?.status !== "IN_REVIEW") {
       return { alreadyActioned: true }
+    }
+
+    const ministerUser = current?.users
+
+    if (input.action === "RETURNED_FOR_CORRECTION") {
+      await db.from("request_comments").insert({
+        entity_type: "SETTLEMENT",
+        entity_id: id,
+        user_id: reviewerId,
+        message: input.message
+      })
+
+      const { data, error } = await db
+        .from("expense_settlements")
+        .update({
+          status: "RETURNED_FOR_CORRECTION",
+          reviewed_by: reviewerId,
+          reviewed_at: now,
+          review_message: input.message,
+          updated_at: now
+        })
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+
+      await auditService.logSystem({
+        entity: "EXPENSE_SETTLEMENT",
+        action: "SETTLEMENT_RETURNED_FOR_CORRECTION",
+        user_id: reviewerId,
+        entity_id: id,
+        previous_value: { status: "IN_REVIEW" },
+        new_value: { status: "RETURNED_FOR_CORRECTION", message: input.message }
+      })
+
+      if (ministerUser?.email) {
+        await sendSettlementReturnedNotification(
+          { intention_id: current.intention_id, amount: current.amount, description: current.description },
+          ministerUser,
+          input.message
+        ).catch(() => null)
+      }
+
+      return { alreadyActioned: false, data }
     }
 
     let movementId: string | null = null
@@ -134,9 +363,7 @@ export const settlementsService = {
           .eq("is_system", true)
           .single()
         if (categoryErr || !settlementCategory) {
-          throw new Error(
-            "No se encontró la categoría del sistema 'Rendiciones de Ministerio'"
-          )
+          throw new Error("No se encontró la categoría del sistema 'Rendiciones de Ministerio'")
         }
 
         const { data: movement, error: movErr } = await adminClient
@@ -185,16 +412,59 @@ export const settlementsService = {
       action: `SETTLEMENT_${input.action}`,
       user_id: reviewerId,
       entity_id: id,
-      previous_value: { status: "PENDING" },
+      previous_value: { status: "IN_REVIEW" },
       new_value: { status: input.action, message: input.message, movement_id: movementId }
     })
 
-    const ministerUser = current?.users
     if (ministerUser?.email) {
-      await sendSettlementReviewNotification(data, ministerUser, input.action).catch(() => null)
+      await sendSettlementReviewNotification(
+        { intention_id: current.intention_id, amount: current.amount, description: current.description },
+        ministerUser,
+        input.action
+      ).catch(() => null)
     }
 
     return { alreadyActioned: false, data }
+  },
+
+  // Tesorería attaches the closing transfer's proof and marks the whole request
+  // as settled — one closing transfer can cover several settlements, so this is
+  // scoped to the intention rather than any single settlement.
+  async closeIntention(db: DB, input: CloseIntentionInput, userId: string) {
+    await insertIntentionAttachments(db, input.intention_id, input.attachments, userId)
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("budget_intentions")
+      .update({ settlement_closed_at: now, updated_at: now })
+      .eq("id", input.intention_id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "BUDGET_INTENTION",
+      action: "INTENTION_SETTLEMENT_CLOSED",
+      user_id: userId,
+      entity_id: input.intention_id,
+      new_value: { settlement_closed_at: now }
+    })
+
+    return data
+  },
+
+  // Bulk fetch for the settlements list on the request detail page — one query
+  // for all settlements' correction-comment threads instead of one per row.
+  async getCommentsBySettlementIds(db: DB, settlementIds: string[]) {
+    if (!settlementIds.length) return []
+    const { data, error } = await db
+      .from("request_comments")
+      .select("*, users(id, full_name, role)")
+      .eq("entity_type", "SETTLEMENT")
+      .in("entity_id", settlementIds)
+      .order("created_at", { ascending: true })
+    if (error) throw error
+    return data
   },
 
   async getPendingCount(db: DB, ministryId?: string) {

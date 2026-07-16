@@ -8,6 +8,7 @@ export type IntentionProgressProps = {
   hasTransfer: boolean
   hasSettlement: boolean
   hasApprovedSettlement: boolean
+  isClosed: boolean
 }
 
 type StepState = "complete" | "current" | "pending" | "rejected"
@@ -25,7 +26,8 @@ function buildSteps({
   fundingMethod,
   hasTransfer,
   hasSettlement,
-  hasApprovedSettlement
+  hasApprovedSettlement,
+  isClosed
 }: IntentionProgressProps): Step[] {
   const steps: Step[] = [{ label: "Solicitada", state: "complete" }]
 
@@ -67,8 +69,7 @@ function buildSteps({
 
   steps.push({
     label: "Cerrada",
-    state: "pending",
-    title: "Disponible en una etapa futura"
+    state: isClosed ? "complete" : approvedSettlementState === "complete" ? "current" : "pending"
   })
 
   return steps
