@@ -39,7 +39,7 @@ export const intentionsService = {
     const { data, error } = await db
       .from("budget_intentions")
       .select(
-        "*, ministries(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email)"
+        "*, ministries(id, name), users!budget_intentions_requested_by_fkey(id, full_name, email), intention_attachments(*)"
       )
       .eq("id", id)
       .single()

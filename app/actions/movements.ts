@@ -98,6 +98,19 @@ export async function regeneratePdf(id: string) {
   revalidatePath(`/movements/${id}`)
 }
 
+// This action just uploads a file to Drive and hands back its metadata — it
+// doesn't touch any movement-specific table, so it's shared by every entity
+// that attaches files to Drive (movements, transfer registration, ministry
+// settlements). Anyone who can create a movement, submit a request, or
+// review one can use it.
+function canUploadDriveAttachment(permissions: Set<string> | undefined): boolean {
+  return (
+    can(permissions, PERMISSIONS.CREATE_MOVEMENT) ||
+    can(permissions, PERMISSIONS.SUBMIT_INTENTIONS) ||
+    can(permissions, PERMISSIONS.REVIEW_INTENTIONS)
+  )
+}
+
 export async function uploadMovementAttachment(
   formData: FormData
 ): Promise<
@@ -111,7 +124,7 @@ export async function uploadMovementAttachment(
   | { error: string }
 > {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.CREATE_MOVEMENT)) {
+  if (!user || !canUploadDriveAttachment(user.permissions)) {
     return { error: "Sin permisos para adjuntar archivos" }
   }
 
@@ -152,7 +165,7 @@ export async function uploadMovementAttachment(
 // removeMovementAttachment, which handles the DB row + Drive deletion together.
 export async function deleteUnattachedDriveAttachment(driveFileId: string): Promise<void> {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.CREATE_MOVEMENT)) {
+  if (!user || !canUploadDriveAttachment(user.permissions)) {
     throw new Error("Sin permisos para eliminar adjuntos")
   }
 

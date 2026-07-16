@@ -76,6 +76,7 @@ export type Database = {
           review_message: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          settlement_closed_at: string | null
           status: Database["public"]["Enums"]["intention_status"]
           token: string
           updated_at: string
@@ -92,6 +93,7 @@ export type Database = {
           review_message?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          settlement_closed_at?: string | null
           status?: Database["public"]["Enums"]["intention_status"]
           token?: string
           updated_at?: string
@@ -108,6 +110,7 @@ export type Database = {
           review_message?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          settlement_closed_at?: string | null
           status?: Database["public"]["Enums"]["intention_status"]
           token?: string
           updated_at?: string
@@ -139,7 +142,6 @@ export type Database = {
       expense_settlements: {
         Row: {
           amount: number
-          attachment_url: string | null
           created_at: string
           description: string
           expense_date: string
@@ -157,7 +159,6 @@ export type Database = {
         }
         Insert: {
           amount: number
-          attachment_url?: string | null
           created_at?: string
           description: string
           expense_date: string
@@ -175,7 +176,6 @@ export type Database = {
         }
         Update: {
           amount?: number
-          attachment_url?: string | null
           created_at?: string
           description?: string
           expense_date?: string
@@ -275,6 +275,57 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intention_attachments: {
+        Row: {
+          created_at: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id: string
+          intention_id: string
+          mime_type: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id?: string
+          intention_id: string
+          mime_type: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          created_by_id?: string
+          drive_file_id?: string
+          drive_view_link?: string
+          file_name?: string
+          id?: string
+          intention_id?: string
+          mime_type?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intention_attachments_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intention_attachments_intention_id_fkey"
+            columns: ["intention_id"]
+            isOneToOne: false
+            referencedRelation: "budget_intentions"
             referencedColumns: ["id"]
           },
         ]
@@ -868,6 +919,57 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_attachments: {
+        Row: {
+          created_at: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id: string
+          mime_type: string
+          settlement_id: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_id: string
+          drive_file_id: string
+          drive_view_link: string
+          file_name: string
+          id?: string
+          mime_type: string
+          settlement_id: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          created_by_id?: string
+          drive_file_id?: string
+          drive_view_link?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          settlement_id?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_attachments_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_attachments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "expense_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_audit_log: {
         Row: {
           action: string
@@ -980,7 +1082,14 @@ export type Database = {
       movement_status: "ACTIVE" | "CANCELLED"
       movement_type: "INCOME" | "EXPENSE"
       notification_status: "PENDING" | "SENT" | "ERROR"
-      settlement_status: "PENDING" | "APPROVED" | "REJECTED"
+      settlement_status:
+        | "PENDING"
+        | "APPROVED"
+        | "REJECTED"
+        | "DRAFT"
+        | "IN_REVIEW"
+        | "RETURNED_FOR_CORRECTION"
+        | "CANCELLED"
       user_role: "ADMIN" | "BURSAR" | "FINANCE" | "MINISTER"
       user_status:
         | "ACTIVE"
@@ -1124,7 +1233,15 @@ export const Constants = {
       movement_status: ["ACTIVE", "CANCELLED"],
       movement_type: ["INCOME", "EXPENSE"],
       notification_status: ["PENDING", "SENT", "ERROR"],
-      settlement_status: ["PENDING", "APPROVED", "REJECTED"],
+      settlement_status: [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "DRAFT",
+        "IN_REVIEW",
+        "RETURNED_FOR_CORRECTION",
+        "CANCELLED",
+      ],
       user_role: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"],
       user_status: [
         "ACTIVE",

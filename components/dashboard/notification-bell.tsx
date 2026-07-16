@@ -9,7 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 type NotificationItem = {
   type:
     | "INTENTION_APPROVED"
-    | "SETTLEMENT_PENDING"
+    | "SETTLEMENT_DRAFT"
+    | "SETTLEMENT_RETURNED"
     | "INTENTIONS_PENDING"
     | "SETTLEMENTS_PENDING"
     | "MISSING_TRANSFERS"
@@ -23,8 +24,10 @@ function getNotificationMessage(item: NotificationItem): string {
   switch (item.type) {
     case "INTENTION_APPROVED":
       return `Solicitud aprobada: ${item.description}`
-    case "SETTLEMENT_PENDING":
-      return `Rendición en revisión: ${item.description}`
+    case "SETTLEMENT_DRAFT":
+      return `Rendición sin enviar: ${item.description}`
+    case "SETTLEMENT_RETURNED":
+      return `Rendición devuelta para corrección: ${item.description}`
     case "INTENTIONS_PENDING":
       return `${item.count} solicitud(es) pendiente(s)`
     case "SETTLEMENTS_PENDING":
