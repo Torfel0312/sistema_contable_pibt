@@ -1,7 +1,10 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { severanceReserveService } from "@/services/payroll/severance-reserve.service"
+import { ministryLeftoverService } from "@/services/ministries/ministry-leftover.service"
 
 type SeriesItem = { name: string; income: number; expense: number }
 type CategoryItem = { category: string; total: number }
+type MinistryLeftoverTotal = { ministry_id: string; ministry_name: string; leftover: number }
 
 type DashboardPeriod = {
   from?: string
@@ -24,14 +27,17 @@ function formatMonthES(isoMonth: string): string {
 }
 
 export const dashboardService = {
-  async getSummary(period: DashboardPeriod = {}) {
+  // includeFinanceWidgets gates the severance-reserve + ministry-leftover data —
+  // both are ADMIN/BURSAR/FINANCE-only (Etapa 8), so callers pass this only when
+  // the current user actually holds VIEW_MOVEMENT. Never compute/fetch this data
+  // for a viewer who won't see it (MINISTER).
+  async getSummary(period: DashboardPeriod = {}, options: { includeFinanceWidgets?: boolean } = {}) {
     const admin = createSupabaseAdminClient()
 
     const pFrom = period.from || undefined
     const pTo = period.to || undefined
 
-    // Run aggregation RPC and recent-movements query in parallel
-    const [rpcResponse, recentResponse] = await Promise.all([
+    const [rpcResponse, recentResponse, severanceBalance, leftoverRows] = await Promise.all([
       admin.rpc("get_dashboard_summary", { p_from: pFrom, p_to: pTo }),
       admin
         .from("movements")
@@ -41,7 +47,9 @@ export const dashboardService = {
         .eq("status", "ACTIVE")
         .order("movement_date", { ascending: false })
         .order("folio", { ascending: false })
-        .limit(8)
+        .limit(8),
+      options.includeFinanceWidgets ? severanceReserveService.getBalance(admin) : Promise.resolve(null),
+      options.includeFinanceWidgets ? ministryLeftoverService.getSummary() : Promise.resolve(null)
     ])
 
     if (rpcResponse.error) throw rpcResponse.error
@@ -54,6 +62,20 @@ export const dashboardService = {
       income: Number(s.income),
       expense: Number(s.expense)
     }))
+
+    const ministryLeftoverTotals: MinistryLeftoverTotal[] | null = leftoverRows
+      ? Object.values(
+          leftoverRows.reduce<Record<string, MinistryLeftoverTotal>>((acc, row) => {
+            const existing = acc[row.ministry_id]
+            acc[row.ministry_id] = {
+              ministry_id: row.ministry_id,
+              ministry_name: row.ministry_name,
+              leftover: (existing?.leftover ?? 0) + row.leftover
+            }
+            return acc
+          }, {})
+        ).sort((a, b) => b.leftover - a.leftover)
+      : null
 
     return {
       kpis: {
@@ -69,7 +91,9 @@ export const dashboardService = {
           total: Number(c.total)
         })
       ),
-      recentMovements: recentResponse.data
+      recentMovements: recentResponse.data,
+      severanceBalance,
+      ministryLeftoverTotals
     }
   }
 }

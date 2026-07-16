@@ -3,6 +3,8 @@ import { dashboardService } from "@/services/dashboard/dashboard.service"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { IncomeExpenseChart, CategoryChart } from "@/components/dashboard/dashboard-charts"
+import { SeveranceReserveCard } from "@/components/dashboard/severance-reserve-card"
+import { MinistryLeftoverWidget } from "@/components/dashboard/ministry-leftover-widget"
 import { MovementsTable } from "@/components/movements/movements-table"
 import { Label } from "@/components/ui/label"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
@@ -22,11 +24,13 @@ export default async function DashboardPage({
 }) {
   const from = (await searchParams)?.from
   const to = (await searchParams)?.to
-  const [data, user] = await Promise.all([
-    dashboardService.getSummary({ from, to }),
-    getCurrentUser()
-  ])
+  const user = await getCurrentUser()
   const canWrite = can(user?.permissions, PERMISSIONS.CREATE_MOVEMENT) ?? false
+  const canViewFinanceWidgets = can(user?.permissions, PERMISSIONS.VIEW_MOVEMENT) ?? false
+  const data = await dashboardService.getSummary(
+    { from, to },
+    { includeFinanceWidgets: canViewFinanceWidgets }
+  )
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
@@ -134,6 +138,13 @@ export default async function DashboardPage({
           <CategoryChart data={data.categoryBreakdown} />
         </div>
       </div>
+
+      {canViewFinanceWidgets && data.severanceBalance !== null && data.ministryLeftoverTotals && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <SeveranceReserveCard balance={data.severanceBalance} />
+          <MinistryLeftoverWidget totals={data.ministryLeftoverTotals} />
+        </div>
+      )}
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">

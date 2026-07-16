@@ -233,6 +233,24 @@ to zero.
 
 ---
 
+## Dashboard Consolidado (Etapa 8)
+
+Pure composition — no new schema or calculation, just surfacing Etapa 6 and Etapa 7's data
+on the main dashboard. Restricted to `VIEW_MOVEMENT` (ADMIN/BURSAR/FINANCE) — MINISTER
+doesn't see either widget, and the data isn't even fetched for a viewer who won't see it.
+
+```mermaid
+flowchart TD
+    A([Dashboard page loads]) --> B{VIEW_MOVEMENT?}
+    B -- No --> C([Only the standard KPIs/charts render])
+    B -- Yes --> D["dashboardService.getSummary(period, includeFinanceWidgets: true)"]
+    D --> E[severanceReserveService.getBalance] & F[ministryLeftoverService.getSummary, grouped by ministry]
+    E --> G([SeveranceReserveCard])
+    F --> H([MinistryLeftoverWidget — per-ministry totals, links to /ministries/:id])
+```
+
+---
+
 ## Scheduled Reminders
 
 A Supabase cron job (`supabase/migrations/20260426000002_reminder_cron.sql`) runs periodically
