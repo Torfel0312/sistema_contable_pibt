@@ -99,7 +99,7 @@ export function IntentionDetailClient({
   settlements: initialSettlements,
   settlementComments,
   canReview,
-  canSubmit,
+  canSubmit: canCreateSettlement,
   currentUserId
 }: {
   intention: Intention
@@ -117,7 +117,7 @@ export function IntentionDetailClient({
   const [currentTransfer, setCurrentTransfer] = useState<Transfer>(transfer)
   const status = STATUS_CONFIG[intention.status]
   const StatusIcon = status.icon
-  const isMinister = canSubmit
+  const isMinister = canCreateSettlement
   const isClosed = !!intention.settlement_closed_at
 
   const commentsBySettlement = settlementComments.reduce<Record<string, SettlementComment[]>>(

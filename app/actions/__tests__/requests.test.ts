@@ -20,7 +20,7 @@ const mockCanAccessWorkflow = jest.fn()
 
 jest.mock("@/lib/permissions/rbac", () => ({
   PERMISSIONS: {
-    SUBMIT_INTENTIONS: "SUBMIT_INTENTIONS",
+    CREATE_REQUEST: "CREATE_REQUEST",
     REVIEW_INTENTIONS: "REVIEW_INTENTIONS",
     VIEW_WORKFLOW: "VIEW_WORKFLOW"
   },
@@ -49,7 +49,7 @@ jest.mock("next/cache", () => ({
 
 const mockUser = {
   id: "user-1",
-  permissions: ["SUBMIT_INTENTIONS", "REVIEW_INTENTIONS", "VIEW_WORKFLOW"]
+  permissions: ["CREATE_REQUEST", "REVIEW_INTENTIONS", "VIEW_WORKFLOW"]
 }
 const requestInput = {
   amount: 5000,

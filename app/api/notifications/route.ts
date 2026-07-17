@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
+import { canAccessWorkflow, isMinisterWorkflowUser } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { settlementsService } from "@/services/settlements/settlements.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
@@ -13,7 +13,7 @@ export async function GET() {
 
   const db = await createSupabaseServerClient()
 
-  if (can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (isMinisterWorkflowUser(user.permissions)) {
     const assignment = await ministriesService.getMinistryForUser(db, user.id)
     if (!assignment) return NextResponse.json({ count: 0, items: [] })
 

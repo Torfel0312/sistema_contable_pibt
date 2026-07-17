@@ -58,11 +58,11 @@ const FUNDING_METHOD_LABELS = {
 }
 
 export function IntentionsClient({
-  canSubmit,
+  canCreateRequest,
   intentions: initialIntentions,
   ministry
 }: {
-  canSubmit: boolean
+  canCreateRequest: boolean
   intentions: Intention[]
   ministry: Ministry
 }) {
@@ -70,7 +70,7 @@ export function IntentionsClient({
   const [intentions, setIntentions] = useState<Intention[]>(initialIntentions)
   const [open, setOpen] = useState(false)
 
-  const isMinister = canSubmit
+  const isMinister = canCreateRequest
 
   // Closed = rejected outright, or its settlement flow was closed out by tesorería
   // (settlement_closed_at set). Everything else still needs someone's attention.

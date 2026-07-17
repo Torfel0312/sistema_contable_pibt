@@ -106,7 +106,8 @@ export async function regeneratePdf(id: string) {
 function canUploadDriveAttachment(permissions: Set<string> | undefined): boolean {
   return (
     can(permissions, PERMISSIONS.CREATE_MOVEMENT) ||
-    can(permissions, PERMISSIONS.SUBMIT_INTENTIONS) ||
+    can(permissions, PERMISSIONS.CREATE_REQUEST) ||
+    can(permissions, PERMISSIONS.CREATE_SETTLEMENT) ||
     can(permissions, PERMISSIONS.REVIEW_INTENTIONS)
   )
 }

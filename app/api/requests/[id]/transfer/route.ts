@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, isMinisterWorkflowUser } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { registerTransferSchema } from "@/lib/validators/intention"
 
@@ -9,7 +9,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (
     !user ||
     (!can(user.permissions, PERMISSIONS.REVIEW_INTENTIONS) &&
-      !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS))
+      !isMinisterWorkflowUser(user.permissions))
   ) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }

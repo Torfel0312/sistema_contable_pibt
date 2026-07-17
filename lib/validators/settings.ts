@@ -21,7 +21,8 @@ export const updatePermissionSchema = z.object({
     "VIEW_MOVEMENT",
     "MANAGE_MINISTRIES",
     "REVIEW_INTENTIONS",
-    "SUBMIT_INTENTIONS",
+    "CREATE_REQUEST",
+    "CREATE_SETTLEMENT",
     "MANAGE_SETTINGS",
     "VIEW_WORKFLOW"
   ]),

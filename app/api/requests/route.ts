@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   const db = await createSupabaseServerClient()
 
-  if (can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
     const assignment = await ministriesService.getMinistryForUser(db, user.id)
     if (!assignment) return NextResponse.json([])
     const data = await intentionsService.list(db, {
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 
