@@ -1,4 +1,4 @@
-import { createRequest, reviewRequest, addComment } from "../requests"
+import { createRequest, reviewRequest, submitRequest, cancelRequest, addComment } from "../requests"
 
 const mockGetCurrentUser = jest.fn()
 const mockDb = {}
@@ -7,6 +7,8 @@ const mockCan = jest.fn()
 const mockGetMinistryForUser = jest.fn()
 const mockCreate = jest.fn()
 const mockReview = jest.fn()
+const mockSubmit = jest.fn()
+const mockCancel = jest.fn()
 const mockRegisterTransfer = jest.fn()
 const mockAddComment = jest.fn()
 const mockRevalidatePath = jest.fn()
@@ -32,6 +34,8 @@ jest.mock("@/services/intentions/intentions.service", () => ({
   intentionsService: {
     create: (...args: unknown[]) => mockCreate(...args),
     review: (...args: unknown[]) => mockReview(...args),
+    submit: (...args: unknown[]) => mockSubmit(...args),
+    cancel: (...args: unknown[]) => mockCancel(...args),
     registerTransfer: (...args: unknown[]) => mockRegisterTransfer(...args),
     addComment: (...args: unknown[]) => mockAddComment(...args)
   }
@@ -54,7 +58,8 @@ const mockUser = {
 const requestInput = {
   amount: 5000,
   purpose: "Test request long enough",
-  funding_method: "TRANSFER" as const
+  funding_method: "TRANSFER" as const,
+  isDraft: false
 }
 
 describe("createRequest", () => {
@@ -120,6 +125,63 @@ describe("reviewRequest", () => {
     const result = await reviewRequest("req-1", { action: "APPROVED", message: "ok" })
 
     expect(result).toEqual(reviewResult)
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/requests/req-1")
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/requests")
+  })
+})
+
+describe("submitRequest", () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it("throws when lacks CREATE_REQUEST permission", async () => {
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(false)
+    await expect(submitRequest("req-1")).rejects.toThrow("Solo los ministros")
+  })
+
+  it("returns alreadyActioned:true without revalidating", async () => {
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockSubmit.mockResolvedValue({ alreadyActioned: true })
+
+    const result = await submitRequest("req-1")
+
+    expect(result).toEqual({ alreadyActioned: true })
+    expect(mockRevalidatePath).not.toHaveBeenCalled()
+  })
+
+  it("revalidates on successful submit", async () => {
+    const submitResult = { alreadyActioned: false, data: { id: "req-1", status: "PENDING" } }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockSubmit.mockResolvedValue(submitResult)
+
+    const result = await submitRequest("req-1")
+
+    expect(result).toEqual(submitResult)
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/requests/req-1")
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/requests")
+  })
+})
+
+describe("cancelRequest", () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it("throws when lacks CREATE_REQUEST permission", async () => {
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(false)
+    await expect(cancelRequest("req-1")).rejects.toThrow("Solo los ministros")
+  })
+
+  it("cancels and revalidates", async () => {
+    const cancelled = { id: "req-1", status: "CANCELLED" }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockCancel.mockResolvedValue(cancelled)
+
+    const data = await cancelRequest("req-1")
+
+    expect(data).toEqual(cancelled)
     expect(mockRevalidatePath).toHaveBeenCalledWith("/requests/req-1")
     expect(mockRevalidatePath).toHaveBeenCalledWith("/requests")
   })

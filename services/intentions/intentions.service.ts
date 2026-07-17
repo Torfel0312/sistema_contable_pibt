@@ -17,6 +17,8 @@ import type {
 
 type DB = SupabaseClient<Database>
 
+const CANCELLABLE_STATUSES = ["DRAFT", "PENDING"] as const
+
 export const intentionsService = {
   async list(db: DB, filters?: { ministryId?: string; status?: string }) {
     let query = db
@@ -28,7 +30,10 @@ export const intentionsService = {
 
     if (filters?.ministryId) query = query.eq("ministry_id", filters.ministryId)
     if (filters?.status)
-      query = query.eq("status", filters.status as "PENDING" | "APPROVED" | "REJECTED")
+      query = query.eq(
+        "status",
+        filters.status as "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"
+      )
 
     const { data, error } = await query
     if (error) throw error
@@ -60,6 +65,8 @@ export const intentionsService = {
   },
 
   async create(db: DB, input: CreateIntentionInput, userId: string, ministryId: string) {
+    const status = input.isDraft ? "DRAFT" : "PENDING"
+
     const { data, error } = await db
       .from("budget_intentions")
       .insert({
@@ -68,7 +75,8 @@ export const intentionsService = {
         amount: input.amount,
         purpose: input.purpose,
         date_needed: input.date_needed ?? null,
-        funding_method: input.funding_method
+        funding_method: input.funding_method,
+        status
       })
       .select()
       .single()
@@ -79,10 +87,91 @@ export const intentionsService = {
       action: "INTENTION_CREATED",
       user_id: userId,
       entity_id: data.id,
-      new_value: { amount: data.amount, ministry_id: ministryId }
+      new_value: { amount: data.amount, ministry_id: ministryId, status }
+    })
+
+    if (!input.isDraft) {
+      await sendIntentionNotification(data).catch(() => null)
+    }
+
+    return data
+  },
+
+  // DRAFT -> PENDING. Only the minister who owns the request can submit it;
+  // RLS already scopes the UPDATE to requested_by = auth.uid(), this just
+  // gives a friendly error instead of a silent no-op.
+  async submit(db: DB, id: string, userId: string) {
+    const { data: current, error: fetchError } = await db
+      .from("budget_intentions")
+      .select("status, requested_by")
+      .eq("id", id)
+      .single()
+    if (fetchError) throw fetchError
+
+    if (current.requested_by !== userId) {
+      throw new Error("Solo quien creó la solicitud puede enviarla")
+    }
+    if (current.status !== "DRAFT") {
+      return { alreadyActioned: true }
+    }
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("budget_intentions")
+      .update({ status: "PENDING", updated_at: now })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "BUDGET_INTENTION",
+      action: "INTENTION_SUBMITTED",
+      user_id: userId,
+      entity_id: id,
+      previous_value: { status: "DRAFT" },
+      new_value: { status: "PENDING" }
     })
 
     await sendIntentionNotification(data).catch(() => null)
+
+    return { alreadyActioned: false, data }
+  },
+
+  // Only reachable from DRAFT or PENDING — once APPROVED or REJECTED, a
+  // request is final and cannot be cancelled by the minister.
+  async cancel(db: DB, id: string, userId: string) {
+    const { data: current, error: fetchError } = await db
+      .from("budget_intentions")
+      .select("status, requested_by")
+      .eq("id", id)
+      .single()
+    if (fetchError) throw fetchError
+
+    if (current.requested_by !== userId) {
+      throw new Error("Solo quien creó la solicitud puede cancelarla")
+    }
+    if (!CANCELLABLE_STATUSES.includes(current.status as (typeof CANCELLABLE_STATUSES)[number])) {
+      throw new Error("Esta solicitud ya fue aprobada o rechazada; no se puede cancelar")
+    }
+
+    const now = new Date().toISOString()
+    const { data, error } = await db
+      .from("budget_intentions")
+      .update({ status: "CANCELLED", updated_at: now })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "BUDGET_INTENTION",
+      action: "INTENTION_CANCELLED",
+      user_id: userId,
+      entity_id: id,
+      previous_value: { status: current.status },
+      new_value: { status: "CANCELLED" }
+    })
 
     return data
   },

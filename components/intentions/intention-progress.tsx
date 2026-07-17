@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 export type IntentionProgressProps = {
-  status: "PENDING" | "APPROVED" | "REJECTED"
+  status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"
   fundingMethod: "REIMBURSEMENT" | "TRANSFER"
   hasTransfer: boolean
   hasSettlement: boolean
@@ -29,7 +29,16 @@ function buildSteps({
   hasApprovedSettlement,
   isClosed
 }: IntentionProgressProps): Step[] {
+  if (status === "DRAFT") {
+    return [{ label: "Borrador", state: "current" }]
+  }
+
   const steps: Step[] = [{ label: "Solicitada", state: "complete" }]
+
+  if (status === "CANCELLED") {
+    steps.push({ label: "Cancelada", state: "rejected" })
+    return steps
+  }
 
   if (status === "PENDING") {
     steps.push({ label: "En revisión", state: "current" })

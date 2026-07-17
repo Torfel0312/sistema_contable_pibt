@@ -29,6 +29,34 @@ export async function createRequest(input: CreateIntentionInput) {
   return created
 }
 
+export async function submitRequest(id: string) {
+  const user = await getCurrentUser()
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
+    throw new Error("Solo los ministros pueden enviar solicitudes")
+  }
+
+  const db = await createSupabaseServerClient()
+  const result = await intentionsService.submit(db, id, user.id)
+  if (!result.alreadyActioned) {
+    revalidatePath(`/requests/${id}`)
+    revalidatePath("/requests")
+  }
+  return result
+}
+
+export async function cancelRequest(id: string) {
+  const user = await getCurrentUser()
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
+    throw new Error("Solo los ministros pueden cancelar solicitudes")
+  }
+
+  const db = await createSupabaseServerClient()
+  const data = await intentionsService.cancel(db, id, user.id)
+  revalidatePath(`/requests/${id}`)
+  revalidatePath("/requests")
+  return data
+}
+
 export async function reviewRequest(
   id: string,
   input: ReviewIntentionInput

@@ -1197,7 +1197,12 @@ export type Database = {
     Enums: {
       comment_entity: "INTENTION" | "SETTLEMENT"
       intention_funding_method: "REIMBURSEMENT" | "TRANSFER"
-      intention_status: "PENDING" | "APPROVED" | "REJECTED"
+      intention_status:
+        | "PENDING"
+        | "APPROVED"
+        | "REJECTED"
+        | "DRAFT"
+        | "CANCELLED"
       invoice_status: "PENDING" | "SETTLED"
       movement_status: "ACTIVE" | "CANCELLED"
       movement_type: "INCOME" | "EXPENSE"
@@ -1348,7 +1353,13 @@ export const Constants = {
     Enums: {
       comment_entity: ["INTENTION", "SETTLEMENT"],
       intention_funding_method: ["REIMBURSEMENT", "TRANSFER"],
-      intention_status: ["PENDING", "APPROVED", "REJECTED"],
+      intention_status: [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "DRAFT",
+        "CANCELLED",
+      ],
       invoice_status: ["PENDING", "SETTLED"],
       movement_status: ["ACTIVE", "CANCELLED"],
       movement_type: ["INCOME", "EXPENSE"],

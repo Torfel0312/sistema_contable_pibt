@@ -21,7 +21,8 @@ import {
   Lock,
   Archive,
   Paperclip,
-  X
+  X,
+  Send
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { IntentionProgress } from "@/components/intentions/intention-progress"
@@ -55,7 +56,13 @@ import type {
 import type { CreateSettlementInput, ReviewSettlementInput } from "@/lib/validators/settlement"
 import type { intentionsService } from "@/services/intentions/intentions.service"
 import type { settlementsService } from "@/services/settlements/settlements.service"
-import { reviewRequest, registerTransfer, addComment } from "@/app/actions/requests"
+import {
+  reviewRequest,
+  registerTransfer,
+  addComment,
+  submitRequest,
+  cancelRequest
+} from "@/app/actions/requests"
 import {
   createMinistrySettlement,
   submitSettlement,
@@ -73,10 +80,14 @@ type Settlement = Awaited<ReturnType<typeof settlementsService.list>>[number]
 type SettlementComment = Awaited<ReturnType<typeof settlementsService.getCommentsBySettlementIds>>[number]
 
 const STATUS_CONFIG = {
+  DRAFT: { icon: FileText, color: "text-muted-foreground", label: "Borrador" },
   PENDING: { icon: Clock, color: "text-amber-500", label: "Pendiente de revisión" },
   APPROVED: { icon: CheckCircle, color: "text-green-500", label: "Aprobada" },
-  REJECTED: { icon: XCircle, color: "text-red-500", label: "Rechazada" }
+  REJECTED: { icon: XCircle, color: "text-red-500", label: "Rechazada" },
+  CANCELLED: { icon: Ban, color: "text-muted-foreground line-through", label: "Cancelada" }
 }
+
+const CANCELLABLE_INTENTION_STATUSES = new Set(["DRAFT", "PENDING"])
 
 const SETTLEMENT_STATUS_CONFIG = {
   DRAFT: { color: "text-muted-foreground", label: "Borrador" },
@@ -100,6 +111,7 @@ export function IntentionDetailClient({
   settlementComments,
   canReview,
   canSubmit: canCreateSettlement,
+  canCreateRequest,
   currentUserId
 }: {
   intention: Intention
@@ -109,6 +121,7 @@ export function IntentionDetailClient({
   settlementComments: SettlementComment[]
   canReview: boolean
   canSubmit: boolean
+  canCreateRequest: boolean
   currentUserId: string
 }) {
   const router = useRouter()
@@ -118,6 +131,7 @@ export function IntentionDetailClient({
   const status = STATUS_CONFIG[intention.status]
   const StatusIcon = status.icon
   const isMinister = canCreateSettlement
+  const isRequestOwner = canCreateRequest && intention.requested_by === currentUserId
   const isClosed = !!intention.settlement_closed_at
 
   const commentsBySettlement = settlementComments.reduce<Record<string, SettlementComment[]>>(
@@ -210,6 +224,31 @@ export function IntentionDetailClient({
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al revisar")
+    }
+  }
+
+  async function handleSubmitRequest() {
+    try {
+      const result = await submitRequest(intention.id)
+      if (result.alreadyActioned) {
+        toast.info("Esta solicitud ya no está en borrador")
+        router.refresh()
+        return
+      }
+      toast.success("Solicitud enviada al equipo de tesorería")
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al enviar la solicitud")
+    }
+  }
+
+  async function handleCancelRequest() {
+    try {
+      await cancelRequest(intention.id)
+      toast.success("Solicitud cancelada")
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al cancelar la solicitud")
     }
   }
 
@@ -506,6 +545,22 @@ export function IntentionDetailClient({
                 </form>
               </DialogContent>
             </Dialog>
+          </div>
+        )}
+
+        {/* Actions for the minister who owns this request */}
+        {isRequestOwner && CANCELLABLE_INTENTION_STATUSES.has(intention.status) && (
+          <div className="flex gap-2 pt-1">
+            {intention.status === "DRAFT" && (
+              <Button size="sm" onClick={handleSubmitRequest}>
+                <Send className="size-4" />
+                Enviar solicitud
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" onClick={handleCancelRequest}>
+              <Ban className="size-4" />
+              Cancelar solicitud
+            </Button>
           </div>
         )}
       </Card>
