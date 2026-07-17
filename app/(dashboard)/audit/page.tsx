@@ -1,27 +1,45 @@
 import { redirect } from "next/navigation"
-import { cn, formatDateTime } from "@/lib/utils"
-import { getCurrentUser } from "@/lib/supabase/server"
+import { formatDateTime } from "@/lib/utils"
+import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { auditService } from "@/services/audit/audit.service"
+import { AuditTable, type SerializedAuditEvent } from "@/components/audit/audit-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
-import {
-  Item,
-  ItemGroup,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemHeader
-} from "@/components/ui/item"
-import { ClipboardList } from "lucide-react"
 
-function entityClass(entity: string) {
-  const e = entity.toUpperCase()
-  if (e === "MOVIMIENTO" || e === "MOVEMENT") return "bg-primary/10 text-primary"
-  if (e === "USUARIO" || e === "USER") return "bg-role-purple-surface text-role-purple"
-  if (e === "CANCELADO" || e === "CANCELLED" || e === "ANULADO")
-    return "bg-destructive/10 text-destructive"
-  return "bg-muted text-muted-foreground"
+async function resolveHrefs(
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  events: Awaited<ReturnType<typeof auditService.listSystem>>
+) {
+  const settlementIds = events
+    .filter((event) => event.entity === "EXPENSE_SETTLEMENT" && event.entity_id)
+    .map((event) => event.entity_id as string)
+
+  let settlementToIntention = new Map<string, string>()
+  if (settlementIds.length) {
+    const { data } = await db
+      .from("expense_settlements")
+      .select("id, intention_id")
+      .in("id", settlementIds)
+    settlementToIntention = new Map((data ?? []).map((row) => [row.id, row.intention_id]))
+  }
+
+  return (entity: string, entityId: string | null): string | null => {
+    if (!entityId) return null
+    switch (entity) {
+      case "MINISTRY":
+      case "MINISTRY_ASSIGNMENT":
+        return `/ministries/${entityId}`
+      case "BUDGET_INTENTION":
+      case "INTENTION_TRANSFER":
+        return `/requests/${entityId}`
+      case "EXPENSE_SETTLEMENT": {
+        const intentionId = settlementToIntention.get(entityId)
+        return intentionId ? `/requests/${intentionId}` : null
+      }
+      default:
+        return null
+    }
+  }
 }
 
 export default async function AuditPage() {
@@ -30,7 +48,21 @@ export default async function AuditPage() {
     redirect("/dashboard")
   }
 
+  const db = await createSupabaseServerClient()
   const events = await auditService.listSystem(50)
+  const getHref = await resolveHrefs(db, events)
+
+  const rows: SerializedAuditEvent[] = events.map((event) => ({
+    id: event.id,
+    event_date_display: formatDateTime(event.event_date),
+    entity: event.entity,
+    action: event.action,
+    note: event.note,
+    user_name: event.users?.full_name ?? null,
+    href: getHref(event.entity, event.entity_id),
+    previous_value: event.previous_value,
+    new_value: event.new_value
+  }))
 
   return (
     <section className="mx-auto max-w-6xl flex flex-col gap-8">
@@ -48,119 +80,7 @@ export default async function AuditPage() {
           <CardTitle className="text-xl">Registro de Auditoría</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="hidden sm:block overflow-x-auto px-6 pb-6">
-            <table className="min-w-full text-sm" aria-label="Registro de auditoría">
-              <thead>
-                <tr className="border-b border-border">
-                  <th
-                    scope="col"
-                    className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-                  >
-                    Fecha
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-                  >
-                    Entidad
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-                  >
-                    Acción
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-                  >
-                    Usuario
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-                  >
-                    Observación
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {events.map((event, index) => (
-                  <tr
-                    key={event.id}
-                    className={cn(
-                      "transition-colors hover:bg-muted/40",
-                      index % 2 === 0 ? "bg-transparent" : "bg-muted/10"
-                    )}
-                  >
-                    <td className="px-4 py-4 align-middle whitespace-nowrap text-muted-foreground font-medium tabular-nums text-xs">
-                      {formatDateTime(event.event_date)}
-                    </td>
-                    <td className="px-4 py-4 align-middle">
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest",
-                          entityClass(event.entity)
-                        )}
-                      >
-                        {event.entity}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 align-middle font-bold text-foreground uppercase tracking-tight text-xs">
-                      {event.action}
-                    </td>
-                    <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
-                      {event.users?.full_name ?? "—"}
-                    </td>
-                    <td className="px-4 py-4 align-middle text-muted-foreground italic truncate max-w-xs text-xs">
-                      {event.note ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="sm:hidden px-4 pb-4">
-            <ItemGroup>
-              {events.map((event) => (
-                <Item key={event.id} variant="muted" size="sm">
-                  <ItemContent>
-                    <ItemHeader>
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest",
-                          entityClass(event.entity)
-                        )}
-                      >
-                        {event.entity}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {formatDateTime(event.event_date)}
-                      </span>
-                    </ItemHeader>
-                    <ItemTitle className="uppercase tracking-tight">{event.action}</ItemTitle>
-                    <ItemDescription>
-                      {event.users?.full_name ?? "—"}
-                      {event.note && <span className="italic"> · {event.note}</span>}
-                    </ItemDescription>
-                  </ItemContent>
-                </Item>
-              ))}
-            </ItemGroup>
-          </div>
-
-          {!events.length && (
-            <Empty className="border-0 py-16">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ClipboardList />
-                </EmptyMedia>
-                <EmptyTitle>Sin eventos</EmptyTitle>
-                <EmptyDescription>No hay eventos de auditoría registrados.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
+          <AuditTable rows={rows} />
         </CardContent>
       </Card>
     </section>
