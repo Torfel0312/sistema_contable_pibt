@@ -20,7 +20,6 @@ const PAGE_LABELS: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/movements": "Movimientos",
   "/movements/new": "Nuevo Movimiento",
-  "/settlements": "Rendiciones",
   "/users": "Usuarios",
   "/audit": "Auditoría",
   "/requests": "Solicitudes",

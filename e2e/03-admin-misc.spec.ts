@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test"
 import { login, shot } from "./fixtures/helpers"
 
-test.describe("Users / Audit / Profile / Voucher Book / Invoices (ADMIN)", () => {
+test.describe("Users / Audit / Profile / Voucher Book (ADMIN)", () => {
   test.beforeEach(async ({ page }) => {
     await login(page, "admin")
   })
@@ -29,15 +29,5 @@ test.describe("Users / Audit / Profile / Voucher Book / Invoices (ADMIN)", () =>
   test("voucher book (talonario unificado)", async ({ page }) => {
     await page.goto("/voucher-book", { waitUntil: "networkidle" })
     await shot(page, "03-admin-misc", "voucher-book")
-  })
-
-  test("invoices / Rendición de Boletas page + new dialog", async ({ page }) => {
-    await page.goto("/settlements", { waitUntil: "networkidle" })
-    await shot(page, "03-admin-misc", "invoices-boletas")
-
-    await page.getByRole("button", { name: "Nueva rendición" }).first().click()
-    const dialog = page.getByRole("dialog")
-    await expect(dialog).toBeVisible()
-    await shot(page, "03-admin-misc", "invoices-new-dialog")
   })
 })

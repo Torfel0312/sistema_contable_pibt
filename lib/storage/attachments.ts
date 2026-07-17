@@ -2,7 +2,7 @@
 // not full URLs. Build a stable client-facing href that hits a server route which
 // mints a signed URL on each click. Signed URL never lands in mailboxes or logs.
 
-export const ATTACHMENT_BUCKETS = ["movement-attachments", "invoice-attachments"] as const
+export const ATTACHMENT_BUCKETS = ["movement-attachments"] as const
 export type AttachmentBucket = (typeof ATTACHMENT_BUCKETS)[number]
 
 export const ATTACHMENT_SIGNED_URL_TTL_SECONDS = 60 * 60

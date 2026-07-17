@@ -388,53 +388,6 @@ export type Database = {
           },
         ]
       }
-      invoices: {
-        Row: {
-          amount: number
-          attachment_url: string | null
-          created_at: string
-          created_by_id: string
-          date: string
-          description: string | null
-          id: string
-          number: string
-          status: Database["public"]["Enums"]["invoice_status"]
-          updated_at: string | null
-        }
-        Insert: {
-          amount: number
-          attachment_url?: string | null
-          created_at?: string
-          created_by_id: string
-          date: string
-          description?: string | null
-          id?: string
-          number: string
-          status?: Database["public"]["Enums"]["invoice_status"]
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number
-          attachment_url?: string | null
-          created_at?: string
-          created_by_id?: string
-          date?: string
-          description?: string | null
-          id?: string
-          number?: string
-          status?: Database["public"]["Enums"]["invoice_status"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_created_by_id_fkey"
-            columns: ["created_by_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ministries: {
         Row: {
           created_at: string
@@ -1203,7 +1156,6 @@ export type Database = {
         | "REJECTED"
         | "DRAFT"
         | "CANCELLED"
-      invoice_status: "PENDING" | "SETTLED"
       movement_status: "ACTIVE" | "CANCELLED"
       movement_type: "INCOME" | "EXPENSE"
       notification_status: "PENDING" | "SENT" | "ERROR"
@@ -1360,7 +1312,6 @@ export const Constants = {
         "DRAFT",
         "CANCELLED",
       ],
-      invoice_status: ["PENDING", "SETTLED"],
       movement_status: ["ACTIVE", "CANCELLED"],
       movement_type: ["INCOME", "EXPENSE"],
       notification_status: ["PENDING", "SENT", "ERROR"],

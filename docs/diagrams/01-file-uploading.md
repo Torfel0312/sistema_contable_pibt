@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    A([User picks file<br/>movement/invoice/settlement form]) --> B[Browser uploads directly to<br/>Supabase Storage bucket<br/>movement-attachments / invoice-attachments]
+    A([User picks file<br/>movement/settlement form]) --> B[Browser uploads directly to<br/>Supabase Storage bucket<br/>movement-attachments]
     B --> C[Storage returns path;<br/>stored as attachment_url on the record]
     C --> D[Server action inserts/updates record<br/>movements / expense_settlements<br/>with attachment_url]
     D --> E[Later: user clicks<br/>attachment link in UI]

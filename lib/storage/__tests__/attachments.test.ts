@@ -14,8 +14,8 @@ describe("attachmentHref", () => {
   })
 
   it("preserves nested path segments", () => {
-    expect(attachmentHref("invoice-attachments", "2026/05/abc.pdf")).toBe(
-      "/api/attachments/invoice-attachments/2026/05/abc.pdf"
+    expect(attachmentHref("movement-attachments", "2026/05/abc.pdf")).toBe(
+      "/api/attachments/movement-attachments/2026/05/abc.pdf"
     )
   })
 
@@ -43,14 +43,11 @@ describe("attachmentHref", () => {
 describe("isAttachmentBucket", () => {
   it("accepts only the whitelisted buckets", () => {
     expect(isAttachmentBucket("movement-attachments")).toBe(true)
-    expect(isAttachmentBucket("invoice-attachments")).toBe(true)
     expect(isAttachmentBucket("avatars")).toBe(false)
     expect(isAttachmentBucket("")).toBe(false)
   })
 
   it("matches the exported tuple exactly", () => {
-    expect([...ATTACHMENT_BUCKETS].sort()).toEqual(
-      ["invoice-attachments", "movement-attachments"].sort()
-    )
+    expect([...ATTACHMENT_BUCKETS].sort()).toEqual(["movement-attachments"].sort())
   })
 })
