@@ -9,6 +9,8 @@ import { VoucherActions } from "@/components/vouchers/voucher-actions"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, formatDateTime, formatCLP } from "@/lib/utils"
+import { auditActionLabel } from "@/lib/constants/audit"
+import { AuditDiff } from "@/components/audit/audit-diff"
 import type { MovementIntegrationPayload } from "@/services/google/types"
 import {
   ChevronLeft,
@@ -46,6 +48,8 @@ export default async function MovementDetailPage({ params }: Props) {
     action: string
     event_date: string
     note: string | null
+    previous_value: unknown
+    new_value: unknown
     users: { full_name: string } | null
   }>
   const attachments = (row.movement_attachments ?? []) as Array<{
@@ -278,7 +282,9 @@ export default async function MovementDetailPage({ params }: Props) {
             {auditLog.map((item) => (
               <div key={item.id} className="px-6 sm:px-8 py-4 flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-bold text-foreground">{item.action}</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {auditActionLabel(item.action)}
+                  </p>
                   <p className="text-xs text-muted-foreground uppercase tracking-widest">
                     Por <span className="text-primary">{item.users?.full_name ?? "—"}</span> •{" "}
                     {formatDateTime(item.event_date)}
@@ -286,6 +292,9 @@ export default async function MovementDetailPage({ params }: Props) {
                   {item.note && (
                     <p className="text-xs text-muted-foreground mt-1 max-w-lg">{item.note}</p>
                   )}
+                  <div className="mt-1 max-w-lg">
+                    <AuditDiff previous={item.previous_value} next={item.new_value} />
+                  </div>
                 </div>
               </div>
             ))}
