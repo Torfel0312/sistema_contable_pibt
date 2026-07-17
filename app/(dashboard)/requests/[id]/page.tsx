@@ -22,6 +22,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
   const canCreateSettlement = can(user.permissions, PERMISSIONS.CREATE_SETTLEMENT)
   const canReview = can(user.permissions, PERMISSIONS.REVIEW_INTENTIONS)
+  const canCreateRequest = can(user.permissions, PERMISSIONS.CREATE_REQUEST)
 
   if (isMinisterWorkflowUser(user.permissions)) {
     const assignment = await ministriesService.getMinistryForUser(db, user.id)
@@ -50,6 +51,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
       settlementComments={settlementComments}
       canReview={canReview}
       canSubmit={canCreateSettlement}
+      canCreateRequest={canCreateRequest}
       currentUserId={user.id}
     />
   )

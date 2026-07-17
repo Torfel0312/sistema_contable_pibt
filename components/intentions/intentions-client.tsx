@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
+import { Plus, Clock, CheckCircle, XCircle, FileText, Ban } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -41,15 +41,19 @@ type MinistryAssignment = Awaited<ReturnType<typeof ministriesService.getMinistr
 type Ministry = NonNullable<MinistryAssignment>["ministries"] | null
 
 const STATUS_ICONS = {
+  DRAFT: <FileText className="size-4 text-muted-foreground" />,
   PENDING: <Clock className="size-4 text-amber-500" />,
   APPROVED: <CheckCircle className="size-4 text-green-500" />,
-  REJECTED: <XCircle className="size-4 text-red-500" />
+  REJECTED: <XCircle className="size-4 text-red-500" />,
+  CANCELLED: <Ban className="size-4 text-muted-foreground" />
 }
 
 const STATUS_LABELS = {
+  DRAFT: "Borrador",
   PENDING: "Pendiente",
   APPROVED: "Aprobada",
-  REJECTED: "Rechazada"
+  REJECTED: "Rechazada",
+  CANCELLED: "Cancelada"
 }
 
 const FUNDING_METHOD_LABELS = {
@@ -72,13 +76,14 @@ export function IntentionsClient({
 
   const isMinister = canCreateRequest
 
-  // Closed = rejected outright, or its settlement flow was closed out by tesorería
-  // (settlement_closed_at set). Everything else still needs someone's attention.
+  // Closed = rejected/cancelled outright, or its settlement flow was closed out
+  // by tesorería (settlement_closed_at set). Everything else still needs
+  // someone's attention (including DRAFT, which is still being worked on).
   const closedIntentions = intentions.filter(
-    (i) => i.status === "REJECTED" || !!i.settlement_closed_at
+    (i) => i.status === "REJECTED" || i.status === "CANCELLED" || !!i.settlement_closed_at
   )
   const openIntentions = intentions.filter(
-    (i) => i.status !== "REJECTED" && !i.settlement_closed_at
+    (i) => i.status !== "REJECTED" && i.status !== "CANCELLED" && !i.settlement_closed_at
   )
 
   type IntentionFormValues = Omit<CreateIntentionInput, "amount"> & { amount: string }
@@ -108,9 +113,10 @@ export function IntentionsClient({
         amount: "",
         purpose: "",
         date_needed: "",
-        funding_method: "REIMBURSEMENT"
+        funding_method: "REIMBURSEMENT",
+        isDraft: false
       })
-      toast.success("Solicitud enviada al equipo de tesorería")
+      toast.success(values.isDraft ? "Borrador guardado" : "Solicitud enviada al equipo de tesorería")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar solicitud")
     }
@@ -155,7 +161,7 @@ export function IntentionsClient({
               <DialogHeader>
                 <DialogTitle>Solicitud de dinero</DialogTitle>
               </DialogHeader>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <form className="space-y-4">
                 <Field>
                   <FieldLabel htmlFor="int-amount">Monto solicitado (CLP) *</FieldLabel>
                   <Controller
@@ -222,9 +228,25 @@ export function IntentionsClient({
                   </NativeSelect>
                   <FieldError errors={[form.formState.errors.funding_method]} />
                 </Field>
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Enviando..." : "Enviar solicitud"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={form.formState.isSubmitting}
+                    onClick={form.handleSubmit((values) => handleSubmit({ ...values, isDraft: true }))}
+                  >
+                    Guardar borrador
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1"
+                    disabled={form.formState.isSubmitting}
+                    onClick={form.handleSubmit((values) => handleSubmit({ ...values, isDraft: false }))}
+                  >
+                    {form.formState.isSubmitting ? "Enviando..." : "Enviar solicitud"}
+                  </Button>
+                </div>
               </form>
             </DialogContent>
           </Dialog>

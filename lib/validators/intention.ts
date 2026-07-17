@@ -19,7 +19,8 @@ export const createIntentionSchema = z.object({
     .literal("")
     .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"))
     .optional(),
-  funding_method: z.enum(["REIMBURSEMENT", "TRANSFER"])
+  funding_method: z.enum(["REIMBURSEMENT", "TRANSFER"]),
+  isDraft: z.boolean().optional().default(false)
 })
 
 export const reviewIntentionSchema = z.object({
@@ -40,7 +41,7 @@ export const addCommentSchema = z.object({
 })
 
 export const intentionFiltersSchema = z.object({
-  status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+  status: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED", "CANCELLED"]).optional(),
   ministry_id: z.string().uuid().optional()
 })
 
