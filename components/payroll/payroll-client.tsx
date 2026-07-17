@@ -209,9 +209,7 @@ function PayrollHistory({ records }: { records: PayrollRecord[] }) {
             <div className="flex flex-col gap-1">
               {record.payroll_movements.map((pm) => (
                 <div key={pm.id} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {KIND_LABELS[pm.kind] ?? pm.kind} · Folio {pm.movements?.folio_display}
-                  </span>
+                  <span className="text-muted-foreground">{KIND_LABELS[pm.kind] ?? pm.kind}</span>
                   <span>{formatCLP(Number(pm.movements?.amount ?? 0))}</span>
                 </div>
               ))}

@@ -62,7 +62,6 @@ export default async function MovementDetailPage({ params }: Props) {
 
   const voucherPayload: MovementIntegrationPayload = {
     movementId: row.id,
-    folio: row.folio_display ?? "",
     movementTypeLabel: row.movement_type === "INCOME" ? "INGRESO" : "EGRESO",
     movementDate: row.movement_date,
     amount: Number(row.amount),
@@ -91,7 +90,7 @@ export default async function MovementDetailPage({ params }: Props) {
           </Link>
           <div className="flex items-center gap-4">
             <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-              Detalle #{row.folio_display ?? row.folio}
+              Detalle del movimiento
             </h1>
             <span
               className={cn(

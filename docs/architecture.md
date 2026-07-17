@@ -67,12 +67,6 @@ RLS (Row Level Security) is enabled on all tables.
 | `lib/supabase/client.ts` | Browser client                    | Client Components              |
 | `lib/supabase/admin.ts`  | Service role (bypasses RLS)       | User management, audit inserts |
 
-## Folio system
-
-Sequential numeric ID for movements stored in the `folio_counter` table (singleton row `id: 'main'`).
-Incremented atomically via the `increment_and_get_folio()` Postgres RPC on each movement creation.
-`folio_display` is a generated column (`lpad(folio::text, 6, '0')`).
-
 ## User creation
 
 Admins call the `create_user_with_role(email, password, full_name, role)` Postgres RPC
@@ -113,7 +107,6 @@ Migrations live in `supabase/migrations/`. Key tables:
 | `movements`          | Income/expense records                |
 | `movement_audit_log` | Audit trail for every movement change |
 | `system_audit_log`   | System-wide audit events              |
-| `folio_counter`      | Sequential folio singleton            |
 | `intentions`         | Fund request intentions by ministry   |
 | `budgets`            | Budget allocations by ministry        |
 | `budget_periods`     | Budget periods                        |

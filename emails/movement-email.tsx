@@ -9,7 +9,6 @@ export function MovementEmail({ movement }: { movement: MovementIntegrationPaylo
 
   const rows: [string, string][] = (
     [
-      ["Folio", movement.folio],
       ["Fecha", movement.movementDate],
       ["Tipo", movement.movementTypeLabel],
       ["Monto", formatAmount(movement.amount)],
@@ -23,9 +22,7 @@ export function MovementEmail({ movement }: { movement: MovementIntegrationPaylo
   ).filter((r): r is [string, string] => r !== null)
 
   return (
-    <BaseEmail
-      preview={`Nuevo movimiento: ${movement.movementTypeLabel} - Folio ${movement.folio}`}
-    >
+    <BaseEmail preview={`Nuevo movimiento: ${movement.movementTypeLabel} - ${movement.category}`}>
       <Section style={{ padding: "24px 32px 8px" }}>
         <Text style={{ margin: 0, fontSize: 15, color: "#333" }}>
           Se ha registrado un nuevo movimiento:

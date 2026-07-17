@@ -89,7 +89,6 @@ export default async function MovementsPage({ searchParams }: Props) {
         canWrite={canWrite}
         rows={rows.map((row) => ({
           id: row.id,
-          folio_display: row.folio_display,
           movement_date: row.movement_date,
           movement_type: row.movement_type,
           amount: String(row.amount),

@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { auditService } from "@/services/audit/audit.service"
-import { increment_and_get_folio } from "@/lib/utils/folio"
 import { sanitizePostgrestSearch } from "@/lib/utils/postgrest"
 import type {
   AttachmentInput,
@@ -19,9 +18,8 @@ function normalizeOptional(value?: string | null) {
 }
 
 // Best-effort: attachments are inserted after the movement row already exists.
-// If this fails, the movement itself is not rolled back (same non-transactional
-// tolerance already used elsewhere in this codebase, e.g. folio increment + insert) —
-// the error is logged server-side instead of blocking the movement response.
+// If this fails, the movement itself is not rolled back — the error is logged
+// server-side instead of blocking the movement response.
 export async function insertMovementAttachments(
   db: DB,
   movementId: string,
@@ -79,11 +77,11 @@ export const movementsService = {
     let query = db
       .from("movements")
       .select(
-        "id, folio, folio_display, movement_date, movement_type, amount, category_id, subcategory_id, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), payment_methods:payment_method_id(name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)",
+        "id, movement_date, movement_type, amount, category_id, subcategory_id, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), payment_methods:payment_method_id(name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)",
         { count: "exact" }
       )
       .order("movement_date", { ascending: false })
-      .order("folio", { ascending: false })
+      .order("created_at", { ascending: false })
       .range(from, to)
 
     if (filters.movement_type && filters.movement_type !== "ALL") {
@@ -100,7 +98,7 @@ export const movementsService = {
         // directly here. PostgREST .or() filters can't reach into an
         // embedded relation's column, so category name search is dropped
         // rather than attempting a fragile embedded-filter workaround.
-        query = query.or(`folio_display.ilike.%${s}%,delivered_by.ilike.%${s}%`)
+        query = query.ilike("delivered_by", `%${s}%`)
       }
     }
 
@@ -133,13 +131,9 @@ export const movementsService = {
   },
 
   async create(db: DB, input: CreateMovementInput, userId: string) {
-    // folio RPC is service_role only — uses admin client internally via folio utility
-    const folio = await increment_and_get_folio()
-
     const { data: movement, error } = await db
       .from("movements")
       .insert({
-        folio,
         movement_date: input.movement_date,
         movement_type: input.movement_type,
         amount: input.amount,

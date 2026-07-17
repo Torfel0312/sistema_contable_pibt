@@ -39,9 +39,8 @@ export const payrollService = {
       }))
     })
     if (rpcError) {
-      // The only unique constraint register_payroll() can hit is payroll_records.period
-      // (folio collisions can't happen — folio_counter is incremented atomically inside
-      // the same transaction) so 23505 unambiguously means "already registered this month."
+      // The only unique constraint register_payroll() can hit is payroll_records.period,
+      // so 23505 unambiguously means "already registered this month."
       if (rpcError.code === "23505") {
         throw new Error("Ya existe un registro de remuneración para este mes")
       }
@@ -90,7 +89,7 @@ export const payrollService = {
     const { data, error } = await db
       .from("payroll_records")
       .select(
-        "*, payroll_movements(id, kind, movements(id, folio, folio_display, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
+        "*, payroll_movements(id, kind, movements(id, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
       )
       .order("period", { ascending: false })
     if (error) throw error
@@ -101,7 +100,7 @@ export const payrollService = {
     const { data, error } = await db
       .from("payroll_records")
       .select(
-        "*, payroll_movements(id, kind, movements(id, folio, folio_display, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
+        "*, payroll_movements(id, kind, movements(id, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
       )
       .eq("id", id)
       .single()

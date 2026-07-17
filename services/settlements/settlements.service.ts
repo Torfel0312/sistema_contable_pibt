@@ -348,8 +348,6 @@ export const settlementsService = {
         // Movement INSERT requires service_role: movements_insert RLS only allows ADMIN/BURSAR,
         // but FINANCE reviewers must also be able to approve. Admin client is used here explicitly.
         const { createSupabaseAdminClient: getAdmin } = await import("@/lib/supabase/admin")
-        const { increment_and_get_folio } = await import("@/lib/utils/folio")
-        const folio = await increment_and_get_folio()
 
         const adminClient = getAdmin()
 
@@ -369,7 +367,6 @@ export const settlementsService = {
         const { data: movement, error: movErr } = await adminClient
           .from("movements")
           .insert({
-            folio,
             movement_date: now.slice(0, 10),
             movement_type: "EXPENSE",
             amount: settlement.amount,

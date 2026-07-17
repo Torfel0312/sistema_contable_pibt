@@ -23,7 +23,6 @@ jest.mock("@/services/settings/settings.service", () => ({
 
 const mockMovementRow = {
   id: "mov-1",
-  folio_display: "000042",
   movement_date: "2026-05-01",
   movement_type: "INCOME",
   amount: 150000,
@@ -67,7 +66,6 @@ import type { MovementIntegrationPayload } from "@/services/google/types"
 
 const baseMovement: MovementIntegrationPayload = {
   movementId: "mov-1",
-  folio: "000042",
   movementDate: "2026-05-01",
   movementTypeLabel: "INGRESO",
   amount: 150000,
@@ -116,9 +114,9 @@ describe("sendVoucherEmail", () => {
     const call = mockSend.mock.calls[0][0] as SendCallArgs
     expect(call.to).toBe("donante@example.com")
     expect(call.bcc).toBeUndefined()
-    expect(call.subject).toContain("000042")
+    expect(call.subject).toContain("Comprobante")
     expect(call.attachments).toEqual([
-      expect.objectContaining({ filename: "comprobante-000042.pdf" })
+      expect.objectContaining({ filename: "comprobante-mov-1.pdf" })
     ])
   })
 

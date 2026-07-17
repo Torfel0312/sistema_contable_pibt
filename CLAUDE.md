@@ -66,9 +66,6 @@ API route or server action → reads Supabase session → validates with Zod sch
 **Auth:**
 Supabase Auth with email/password (`signInWithPassword`). No public sign-up — accounts are created by an ADMIN via the users management page; the invited user receives an email (Resend) and activates via `/activate`. Password reset via `/api/auth/forgot-password`. Session is read server-side via `createServerClient()` from `lib/supabase/server.ts`.
 
-**Folio system:**
-Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'main'`). Incremented atomically via the `increment_and_get_folio()` Postgres RPC on each movement creation. `folio_display` is a generated column (`lpad(folio::text, 6, '0')`).
-
 **Ministries:**
 `ministries` + `ministry_assignments` tables; a MINISTER user is assigned to a ministry via `ministry_assignments` (FK to `users`) — there is no free-text minister field. Managed at `/ministries`. Used by the requests workflow.
 
@@ -79,7 +76,7 @@ Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'm
 Outbound webhooks via Google Apps Script (configured via env vars): PDF generation + Drive storage and Google Sheets sync. Triggered in `services/google/movement-postprocess.ts` after a movement is created/edited. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`. Integration state tracked on `movements` (`pdf_status`, `synced_to_sheet`, `notification_status`, etc.).
 
 **Database schema:**
-Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
+Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
 
 Always use `pnpm supabase migration new ...` for new migrations
 

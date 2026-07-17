@@ -7,7 +7,6 @@ import {
   sendTransferNotification
 } from "@/services/email/workflow-emails.service"
 import { insertMovementAttachments } from "@/services/movements/movements.service"
-import { increment_and_get_folio } from "@/lib/utils/folio"
 import type {
   CreateIntentionInput,
   ReviewIntentionInput,
@@ -238,12 +237,9 @@ export const intentionsService = {
       throw new Error("No se encontró la categoría del sistema 'Transferencias a Ministerios'")
     }
 
-    const folio = await increment_and_get_folio()
-
     const { data: movement, error: movErr } = await db
       .from("movements")
       .insert({
-        folio,
         movement_date: input.transfer_date,
         movement_type: "EXPENSE",
         amount: input.amount,

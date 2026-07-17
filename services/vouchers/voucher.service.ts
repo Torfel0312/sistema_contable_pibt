@@ -47,7 +47,6 @@ async function buildVoucherPayload(movementId: string): Promise<MovementIntegrat
 
   return {
     movementId: movement.id,
-    folio: movement.folio_display ?? "",
     movementTypeLabel: movement.movement_type === "INCOME" ? "INGRESO" : "EGRESO",
     movementDate: movement.movement_date,
     amount: Number(movement.amount),
@@ -80,11 +79,11 @@ export async function sendVoucherEmail(
     from,
     to: toEmail,
     ...(opts?.bcc ? { bcc: opts.bcc } : {}),
-    subject: `Comprobante — Folio ${payload.folio}`,
+    subject: `Comprobante — ${payload.movementTypeLabel === "INGRESO" ? "Ingreso" : "Egreso"}`,
     react: ReceiptConfirmationEmail({ movement: payload }),
     attachments: [
       {
-        filename: `comprobante-${payload.folio}.pdf`,
+        filename: `comprobante-${payload.movementId}.pdf`,
         content: pdfBuffer
       }
     ]

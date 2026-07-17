@@ -58,13 +58,13 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
     setSharing(true)
     try {
       const blob = await buildVoucherBlob(movement)
-      const file = new File([blob], `comprobante-${movement.folio}.pdf`, {
+      const file = new File([blob], `comprobante-${movement.movementId}.pdf`, {
         type: "application/pdf"
       })
 
       if (navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: `Comprobante ${movement.folio}` })
+          await navigator.share({ files: [file], title: "Comprobante" })
         } catch (err) {
           if (err instanceof Error && err.name === "AbortError") return
           toast.error("No se pudo compartir el comprobante")
@@ -72,7 +72,7 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
         return
       }
 
-      downloadBlob(blob, `comprobante-${movement.folio}.pdf`)
+      downloadBlob(blob, `comprobante-${movement.movementId}.pdf`)
     } catch {
       toast.error("No se pudo generar el comprobante")
     } finally {
@@ -145,7 +145,7 @@ export function VoucherActions({ movement }: { movement: MovementIntegrationPayl
           <DialogHeader>
             <DialogTitle>Enviar comprobante por correo</DialogTitle>
             <DialogDescription>
-              Se enviará el comprobante del folio {movement.folio} al correo indicado.
+              Se enviará el comprobante al correo indicado.
             </DialogDescription>
           </DialogHeader>
           <form
