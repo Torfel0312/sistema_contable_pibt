@@ -7,8 +7,8 @@ import type { UserRole } from "@/types/auth"
 import { updateRolePermission } from "@/app/actions/permissions"
 
 // VIEW_WORKFLOW is intentionally excluded: access to the requests workflow is
-// derived from SUBMIT_INTENTIONS/REVIEW_INTENTIONS (see canAccessWorkflow),
-// so it's not an independently toggleable permission.
+// derived from CREATE_REQUEST/CREATE_SETTLEMENT/REVIEW_INTENTIONS (see
+// canAccessWorkflow), so it's not an independently toggleable permission.
 const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
   MANAGE_USERS: "Gestionar usuarios",
   CREATE_MOVEMENT: "Crear y editar movimientos",
@@ -16,7 +16,8 @@ const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
   VIEW_DASHBOARD: "Ver dashboard general",
   MANAGE_MINISTRIES: "Gestionar ministerios",
   REVIEW_INTENTIONS: "Revisar solicitudes de fondos",
-  SUBMIT_INTENTIONS: "Enviar solicitudes de fondos",
+  CREATE_REQUEST: "Crear solicitudes de fondos",
+  CREATE_SETTLEMENT: "Crear rendiciones de gastos",
   MANAGE_SETTINGS: "Gestionar configuración del sistema"
 }
 

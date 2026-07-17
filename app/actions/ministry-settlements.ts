@@ -9,7 +9,7 @@ import type { CreateSettlementInput, ReviewSettlementInput, CloseIntentionInput 
 
 export async function createMinistrySettlement(input: CreateSettlementInput) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_SETTLEMENT)) {
     throw new Error("Solo los ministros pueden enviar rendiciones")
   }
 
@@ -21,7 +21,7 @@ export async function createMinistrySettlement(input: CreateSettlementInput) {
 
 export async function submitSettlement(id: string, intentionId: string) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_SETTLEMENT)) {
     throw new Error("Solo los ministros pueden enviar rendiciones a revisión")
   }
 
@@ -33,7 +33,7 @@ export async function submitSettlement(id: string, intentionId: string) {
 
 export async function cancelSettlement(id: string, intentionId: string) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_SETTLEMENT)) {
     throw new Error("Solo los ministros pueden cancelar rendiciones")
   }
 

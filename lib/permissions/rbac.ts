@@ -4,7 +4,8 @@ export const PERMISSIONS = {
   VIEW_MOVEMENT: "VIEW_MOVEMENT",
   MANAGE_MINISTRIES: "MANAGE_MINISTRIES",
   REVIEW_INTENTIONS: "REVIEW_INTENTIONS",
-  SUBMIT_INTENTIONS: "SUBMIT_INTENTIONS",
+  CREATE_REQUEST: "CREATE_REQUEST",
+  CREATE_SETTLEMENT: "CREATE_SETTLEMENT",
   MANAGE_SETTINGS: "MANAGE_SETTINGS",
   VIEW_WORKFLOW: "VIEW_WORKFLOW",
   MANAGE_CATEGORIES: "MANAGE_CATEGORIES",
@@ -21,7 +22,16 @@ export function can(permissions: Set<string> | undefined, permission: Permission
 export function canAccessWorkflow(permissions: Set<string> | undefined): boolean {
   return (
     can(permissions, PERMISSIONS.VIEW_WORKFLOW) ||
-    can(permissions, PERMISSIONS.SUBMIT_INTENTIONS) ||
+    can(permissions, PERMISSIONS.CREATE_REQUEST) ||
+    can(permissions, PERMISSIONS.CREATE_SETTLEMENT) ||
     can(permissions, PERMISSIONS.REVIEW_INTENTIONS)
+  )
+}
+
+// A minister-owned request/settlement view (own-ministry scoping, detail page
+// access) applies to anyone who can create either side of the workflow.
+export function isMinisterWorkflowUser(permissions: Set<string> | undefined): boolean {
+  return (
+    can(permissions, PERMISSIONS.CREATE_REQUEST) || can(permissions, PERMISSIONS.CREATE_SETTLEMENT)
   )
 }

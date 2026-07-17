@@ -14,7 +14,7 @@ import type {
 
 export async function createRequest(input: CreateIntentionInput) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
     throw new Error("Sin permisos para enviar solicitudes")
   }
 

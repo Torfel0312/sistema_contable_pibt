@@ -11,7 +11,7 @@ export default async function RequestsPage() {
 
   const db = await createSupabaseServerClient()
 
-  if (can(user.permissions, PERMISSIONS.SUBMIT_INTENTIONS)) {
+  if (can(user.permissions, PERMISSIONS.CREATE_REQUEST)) {
     const assignment = await ministriesService.getMinistryForUser(db, user.id)
 
     const intentions = assignment
@@ -20,7 +20,7 @@ export default async function RequestsPage() {
 
     return (
       <IntentionsClient
-        canSubmit={true}
+        canCreateRequest={true}
         intentions={intentions}
         ministry={assignment?.ministries ?? null}
       />
@@ -29,5 +29,5 @@ export default async function RequestsPage() {
 
   const intentions = await intentionsService.list(db)
 
-  return <IntentionsClient canSubmit={false} intentions={intentions} ministry={null} />
+  return <IntentionsClient canCreateRequest={false} intentions={intentions} ministry={null} />
 }
