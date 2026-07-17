@@ -5,7 +5,6 @@ import type { MovementIntegrationPayload } from "@/services/google/types"
 
 function toPayload(m: {
   id: string
-  folio_display: string | null
   movement_date: string
   movement_type: "INCOME" | "EXPENSE"
   amount: number
@@ -19,7 +18,6 @@ function toPayload(m: {
 }): MovementIntegrationPayload {
   return {
     movementId: m.id,
-    folio: m.folio_display ?? "",
     movementTypeLabel: m.movement_type === "INCOME" ? "INGRESO" : "EGRESO",
     movementDate: m.movement_date,
     amount: Number(m.amount),

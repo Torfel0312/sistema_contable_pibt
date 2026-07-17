@@ -34,7 +34,7 @@ NOTIFICATION_EMAIL="tesoreria@example.com"               # Movement notification
 
 | Trigger          | Recipients                              | Content                                               |
 | ---------------- | --------------------------------------- | ----------------------------------------------------- |
-| Movement created | `NOTIFICATION_EMAIL` + registering user | Movement detail table (folio, amount, category, etc.) |
+| Movement created | `NOTIFICATION_EMAIL` + registering user | Movement detail table (amount, category, etc.) |
 
 ### Fund request workflow
 

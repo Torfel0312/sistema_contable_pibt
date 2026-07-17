@@ -28,7 +28,7 @@ export async function sendMovementEmail(
     from,
     to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail].filter(Boolean) as string[],
     replyTo: process.env.NOTIFICATION_EMAIL,
-    subject: `[${movement.movementTypeLabel}] Folio ${movement.folio} - ${movement.category}`,
+    subject: `[${movement.movementTypeLabel}] ${movement.category}`,
     react: MovementEmail({ movement }),
     headers: TRANSACTIONAL_HEADERS
   })

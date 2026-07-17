@@ -22,7 +22,7 @@ Accounting and fund management system for **Primera Iglesia Bautista de Talcahua
 | Module              | Description                                                                            |
 | ------------------- | -------------------------------------------------------------------------------------- |
 | **Dashboard**       | KPIs, income/expense chart, monthly summary                                            |
-| **Movements**       | Income and expense records with sequential folio, PDF generation, and full audit trail |
+| **Movements**       | Income and expense records with PDF generation and full audit trail                    |
 | **Fund Requests**   | Ministry fund request workflow with treasury approval and transfer registration        |
 | **Budget**          | Budget period and ministry allocation management                                       |
 | **Ministries**      | Ministry and member administration                                                     |

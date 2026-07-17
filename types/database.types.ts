@@ -222,24 +222,6 @@ export type Database = {
           },
         ]
       }
-      folio_counter: {
-        Row: {
-          id: string
-          last_folio: number
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          last_folio?: number
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          last_folio?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       inbound_email_routes: {
         Row: {
           created_at: string
@@ -673,8 +655,6 @@ export type Database = {
           created_at: string
           created_by_id: string
           delivered_by: string | null
-          folio: number
-          folio_display: string
           id: string
           movement_date: string
           movement_type: Database["public"]["Enums"]["movement_type"]
@@ -698,8 +678,6 @@ export type Database = {
           created_at?: string
           created_by_id: string
           delivered_by?: string | null
-          folio: number
-          folio_display?: string
           id?: string
           movement_date: string
           movement_type: Database["public"]["Enums"]["movement_type"]
@@ -723,8 +701,6 @@ export type Database = {
           created_at?: string
           created_by_id?: string
           delivered_by?: string | null
-          folio?: number
-          folio_display?: string
           id?: string
           movement_date?: string
           movement_type?: Database["public"]["Enums"]["movement_type"]
@@ -1135,7 +1111,6 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       get_pending_reminders: { Args: never; Returns: Json }
-      increment_and_get_folio: { Args: never; Returns: number }
       register_payroll: {
         Args: {
           p_category_id: string

@@ -20,6 +20,6 @@ flowchart TD
     N --> O["FINANCE/BURSAR reviews<br/>POST /ministry-settlements/id/review"]
     O --> P{Approve or Reject?}
     P -->|Reject| Q([status: REJECTED<br/>email minister])
-    P -->|Approve| R[Admin client creates movements row<br/>folio via RPC<br/>category 'Rendición Ministerio']
+    P -->|Approve| R[Admin client creates movements row<br/>category 'Rendición Ministerio']
     R --> S([Link movement_id, audit-log both,<br/>email minister<br/>sendSettlementReviewNotification])
 ```

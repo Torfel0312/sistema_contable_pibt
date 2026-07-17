@@ -26,7 +26,6 @@ import { FileSearch } from "lucide-react"
 
 export type SerializedMovement = {
   id: string
-  folio_display: string
   movement_date: string
   movement_type: string
   amount: string
@@ -262,7 +261,7 @@ export function MovementsTable({
               <DialogHeader>
                 <div className="flex items-center gap-3 flex-wrap">
                   <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
-                    #{selected.folio_display}
+                    Detalle del movimiento
                   </DialogTitle>
                   <span
                     className={cn(
@@ -286,7 +285,7 @@ export function MovementsTable({
                   </span>
                 </div>
                 <DialogDescription className="sr-only">
-                  Detalle del movimiento {selected.folio_display}
+                  Información completa del movimiento seleccionado
                 </DialogDescription>
               </DialogHeader>
 

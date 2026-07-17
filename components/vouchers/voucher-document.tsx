@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   body: {
     padding: 32
   },
-  folioRow: {
+  topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
@@ -49,14 +49,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottom: `1px solid ${COLORS.border}`
   },
-  folio: {
-    fontSize: 24,
+  date: {
+    fontSize: 16,
     fontWeight: 700,
     color: COLORS.primary
-  },
-  date: {
-    fontSize: 10,
-    color: COLORS.mutedForeground
   },
   badge: {
     fontSize: 9,
@@ -143,11 +139,8 @@ export function VoucherDocument({ movement }: { movement: MovementIntegrationPay
         </View>
 
         <View style={styles.body}>
-          <View style={styles.folioRow}>
-            <View>
-              <Text style={styles.folio}>Folio {movement.folio}</Text>
-              <Text style={styles.date}>{movement.movementDate}</Text>
-            </View>
+          <View style={styles.topRow}>
+            <Text style={styles.date}>{movement.movementDate}</Text>
             <Text style={isIncome ? styles.badge : [styles.badge, styles.badgeExpense]}>
               {movement.movementTypeLabel}
             </Text>

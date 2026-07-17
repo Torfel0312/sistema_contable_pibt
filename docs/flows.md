@@ -101,7 +101,7 @@ sequenceDiagram
 
     alt Approved
         alt REIMBURSEMENT
-            System->>System: Admin client inserts movements row (folio via increment_and_get_folio RPC, category "Rendiciones de Ministerio")
+            System->>System: Admin client inserts movements row (category "Rendiciones de Ministerio")
         else TRANSFER
             System->>System: Reuse the movement already created when the transfer was registered (no second movement)
         end
@@ -141,8 +141,7 @@ Standard income or expense recording with audit trail and always-on integrations
 flowchart TD
     A([User creates movement]) --> B[API validates session + Zod schema]
     B --> C[Service saves to DB]
-    C --> D[Folio assigned via increment_and_get_folio RPC]
-    D --> E[Audit log entry created]
+    C --> E[Audit log entry created]
     E --> F["processMovementIntegrations() — Promise.allSettled, always runs, each independent"]
     F --> G[Google Apps Script webhook → PDF generated + saved to Drive]
     F --> I[Google Apps Script webhook → Google Sheets sync]
@@ -181,7 +180,7 @@ flowchart TD
     A([ADMIN registers monthly payroll]) --> B[Zod validates period + 1..N line items]
     B --> C["register_payroll() RPC — SECURITY DEFINER, atomic"]
     C --> D[Insert payroll_records row, period normalized to month start]
-    C --> E["For each line: increment folio → insert movements (EXPENSE, category Remuneraciones)"]
+    C --> E["For each line: insert movements (EXPENSE, category Remuneraciones)"]
     E --> F[Insert payroll_movements linking record ↔ movement ↔ kind]
     F --> G[Attachments uploaded to Drive per movement, same pattern as Etapa 1]
     G --> H([System audit log entry: PAYROLL_REGISTERED])

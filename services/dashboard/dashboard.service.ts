@@ -42,11 +42,11 @@ export const dashboardService = {
       admin
         .from("movements")
         .select(
-          "id, folio, folio_display, movement_date, movement_type, amount, status, created_by:users!created_by_id(full_name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)"
+          "id, movement_date, movement_type, amount, status, created_by:users!created_by_id(full_name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)"
         )
         .eq("status", "ACTIVE")
         .order("movement_date", { ascending: false })
-        .order("folio", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(8),
       options.includeFinanceWidgets ? severanceReserveService.getBalance(admin) : Promise.resolve(null),
       options.includeFinanceWidgets ? ministryLeftoverService.getSummary() : Promise.resolve(null)

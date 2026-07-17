@@ -7,7 +7,6 @@ const render = (el: React.ReactElement) => renderToStaticMarkup(el)
 
 const baseMovement: MovementIntegrationPayload = {
   movementId: "mov-1",
-  folio: "000042",
   movementDate: "2026-05-01",
   movementTypeLabel: "INGRESO",
   amount: 150000,
@@ -27,9 +26,8 @@ describe("ReceiptConfirmationEmail", () => {
     expect(() => render(ReceiptConfirmationEmail({ movement: baseMovement }))).not.toThrow()
   })
 
-  it("includes folio and category in output", () => {
+  it("includes category in output", () => {
     const html = render(ReceiptConfirmationEmail({ movement: baseMovement }))
-    expect(html).toContain("000042")
     expect(html).toContain("Diezmos")
   })
 
@@ -38,9 +36,9 @@ describe("ReceiptConfirmationEmail", () => {
     expect(html).toContain("150.000")
   })
 
-  it("includes preview text with folio", () => {
+  it("includes preview text with category", () => {
     const html = render(ReceiptConfirmationEmail({ movement: baseMovement }))
-    expect(html).toContain("Folio 000042")
+    expect(html).toContain("Diezmos")
   })
 
   it("mentions the attached PDF comprobante", () => {

@@ -5,14 +5,13 @@ import type { MovementIntegrationPayload } from "@/services/google/types"
 
 export function ReceiptConfirmationEmail({ movement }: { movement: MovementIntegrationPayload }) {
   const rows: [string, string][] = [
-    ["Folio", movement.folio],
     ["Fecha", movement.movementDate],
     ["Monto", formatAmount(movement.amount)],
     ["Categoría", movement.category]
   ]
 
   return (
-    <BaseEmail preview={`Confirmación de ingreso — Folio ${movement.folio}`}>
+    <BaseEmail preview={`Confirmación de ingreso — ${movement.category}`}>
       <Section style={{ padding: "24px 32px 8px" }}>
         <Text style={{ margin: 0, fontSize: 15, color: "#333" }}>
           Hemos registrado tu aporte/ingreso correctamente. A continuación el detalle:

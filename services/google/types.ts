@@ -2,7 +2,6 @@ export type IntegrationStatus = "PENDING" | "SENT" | "ERROR"
 
 export type MovementIntegrationPayload = {
   movementId: string
-  folio: string
   movementTypeLabel: "INGRESO" | "EGRESO"
   movementDate: string
   amount: number
