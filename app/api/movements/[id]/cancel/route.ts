@@ -1,9 +1,8 @@
-import { NextResponse, after } from "next/server"
+import { NextResponse } from "next/server"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { movementsService } from "@/services/movements/movements.service"
 import { cancelMovementSchema } from "@/lib/validators/movement"
-import { processMovementIntegrations } from "@/services/google/movement-postprocess"
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -26,13 +25,6 @@ export async function POST(request: Request, { params }: Params) {
 
     const db = await createSupabaseServerClient()
     const result = await movementsService.cancel(db, id, parsed.data, user.id)
-    after(async () => {
-      try {
-        await processMovementIntegrations(result.id, user.id)
-      } catch (error) {
-        console.error("processMovementIntegrations failed", { movementId: result.id, error })
-      }
-    })
     return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error"
