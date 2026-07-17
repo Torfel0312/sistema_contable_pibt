@@ -208,9 +208,7 @@ export function InboundEmailRoutesSection({
               <Field>
                 <FieldLabel htmlFor="route-user">Usuario</FieldLabel>
                 <NativeSelect id="route-user" {...form.register("user_id")} defaultValue="">
-                  <NativeSelectOption value="" disabled>
-                    Seleccionar usuario…
-                  </NativeSelectOption>
+                  <NativeSelectOption value="">Seleccionar usuario…</NativeSelectOption>
                   {availableUsers.map((u) => (
                     <NativeSelectOption key={u.id} value={u.id}>
                       {u.full_name} — {u.email}

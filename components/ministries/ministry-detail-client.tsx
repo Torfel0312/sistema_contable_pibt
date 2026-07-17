@@ -299,9 +299,7 @@ export function MinistryDetailClient({
                     {...assignForm.register("user_id")}
                     defaultValue=""
                   >
-                    <NativeSelectOption value="" disabled>
-                      Seleccionar ministro…
-                    </NativeSelectOption>
+                    <NativeSelectOption value="">Seleccionar ministro…</NativeSelectOption>
                     {availableMinsters.map((u) => (
                       <NativeSelectOption key={u.id} value={u.id}>
                         {u.full_name} — {u.email}
