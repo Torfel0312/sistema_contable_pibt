@@ -82,7 +82,6 @@ export async function cancelMovement(id: string, input: CancelMovementInput) {
 
   const db = await createSupabaseServerClient()
   const result = await movementsService.cancel(db, id, input, user.id)
-  scheduleIntegrations(result.id, user.id)
   revalidatePath(`/movements/${id}`)
   revalidatePath("/movements")
   return result
