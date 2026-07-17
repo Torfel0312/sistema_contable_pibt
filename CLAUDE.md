@@ -44,10 +44,10 @@ Always use `pnpm`, never `npm`.
 
 **Layer separation:**
 
-- `app/` — Route handlers and page components. `(dashboard)` route group pages: `dashboard`, `movements` (+ `new`, `[id]`, `[id]/edit`), `settlements` (Rendición de Boletas), `ministries` (+ `[id]`), `requests` (+ `[id]`, intentions/approval workflow), `users`, `audit`, `settings`, `profile`, `voucher-book` (quick income/expense entry form, not linked in sidebar).
-- `app/actions/` — Server actions (auth, movements, invoices, users, ministries, requests, ministry-settlements, settings, permissions, theme).
-- `app/api/` — API routes (movements, invoices, users, ministries, requests, ministry-settlements, notifications, reminders, settings, auth, attachments, dashboard).
-- `components/` — UI (`components/ui/`) and domain components (`components/movements/`, `components/dashboard/`, `components/settlements/`, `components/intentions/`, etc.)
+- `app/` — Route handlers and page components. `(dashboard)` route group pages: `dashboard`, `movements` (+ `new`, `[id]`, `[id]/edit`), `ministries` (+ `[id]`), `requests` (+ `[id]`, intentions/approval workflow), `users`, `audit`, `settings`, `profile`, `voucher-book` (quick income/expense entry form, not linked in sidebar).
+- `app/actions/` — Server actions (auth, movements, users, ministries, requests, ministry-settlements, settings, permissions, theme).
+- `app/api/` — API routes (movements, users, ministries, requests, ministry-settlements, notifications, reminders, settings, auth, attachments, dashboard).
+- `components/` — UI (`components/ui/`) and domain components (`components/movements/`, `components/dashboard/`, `components/intentions/`, etc.)
 - `services/` — All business logic. Never call the Supabase client directly from API routes or server actions; use the service layer.
 - `lib/supabase/` — Supabase client helpers:
   - `server.ts` — SSR client (reads/writes cookies, used in API routes and Server Components); also exports `getCurrentUser()`
@@ -69,9 +69,6 @@ Supabase Auth with email/password (`signInWithPassword`). No public sign-up — 
 **Folio system:**
 Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'main'`). Incremented atomically via the `increment_and_get_folio()` Postgres RPC on each movement creation. `folio_display` is a generated column (`lpad(folio::text, 6, '0')`).
 
-**Invoice settlement (Rendición de Boletas):**
-`invoices` table stores receipts submitted for monthly settlement. Status enum: `PENDING` | `SETTLED`. No physical deletion. API: `GET /api/invoices`, `POST /api/invoices`, `PATCH /api/invoices/[id]`. Service: `services/invoices/invoices.service.ts`. Validator: `lib/validators/invoice.ts`. Page: `app/(dashboard)/settlements/page.tsx` (route `/settlements`).
-
 **Ministries:**
 `ministries` + `ministry_assignments` tables; a MINISTER user is assigned to a ministry via `ministry_assignments` (FK to `users`) — there is no free-text minister field. Managed at `/ministries`. Used by the requests workflow.
 
@@ -82,7 +79,7 @@ Sequential numeric ID stored in the `folio_counter` table (singleton row `id: 'm
 Outbound webhooks via Google Apps Script (configured via env vars): PDF generation + Drive storage and Google Sheets sync. Triggered in `services/google/movement-postprocess.ts` after a movement is created/edited. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`. Integration state tracked on `movements` (`pdf_status`, `synced_to_sheet`, `notification_status`, etc.).
 
 **Database schema:**
-Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `invoices`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
+Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `folio_counter`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
 
 Always use `pnpm supabase migration new ...` for new migrations
 

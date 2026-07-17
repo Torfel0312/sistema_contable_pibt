@@ -27,7 +27,6 @@ Accounting and fund management system for **Primera Iglesia Bautista de Talcahua
 | **Budget**          | Budget period and ministry allocation management                                       |
 | **Ministries**      | Ministry and member administration                                                     |
 | **Settlements**     | Post-transfer expense settlement (receipts and supporting documents)                   |
-| **Invoice Booklet** | Honorary receipt booklet management                                                    |
 | **Events**          | Church event records                                                                   |
 | **Users**           | Account management (ADMIN only)                                                        |
 | **Audit**           | System-wide change and event history                                                   |

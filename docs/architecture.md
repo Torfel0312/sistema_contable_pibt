@@ -114,7 +114,6 @@ Migrations live in `supabase/migrations/`. Key tables:
 | `movement_audit_log` | Audit trail for every movement change |
 | `system_audit_log`   | System-wide audit events              |
 | `folio_counter`      | Sequential folio singleton            |
-| `invoices`           | Settlement receipts (boletas)         |
 | `intentions`         | Fund request intentions by ministry   |
 | `budgets`            | Budget allocations by ministry        |
 | `budget_periods`     | Budget periods                        |

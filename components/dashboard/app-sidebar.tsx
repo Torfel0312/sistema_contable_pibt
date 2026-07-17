@@ -9,7 +9,6 @@ import {
   Briefcase,
   Users,
   ClipboardList,
-  Receipt,
   Church,
   FileCheck,
   SlidersHorizontal,
@@ -66,12 +65,6 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/movements",
         label: "Movimientos",
         icon: Briefcase,
-        roles: ["ADMIN", "BURSAR", "FINANCE"]
-      },
-      {
-        href: "/settlements",
-        label: "Rendiciones",
-        icon: Receipt,
         roles: ["ADMIN", "BURSAR", "FINANCE"]
       },
       {
