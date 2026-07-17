@@ -13,6 +13,7 @@ const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
   MANAGE_USERS: "Gestionar usuarios",
   CREATE_MOVEMENT: "Crear y editar movimientos",
   VIEW_MOVEMENT: "Ver movimientos",
+  VIEW_DASHBOARD: "Ver dashboard general",
   MANAGE_MINISTRIES: "Gestionar ministerios",
   REVIEW_INTENTIONS: "Revisar solicitudes de fondos",
   SUBMIT_INTENTIONS: "Enviar solicitudes de fondos",

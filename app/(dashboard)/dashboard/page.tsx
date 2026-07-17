@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { dashboardService } from "@/services/dashboard/dashboard.service"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
@@ -25,6 +26,8 @@ export default async function DashboardPage({
   const from = (await searchParams)?.from
   const to = (await searchParams)?.to
   const user = await getCurrentUser()
+  if (!user) redirect("/")
+  if (!can(user.permissions, PERMISSIONS.VIEW_DASHBOARD)) redirect("/requests")
   const canWrite = can(user?.permissions, PERMISSIONS.CREATE_MOVEMENT) ?? false
   const canViewFinanceWidgets = can(user?.permissions, PERMISSIONS.VIEW_MOVEMENT) ?? false
   const data = await dashboardService.getSummary(
