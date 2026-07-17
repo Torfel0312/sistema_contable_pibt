@@ -90,6 +90,8 @@ Always make sure that types are up to date with `pnpm types:generate`
 
 ## Key conventions
 
+- Anytime you start a branch or worktree, fetch latest main changes to avoid conflicts
+- Always use playwright-cli for browser navigation, install it if needed
 - Always use `pnpm`, never `npm` or `yarn`.
 - All Zod schemas live in `lib/validators/` and are shared between API routes and forms.
 - UI components in `components/ui/` are shadcn-style built on `@base-ui/react` (not Radix). Don't swap to Radix primitives.
