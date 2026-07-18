@@ -34,6 +34,7 @@ export type SerializedAuditEvent = {
   action: string
   note: string | null
   user_name: string | null
+  impersonator_name: string | null
   href: string | null
   previous_value: unknown
   new_value: unknown
@@ -105,6 +106,11 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 </td>
                 <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
                   {event.user_name ?? "—"}
+                  {event.impersonator_name && (
+                    <span className="block text-xs italic text-muted-foreground/80">
+                      suplantado por {event.impersonator_name}
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-4 align-middle text-muted-foreground italic truncate max-w-xs text-xs">
                   {event.note ?? "—"}
@@ -137,6 +143,7 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 <ItemTitle>{auditActionLabel(event.action)}</ItemTitle>
                 <ItemDescription>
                   {event.user_name ?? "—"}
+                  {event.impersonator_name && ` (suplantado por ${event.impersonator_name})`}
                   {event.note && <span className="italic"> · {event.note}</span>}
                 </ItemDescription>
               </ItemContent>
@@ -185,6 +192,9 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <Field label="Fecha" value={selected.event_date_display} />
                 <Field label="Usuario" value={selected.user_name} />
+                {selected.impersonator_name && (
+                  <Field label="Suplantado por" value={selected.impersonator_name} />
+                )}
               </div>
 
               {selected.note && (

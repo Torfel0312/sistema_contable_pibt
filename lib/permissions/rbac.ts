@@ -19,6 +19,15 @@ export function can(permissions: Set<string> | undefined, permission: Permission
   return permissions?.has(permission) ?? false
 }
 
+// MANAGE_USERS is deliberately blocked while impersonating, even if the impersonated
+// user's role nominally grants it — otherwise impersonation could be used to modify
+// users/roles/permissions, escalating beyond the real admin's intent for the session.
+export function isImpersonating(
+  user: { impersonatorId?: string | null } | null | undefined
+): boolean {
+  return !!user?.impersonatorId
+}
+
 export function canAccessWorkflow(permissions: Set<string> | undefined): boolean {
   return (
     can(permissions, PERMISSIONS.VIEW_WORKFLOW) ||

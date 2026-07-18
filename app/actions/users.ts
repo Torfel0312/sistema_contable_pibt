@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, isImpersonating } from "@/lib/permissions/rbac"
 import { usersService } from "@/services/users/users.service"
 import type { CreateUserInput, UpdateUserInput } from "@/lib/validators/user"
 
 function assertUserAccess(user: Awaited<ReturnType<typeof getCurrentUser>>) {
-  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS) || isImpersonating(user)) {
     throw new Error("Sin permisos para gestionar usuarios")
   }
   return user

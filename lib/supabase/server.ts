@@ -6,6 +6,8 @@ import type { Database } from "@/types/database.types"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import type { UserRole } from "@/types/auth"
 
+export const IMPERSONATION_COOKIE = "impersonation_session"
+
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies()
 
@@ -51,9 +53,33 @@ export function revalidateRolePermissions() {
   revalidateTag("role-permissions", "days")
 }
 
-// cache() deduplicates calls within a single React render tree (one request).
-// Layout + page both call getCurrentUser — this ensures it only runs once.
-export const getCurrentUser = cache(async function getCurrentUser() {
+async function loadIdentity(userId: string) {
+  // Service-role client: this loads either the real user's own row or, while
+  // impersonating, a different user's row — RLS-as-self would not cover the latter.
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("users")
+    .select("id, full_name, email, role, status")
+    .eq("id", userId)
+    .single()
+
+  if (!profile || profile.status !== "ACTIVE") return null
+
+  const permList = await getPermissionsForRole(profile.role)
+
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: profile.full_name,
+    role: profile.role,
+    status: profile.status,
+    permissions: new Set<string>(permList)
+  }
+}
+
+// The actually-authenticated user, ignoring any impersonation overlay. Used to gate
+// starting/stopping impersonation itself — never derived from the effective identity.
+export const getRealUser = cache(async function getRealUser() {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user }
@@ -61,23 +87,62 @@ export const getCurrentUser = cache(async function getCurrentUser() {
 
   if (!user) return null
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id, full_name, role, status")
-    .eq("id", user.id)
-    .single()
+  return loadIdentity(user.id)
+})
 
-  if (!profile || profile.status !== "ACTIVE") return null
+async function getActiveImpersonation(realUserId: string) {
+  const cookieStore = await cookies()
+  const sessionId = cookieStore.get(IMPERSONATION_COOKIE)?.value
+  if (!sessionId) return null
 
-  const permList = await getPermissionsForRole(profile.role)
-  const permissions = new Set<string>(permList)
+  const admin = createSupabaseAdminClient()
+  const { data: session } = await admin
+    .from("impersonation_sessions")
+    .select("id, target_user_id, expires_at")
+    .eq("id", sessionId)
+    .eq("impersonator_id", realUserId)
+    .is("ended_at", null)
+    .maybeSingle()
+
+  if (!session) return null
+
+  if (new Date(session.expires_at) <= new Date()) {
+    await admin
+      .from("impersonation_sessions")
+      .update({ ended_at: new Date().toISOString(), ended_reason: "expired" })
+      .eq("id", session.id)
+    return null
+  }
+
+  return session
+}
+
+// cache() deduplicates calls within a single React render tree (one request).
+// Layout + page both call getCurrentUser — this ensures it only runs once.
+export const getCurrentUser = cache(async function getCurrentUser() {
+  const realUser = await getRealUser()
+  if (!realUser) return null
+
+  const impersonation = await getActiveImpersonation(realUser.id)
+  if (!impersonation) {
+    return { ...realUser, impersonatorId: null, realUser: null }
+  }
+
+  const target = await loadIdentity(impersonation.target_user_id)
+  if (!target) {
+    // Target was deactivated (or removed) mid-session — auto-terminate and fall
+    // back to the real identity rather than error or trust stale state.
+    const admin = createSupabaseAdminClient()
+    await admin
+      .from("impersonation_sessions")
+      .update({ ended_at: new Date().toISOString(), ended_reason: "target_inactive" })
+      .eq("id", impersonation.id)
+    return { ...realUser, impersonatorId: null, realUser: null }
+  }
 
   return {
-    id: profile.id,
-    email: user.email ?? "",
-    name: profile.full_name,
-    role: profile.role,
-    status: profile.status,
-    permissions
+    ...target,
+    impersonatorId: realUser.id,
+    realUser: { id: realUser.id, email: realUser.email, name: realUser.name, role: realUser.role }
   }
 })

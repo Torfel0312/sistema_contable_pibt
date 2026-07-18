@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -19,8 +19,9 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar"
-import { ChevronsUpDown, LogOut, UserCircle } from "lucide-react"
+import { ChevronsUpDown, LogOut, UserCircle, UserCog } from "lucide-react"
 import Link from "next/link"
+import { ImpersonationDialog } from "@/components/dashboard/impersonation-picker"
 
 export function NavUser({
   user
@@ -29,10 +30,12 @@ export function NavUser({
     name: string
     initials: string
     role: string
+    canImpersonate: boolean
   }
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const [impersonationOpen, setImpersonationOpen] = useState(false)
 
   const handleSignOut = useCallback(async () => {
     const supabase = createSupabaseBrowserClient()
@@ -93,6 +96,15 @@ export function NavUser({
                 <UserCircle />
                 Mi perfil
               </DropdownMenuItem>
+              {user.canImpersonate && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setImpersonationOpen(true)}>
+                    <UserCog />
+                    Suplantar usuario...
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => void handleSignOut()}>
                 <LogOut />
@@ -102,6 +114,9 @@ export function NavUser({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      {user.canImpersonate && (
+        <ImpersonationDialog open={impersonationOpen} onOpenChange={setImpersonationOpen} />
+      )}
     </SidebarMenu>
   )
 }

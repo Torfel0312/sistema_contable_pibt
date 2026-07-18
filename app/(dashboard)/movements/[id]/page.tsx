@@ -51,6 +51,7 @@ export default async function MovementDetailPage({ params }: Props) {
     previous_value: unknown
     new_value: unknown
     users: { full_name: string } | null
+    impersonator: { full_name: string } | null
   }>
   const attachments = (row.movement_attachments ?? []) as Array<{
     id: string
@@ -285,8 +286,10 @@ export default async function MovementDetailPage({ params }: Props) {
                     {auditActionLabel(item.action)}
                   </p>
                   <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                    Por <span className="text-primary">{item.users?.full_name ?? "—"}</span> •{" "}
-                    {formatDateTime(item.event_date)}
+                    Por <span className="text-primary">{item.users?.full_name ?? "—"}</span>
+                    {item.impersonator && (
+                      <> (suplantado por {item.impersonator.full_name})</>
+                    )} • {formatDateTime(item.event_date)}
                   </p>
                   {item.note && (
                     <p className="text-xs text-muted-foreground mt-1 max-w-lg">{item.note}</p>

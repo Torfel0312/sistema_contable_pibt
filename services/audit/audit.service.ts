@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { getCurrentUser } from "@/lib/supabase/server"
 
 type LogSystemInput = {
   entity: string
@@ -8,6 +9,7 @@ type LogSystemInput = {
   previous_value?: unknown
   new_value?: unknown
   note?: string | null
+  impersonator_id?: string | null
 }
 
 type LogMovementInput = {
@@ -17,6 +19,13 @@ type LogMovementInput = {
   previous_value?: unknown
   new_value?: unknown
   note?: string | null
+  impersonator_id?: string | null
+}
+
+async function resolveImpersonatorId(explicit?: string | null) {
+  if (explicit !== undefined) return explicit
+  const current = await getCurrentUser()
+  return current?.impersonatorId ?? null
 }
 
 export const auditService = {
@@ -27,6 +36,7 @@ export const auditService = {
       action: input.action,
       entity_id: input.entity_id ?? null,
       user_id: input.user_id,
+      impersonator_id: await resolveImpersonatorId(input.impersonator_id),
       previous_value: (input.previous_value ?? null) as Parameters<
         typeof admin.from
       >[0] extends never
@@ -45,6 +55,7 @@ export const auditService = {
       movement_id: input.movement_id,
       action: input.action,
       user_id: input.user_id,
+      impersonator_id: await resolveImpersonatorId(input.impersonator_id),
       previous_value: (input.previous_value ?? null) as Parameters<
         typeof admin.from
       >[0] extends never
@@ -61,7 +72,9 @@ export const auditService = {
     const admin = createSupabaseAdminClient()
     const { data, error } = await admin
       .from("system_audit_log")
-      .select("*, users(id, full_name, email, role)")
+      .select(
+        "*, users!system_audit_log_user_id_fkey(id, full_name, email, role), impersonator:users!system_audit_log_impersonator_id_fkey(id, full_name, email, role)"
+      )
       .order("event_date", { ascending: false })
       .limit(limit)
 

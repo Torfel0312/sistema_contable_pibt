@@ -15,7 +15,9 @@ jest.mock("@/lib/supabase/server", () => ({
 
 jest.mock("@/lib/permissions/rbac", () => ({
   PERMISSIONS: { MANAGE_USERS: "MANAGE_USERS" },
-  can: (...args: unknown[]) => mockCan(...args)
+  can: (...args: unknown[]) => mockCan(...args),
+  isImpersonating: (user: { impersonatorId?: string | null } | null | undefined) =>
+    !!user?.impersonatorId
 }))
 
 jest.mock("@/services/users/users.service", () => ({

@@ -6,6 +6,18 @@ import { getSiteUrl } from "@/lib/utils"
 import type { CreateUserInput, UpdateUserInput } from "@/lib/validators/user"
 
 export const usersService = {
+  async getById(userId: string) {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin
+      .from("users")
+      .select("id, full_name, email, role, status, created_at, updated_at")
+      .eq("id", userId)
+      .single()
+
+    if (error || !data) throw new Error("Usuario no encontrado")
+    return data
+  },
+
   async list() {
     const admin = createSupabaseAdminClient()
     const { data, error } = await admin
