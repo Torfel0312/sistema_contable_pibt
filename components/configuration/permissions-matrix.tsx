@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { Check } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import type { Permission } from "@/lib/permissions/rbac"
 import type { UserRole } from "@/types/auth"
 import { updateRolePermission } from "@/app/actions/permissions"
@@ -25,8 +27,8 @@ const EDITABLE_PERMISSIONS = Object.keys(PERMISSION_LABELS) as Permission[]
 
 const EDITABLE_ROLES: { role: Exclude<UserRole, "ADMIN">; label: string; dotClass: string }[] = [
   { role: "BURSAR", label: "Tesorero", dotClass: "bg-role-purple" },
-  { role: "FINANCE", label: "Finanzas", dotClass: "bg-emerald-600" },
-  { role: "MINISTER", label: "Ministro", dotClass: "bg-amber-600" }
+  { role: "FINANCE", label: "Finanzas", dotClass: "bg-income" },
+  { role: "MINISTER", label: "Ministro", dotClass: "bg-warn" }
 ]
 
 type PermissionMatrix = Record<string, Record<string, boolean>>
@@ -100,29 +102,42 @@ export function PermissionsMatrix({ initialMatrix }: { initialMatrix: Permission
                 <td className="py-3 px-4 font-medium text-foreground">
                   {PERMISSION_LABELS[permission]}
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <input
-                    type="checkbox"
-                    checked
-                    disabled
-                    className="h-4 w-4 rounded border-border accent-primary cursor-not-allowed opacity-60"
-                    aria-label={`ADMIN — ${PERMISSION_LABELS[permission]}`}
-                  />
+                <td className="py-3 px-4">
+                  <div className="flex justify-center">
+                    <span
+                      role="checkbox"
+                      aria-checked
+                      aria-label={`ADMIN — ${PERMISSION_LABELS[permission]}`}
+                      className="flex size-[19px] items-center justify-center rounded-[6px] bg-muted text-muted-foreground"
+                    >
+                      <Check className="size-3" />
+                    </span>
+                  </div>
                 </td>
                 {EDITABLE_ROLES.map(({ role }) => {
                   const checked = matrix[role]?.[permission] ?? false
                   const key = `${role}:${permission}`
                   const loading = pending === key
                   return (
-                    <td key={role} className="py-3 px-4 text-center">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={loading}
-                        onChange={() => toggle(role, permission)}
-                        className="h-4 w-4 rounded border-border accent-primary cursor-pointer disabled:cursor-wait"
-                        aria-label={`${role} — ${PERMISSION_LABELS[permission]}`}
-                      />
+                    <td key={role} className="py-3 px-4">
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={checked}
+                          aria-label={`${role} — ${PERMISSION_LABELS[permission]}`}
+                          disabled={loading}
+                          onClick={() => toggle(role, permission)}
+                          className={cn(
+                            "flex size-[19px] items-center justify-center rounded-[6px] transition-colors disabled:cursor-wait disabled:opacity-60",
+                            checked
+                              ? "bg-primary text-primary-foreground"
+                              : "border-2 border-input bg-card text-transparent hover:border-primary/40"
+                          )}
+                        >
+                          <Check className="size-3" />
+                        </button>
+                      </div>
                     </td>
                   )
                 })}

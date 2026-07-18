@@ -22,7 +22,23 @@ import {
   ItemHeader,
   ItemActions
 } from "@/components/ui/item"
-import { FileSearch } from "lucide-react"
+import { FileSearch, TrendingUp, TrendingDown } from "lucide-react"
+
+function MovementTypeBadge({ type }: { type: string }) {
+  const isIncome = type === "INCOME"
+  const Icon = isIncome ? TrendingUp : TrendingDown
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
+        isIncome ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+      )}
+    >
+      <Icon className="size-3" />
+      {MOVEMENT_TYPE_LABEL[type] ?? type}
+    </span>
+  )
+}
 
 export type SerializedMovement = {
   id: string
@@ -98,16 +114,7 @@ export function MovementsTable({
               >
                 <ItemContent>
                   <ItemHeader>
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
-                        row.movement_type === "INCOME"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-destructive/10 text-destructive"
-                      )}
-                    >
-                      {MOVEMENT_TYPE_LABEL[row.movement_type] ?? row.movement_type}
-                    </span>
+                    <MovementTypeBadge type={row.movement_type} />
                   </ItemHeader>
                   <ItemTitle className="text-sm">
                     {row.category_name}
@@ -193,16 +200,7 @@ export function MovementsTable({
                     {formatDate(row.movement_date)}
                   </td>
                   <td className="px-4 sm:px-6 py-4">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase",
-                        row.movement_type === "INCOME"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-destructive/10 text-destructive"
-                      )}
-                    >
-                      {MOVEMENT_TYPE_LABEL[row.movement_type] ?? row.movement_type}
-                    </span>
+                    <MovementTypeBadge type={row.movement_type} />
                   </td>
                   <td className="px-4 sm:px-6 py-4 text-right font-bold text-foreground tabular-nums text-sm">
                     {formatCLP(Number(row.amount))}
@@ -263,16 +261,7 @@ export function MovementsTable({
                   <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
                     Detalle del movimiento
                   </DialogTitle>
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase",
-                      selected.movement_type === "INCOME"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-destructive/10 text-destructive"
-                    )}
-                  >
-                    {MOVEMENT_TYPE_LABEL[selected.movement_type] ?? selected.movement_type}
-                  </span>
+                  <MovementTypeBadge type={selected.movement_type} />
                   <span
                     className={cn(
                       "rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase",

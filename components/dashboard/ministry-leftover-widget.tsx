@@ -33,7 +33,7 @@ export function MinistryLeftoverWidget({ totals }: { totals: MinistryLeftoverTot
             >
               <span className="text-sm">{t.ministry_name}</span>
               <span
-                className={`text-sm font-medium tabular-nums ${t.leftover > 0 ? "text-amber-600" : t.leftover < 0 ? "text-destructive" : ""}`}
+                className={`text-sm font-medium tabular-nums ${t.leftover > 0 ? "text-warn" : t.leftover < 0 ? "text-destructive" : ""}`}
               >
                 {formatCLP(t.leftover)}
               </span>

@@ -30,10 +30,18 @@ test.describe("Movements (Etapa 1/2)", () => {
   })
 
   test("movement detail + edit", async ({ page }) => {
+    // /movements/new (non-capital-injection) is a 3-step wizard: step 1
+    // (type/amount/date) → step 2 (who/payment method/category) → step 3
+    // (comments/attachments + submit) — each "Continuar" click runs
+    // per-step Zod validation before advancing.
     await page.goto("/movements/new", { waitUntil: "networkidle" })
     await pickToday(page)
     await page.locator('input[inputmode="numeric"]').first().fill("75000")
+    await page.getByRole("button", { name: "Continuar" }).click()
+
     await page.locator("select[name='category_id']").selectOption({ index: 1 })
+    await page.getByRole("button", { name: "Continuar" }).click()
+
     await page.getByRole("button", { name: /Confirmar y Guardar/ }).click()
     await page.waitForURL(/\/movements\/[0-9a-f-]+$/, { timeout: 10_000 })
 

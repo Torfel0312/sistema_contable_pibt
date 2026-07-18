@@ -6,7 +6,7 @@ import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import {
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Clock,
   AlertTriangle,
@@ -81,9 +81,9 @@ type SettlementComment = Awaited<ReturnType<typeof settlementsService.getComment
 
 const STATUS_CONFIG = {
   DRAFT: { icon: FileText, color: "text-muted-foreground", label: "Borrador" },
-  PENDING: { icon: Clock, color: "text-amber-500", label: "Pendiente de revisión" },
-  APPROVED: { icon: CheckCircle, color: "text-green-500", label: "Aprobada" },
-  REJECTED: { icon: XCircle, color: "text-red-500", label: "Rechazada" },
+  PENDING: { icon: Clock, color: "text-warn", label: "Pendiente de revisión" },
+  APPROVED: { icon: CheckCircle2, color: "text-income", label: "Aprobada" },
+  REJECTED: { icon: XCircle, color: "text-expense", label: "Rechazada" },
   CANCELLED: { icon: Ban, color: "text-muted-foreground line-through", label: "Cancelada" }
 }
 
@@ -91,11 +91,11 @@ const CANCELLABLE_INTENTION_STATUSES = new Set(["DRAFT", "PENDING"])
 
 const SETTLEMENT_STATUS_CONFIG = {
   DRAFT: { color: "text-muted-foreground", label: "Borrador" },
-  PENDING: { color: "text-amber-500", label: "Pendiente de revisión" },
-  IN_REVIEW: { color: "text-blue-500", label: "En revisión" },
-  APPROVED: { color: "text-green-600", label: "Aprobada" },
-  REJECTED: { color: "text-red-500", label: "Rechazada" },
-  RETURNED_FOR_CORRECTION: { color: "text-orange-500", label: "Devuelta para corrección" },
+  PENDING: { color: "text-warn", label: "Pendiente de revisión" },
+  IN_REVIEW: { color: "text-primary", label: "En revisión" },
+  APPROVED: { color: "text-income", label: "Aprobada" },
+  REJECTED: { color: "text-expense", label: "Rechazada" },
+  RETURNED_FOR_CORRECTION: { color: "text-warn", label: "Devuelta para corrección" },
   CANCELLED: { color: "text-muted-foreground line-through", label: "Cancelada" }
 } as const
 
@@ -507,7 +507,7 @@ export function IntentionDetailClient({
                 onClick={() => reviewForm.setValue("action", "APPROVED")}
                 render={
                   <Button size="sm">
-                    <CheckCircle className="size-4" />
+                    <CheckCircle2 className="size-4" />
                     Aprobar
                   </Button>
                 }
@@ -679,7 +679,7 @@ export function IntentionDetailClient({
             )}
           </div>
           {currentTransfer ? (
-            <div className="grid gap-1.5 text-sm bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+            <div className="grid gap-1.5 text-sm bg-income-surface rounded-md p-3">
               <div>
                 <span className="text-muted-foreground">Monto: </span>
                 {formatCLP(currentTransfer.amount)}
@@ -702,7 +702,7 @@ export function IntentionDetailClient({
               )}
             </div>
           ) : (
-            <p className="text-sm text-amber-600 flex items-center gap-1.5">
+            <p className="text-sm text-warn flex items-center gap-1.5">
               <AlertTriangle className="size-4" />
               Transferencia pendiente de registro
             </p>
@@ -746,7 +746,7 @@ export function IntentionDetailClient({
                     <DialogTitle>Rendición de gastos</DialogTitle>
                   </DialogHeader>
                   {lateExpiry && (
-                    <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                    <div className="flex items-center gap-2 rounded-md border border-warn-border bg-warn-surface px-3 py-2 text-sm text-on-warn">
                       <AlertTriangle className="size-4 shrink-0" />
                       La fecha del gasto supera los 30 días. Esta rendición podría ser rechazada por
                       el equipo de tesorería.
@@ -861,7 +861,7 @@ export function IntentionDetailClient({
                       Gasto: {formatDate(s.expense_date)}
                     </p>
                     {s.is_late && (
-                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                      <p className="text-xs text-warn flex items-center gap-1">
                         <AlertTriangle className="size-3" />
                         Gasto tardío (+30 días)
                       </p>
@@ -911,7 +911,7 @@ export function IntentionDetailClient({
                       </p>
                     )}
                     {settlementThread.length > 0 && (
-                      <div className="space-y-1 border-l-2 border-orange-300 pl-2">
+                      <div className="space-y-1 border-l-2 border-warn-border pl-2">
                         {settlementThread.map((c) => (
                           <div key={c.id} className="text-xs">
                             <span className="font-medium">{c.users?.full_name ?? "Tesorería"}: </span>
@@ -962,7 +962,7 @@ export function IntentionDetailClient({
                             onClick={() => settlementReviewForm.setValue("action", "APPROVED")}
                             render={
                               <Button size="sm">
-                                <CheckCircle className="size-4" />
+                                <CheckCircle2 className="size-4" />
                                 Aprobar
                               </Button>
                             }
@@ -1051,8 +1051,8 @@ export function IntentionDetailClient({
           </h2>
           {isClosed ? (
             <div className="space-y-2">
-              <p className="text-sm text-green-600 flex items-center gap-1.5">
-                <CheckCircle className="size-4" />
+              <p className="text-sm text-income flex items-center gap-1.5">
+                <CheckCircle2 className="size-4" />
                 Solicitud cerrada
               </p>
               {(intention.intention_attachments?.length ?? 0) > 0 && (

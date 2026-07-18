@@ -1,22 +1,15 @@
 import type { Metadata } from "next"
-import { Roboto, Roboto_Slab } from "next/font/google"
+import { Manrope } from "next/font/google"
 import { cookies } from "next/headers"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
-const roboto = Roboto({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
-  display: "swap"
-})
-
-const robotoSlab = Roboto_Slab({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800", "900"],
-  variable: "--font-roboto-slab",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
   display: "swap"
 })
 
@@ -37,7 +30,7 @@ export default async function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={cn(roboto.variable, robotoSlab.variable)}
+      className={cn(manrope.variable)}
       {...(theme === "dark" ? { "data-theme": "dark" } : {})}
     >
       <body className="antialiased min-h-screen font-sans bg-background text-on-surface">

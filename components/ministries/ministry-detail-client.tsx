@@ -354,8 +354,8 @@ export function MinistryDetailClient({
                       {a.unassigned_at ? (
                         <span className="text-muted-foreground">{formatDate(a.unassigned_at)}</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
-                          <span className="size-1.5 rounded-full bg-green-500 inline-block" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-income">
+                          <span className="size-1.5 rounded-full bg-income inline-block" />
                           Activo
                         </span>
                       )}
@@ -401,7 +401,7 @@ export function MinistryDetailClient({
                       <td className="px-4 py-3 text-right">{formatCLP(row.transferred_amount)}</td>
                       <td className="px-4 py-3 text-right">{formatCLP(row.settled_amount)}</td>
                       <td
-                        className={`px-4 py-3 text-right font-medium ${row.leftover > 0 ? "text-amber-600" : row.leftover < 0 ? "text-destructive" : ""}`}
+                        className={`px-4 py-3 text-right font-medium ${row.leftover > 0 ? "text-warn" : row.leftover < 0 ? "text-destructive" : ""}`}
                       >
                         {formatCLP(row.leftover)}
                       </td>

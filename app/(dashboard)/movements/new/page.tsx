@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { MovementForm } from "@/components/movements/movement-form"
+import { MovementWizard } from "@/components/movements/movement-wizard"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { paymentMethodsService } from "@/services/payment-methods/payment-methods.service"
@@ -44,20 +45,27 @@ export default async function NewMovementPage({ searchParams }: Props) {
             : "Formulario para el control de ingresos y egresos."}
         </p>
       </div>
-      <div className="rounded-xl bg-card border border-border p-6 sm:p-10">
-        <MovementForm
-          mode="create"
-          paymentMethods={paymentMethods}
-          categories={categories}
-          subcategories={subcategories}
-          isCapitalInjection={isCapitalInjection}
-          defaultValues={
+      {isCapitalInjection ? (
+        <div className="rounded-xl bg-card border border-border p-6 sm:p-10">
+          <MovementForm
+            mode="create"
+            paymentMethods={paymentMethods}
+            categories={categories}
+            subcategories={subcategories}
             isCapitalInjection
-              ? { movement_type: "INCOME", category_id: capitalInjectionCategoryId }
-              : undefined
-          }
-        />
-      </div>
+            defaultValues={{ movement_type: "INCOME", category_id: capitalInjectionCategoryId }}
+          />
+        </div>
+      ) : (
+        <div className="max-w-2xl w-full mx-auto">
+          <MovementWizard
+            mode="create"
+            paymentMethods={paymentMethods}
+            categories={categories}
+            subcategories={subcategories}
+          />
+        </div>
+      )}
     </div>
   )
 }

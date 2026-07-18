@@ -23,12 +23,18 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-900 dark:text-amber-200">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ffd977]/30 bg-[#3b2f00] px-4 py-2 text-sm text-[#ffd977]">
       <span>
-        Viendo como <strong>{user.name}</strong> ({roleLabel(user.role)}) — suplantado por{" "}
-        {user.realUser.name}
+        Viendo como <strong className="text-white">{user.name}</strong> ({roleLabel(user.role)}) —
+        suplantado por {user.realUser.name}
       </span>
-      <Button size="sm" variant="outline" onClick={handleExit} disabled={isPending}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleExit}
+        disabled={isPending}
+        className="border-[#ffd977]/50 bg-transparent text-[#ffd977] hover:bg-[#ffd977]/10 hover:text-[#ffd977]"
+      >
         <LogOut className="size-3.5" />
         Salir de suplantación
       </Button>
