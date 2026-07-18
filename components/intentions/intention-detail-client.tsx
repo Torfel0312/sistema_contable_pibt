@@ -475,6 +475,15 @@ export function IntentionDetailClient({
               {intention.users.full_name}
             </div>
           )}
+          {intention.reviewer && (
+            <div>
+              <span className="text-muted-foreground">
+                {intention.status === "REJECTED" ? "Rechazado por: " : "Aprobado por: "}
+              </span>
+              {intention.reviewer.full_name}
+              {intention.reviewed_at && ` · ${formatDate(intention.reviewed_at)}`}
+            </div>
+          )}
         </div>
 
         {intention.review_message && (
@@ -886,9 +895,18 @@ export function IntentionDetailClient({
                         ))}
                       </div>
                     )}
+                    {(s.status === "APPROVED" || s.status === "REJECTED") && s.reviewer && (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">
+                          {s.status === "REJECTED" ? "Rechazado por: " : "Aprobado por: "}
+                        </span>
+                        {s.reviewer.full_name}
+                        {s.reviewed_at && ` · ${formatDate(s.reviewed_at)}`}
+                      </p>
+                    )}
                     {s.review_message && (s.status === "APPROVED" || s.status === "REJECTED") && (
                       <p className="text-xs bg-muted/50 rounded px-2 py-1">
-                        <span className="font-medium">Revisor: </span>
+                        <span className="font-medium">Mensaje: </span>
                         {s.review_message}
                       </p>
                     )}
