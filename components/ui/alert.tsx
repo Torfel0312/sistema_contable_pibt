@@ -24,10 +24,12 @@ const ICONS = {
 } as const
 
 interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
+  icon?: React.ComponentType<{ className?: string }>
+}
 
-function Alert({ variant = "info", className, children, ...props }: AlertProps) {
-  const Icon = ICONS[variant ?? "info"]
+function Alert({ variant = "info", icon, className, children, ...props }: AlertProps) {
+  const Icon = icon ?? ICONS[variant ?? "info"]
   return (
     <div role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
       <Icon className="mt-0.5 size-4 shrink-0" />

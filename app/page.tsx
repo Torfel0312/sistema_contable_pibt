@@ -53,7 +53,7 @@ export default async function LoginPage() {
       <div className="flex flex-1 flex-col justify-center px-8 py-12 md:px-16 bg-card">
         <div className="mx-auto w-full max-w-sm flex flex-col gap-8">
           <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="font-heading text-[26px] font-extrabold tracking-tight text-foreground">
               Bienvenido
             </h1>
             <p className="text-sm text-muted-foreground">Ingresa tus credenciales para continuar</p>

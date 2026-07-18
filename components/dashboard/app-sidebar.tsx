@@ -152,7 +152,7 @@ export function AppSidebar({
             onClick={() => setOpenMobile(false)}
           >
             <link.icon />
-            <span>{link.label}</span>
+            <span className="text-[13px] font-sans">{link.label}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       )

@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { LogOut } from "lucide-react"
+import { LogOut, VenetianMask } from "lucide-react"
 import { useUser } from "@/components/providers/user-provider"
 import { stopImpersonation } from "@/app/actions/impersonation"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,8 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ffd977]/30 bg-[#3b2f00] px-4 py-2 text-sm text-[#ffd977]">
+    <div className="flex flex-wrap items-center justify-center gap-3 border-b border-[#ffd977]/30 bg-[#3b2f00] px-4 py-[9px] text-[12.5px] font-semibold text-[#ffd977]">
+      <VenetianMask className="size-[15px] shrink-0" />
       <span>
         Viendo como <strong className="text-white">{user.name}</strong> ({roleLabel(user.role)}) —
         suplantado por {user.realUser.name}

@@ -3,6 +3,7 @@ import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/serve
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { ministriesService } from "@/services/ministries/ministries.service"
 import { ministryLeftoverService } from "@/services/ministries/ministry-leftover.service"
+import { intentionsService } from "@/services/intentions/intentions.service"
 import { usersService } from "@/services/users/users.service"
 import { MinistryDetailClient } from "@/components/ministries/ministry-detail-client"
 
@@ -13,11 +14,13 @@ export default async function MinistryDetailPage({ params }: { params: Promise<{
   const { id } = await params
   const db = await createSupabaseServerClient()
 
-  const [ministry, assignments, users, leftover] = await Promise.all([
+  const [ministry, assignments, users, leftover, intentions, associatedMovements] = await Promise.all([
     ministriesService.getById(db, id).catch(() => null),
     ministriesService.getAssignments(db, id),
     usersService.list(),
-    ministryLeftoverService.getSummary(id)
+    ministryLeftoverService.getSummary(id),
+    intentionsService.list(db, { ministryId: id }),
+    ministriesService.getAssociatedMovements(db, id)
   ])
 
   if (!ministry) notFound()
@@ -31,6 +34,10 @@ export default async function MinistryDetailPage({ params }: { params: Promise<{
       assignments={assignments as Parameters<typeof MinistryDetailClient>[0]["assignments"]}
       currentAssignment={currentAssignment as Parameters<typeof MinistryDetailClient>[0]["currentAssignment"]}
       leftover={leftover}
+      intentions={intentions as Parameters<typeof MinistryDetailClient>[0]["intentions"]}
+      associatedMovements={
+        associatedMovements as Parameters<typeof MinistryDetailClient>[0]["associatedMovements"]
+      }
     />
   )
 }

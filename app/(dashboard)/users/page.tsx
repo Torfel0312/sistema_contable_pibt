@@ -15,7 +15,7 @@ export default async function UsersPage() {
   return (
     <section className="mx-auto max-w-6xl flex flex-col gap-8">
       <div>
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">Usuarios</h1>
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">Usuarios</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Gestión de usuarios del sistema (solo administradores).
         </p>

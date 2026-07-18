@@ -57,17 +57,17 @@ export function NavUser({
             }
           >
             <Avatar className="size-8 rounded-lg">
-              <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <AvatarFallback className="rounded-lg bg-white/20 text-white text-xs font-bold">
                 {user.initials}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-muted-foreground uppercase tracking-wide">
+              <span className="truncate font-medium text-sidebar-foreground">{user.name}</span>
+              <span className="truncate text-xs text-sidebar-foreground/60 uppercase tracking-wide">
                 {user.role}
               </span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4" />
+            <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/60" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"

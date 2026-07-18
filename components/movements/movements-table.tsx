@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { cn, formatDate, formatCLP } from "@/lib/utils"
+import { formatDate, formatCLP } from "@/lib/utils"
 import { CancelButton } from "./cancel-button"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -28,15 +29,18 @@ function MovementTypeBadge({ type }: { type: string }) {
   const isIncome = type === "INCOME"
   const Icon = isIncome ? TrendingUp : TrendingDown
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
-        isIncome ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-      )}
-    >
+    <Badge variant={isIncome ? "income" : "expense"} className="uppercase tracking-wide">
       <Icon className="size-3" />
       {MOVEMENT_TYPE_LABEL[type] ?? type}
-    </span>
+    </Badge>
+  )
+}
+
+function MovementStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge variant={status === "ACTIVE" ? "primary" : "expense"} dot className="uppercase tracking-wide">
+      {STATUS_LABEL[status] ?? status}
+    </Badge>
   )
 }
 
@@ -130,16 +134,7 @@ export function MovementsTable({
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <span
-                    className={cn(
-                      "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
-                      row.status === "ACTIVE"
-                        ? "bg-primary/5 text-primary/80"
-                        : "bg-destructive/5 text-destructive/70"
-                    )}
-                  >
-                    {STATUS_LABEL[row.status] ?? row.status}
-                  </span>
+                  <MovementStatusBadge status={row.status} />
                 </ItemActions>
               </Item>
             ))}
@@ -212,16 +207,7 @@ export function MovementsTable({
                     </span>
                   </td>
                   <td className="px-4 sm:px-6 py-4">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase",
-                        row.status === "ACTIVE"
-                          ? "bg-primary/5 text-primary/80"
-                          : "bg-destructive/5 text-destructive/70"
-                      )}
-                    >
-                      {STATUS_LABEL[row.status] ?? row.status}
-                    </span>
+                    <MovementStatusBadge status={row.status} />
                   </td>
                 </tr>
               ))}
@@ -262,16 +248,7 @@ export function MovementsTable({
                     Detalle del movimiento
                   </DialogTitle>
                   <MovementTypeBadge type={selected.movement_type} />
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase",
-                      selected.status === "ACTIVE"
-                        ? "bg-primary/5 text-primary/80"
-                        : "bg-destructive/5 text-destructive/70"
-                    )}
-                  >
-                    {STATUS_LABEL[selected.status] ?? selected.status}
-                  </span>
+                  <MovementStatusBadge status={selected.status} />
                 </div>
                 <DialogDescription className="sr-only">
                   Información completa del movimiento seleccionado

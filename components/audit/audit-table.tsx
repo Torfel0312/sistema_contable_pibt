@@ -3,8 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { AUDIT_ENTITY_LABEL, auditActionLabel, auditEntityLabel } from "@/lib/constants/audit"
+import {
+  AUDIT_ENTITY_LABEL,
+  auditActionLabel,
+  auditActionVariant,
+  auditEntityLabel
+} from "@/lib/constants/audit"
 import { AuditDiff } from "./audit-diff"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -70,6 +76,12 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 scope="col"
                 className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
               >
+                Entidad
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
+              >
                 Acción
               </th>
               <th
@@ -101,8 +113,13 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 <td className="px-4 py-4 align-middle whitespace-nowrap text-muted-foreground font-medium tabular-nums text-xs">
                   {event.event_date_display}
                 </td>
-                <td className="px-4 py-4 align-middle font-bold text-foreground text-sm">
-                  {auditActionLabel(event.action)}
+                <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
+                  {auditEntityLabel(event.entity)}
+                </td>
+                <td className="px-4 py-4 align-middle">
+                  <Badge variant={auditActionVariant(event.action)}>
+                    {auditActionLabel(event.action)}
+                  </Badge>
                 </td>
                 <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
                   {event.user_name ?? "—"}
@@ -140,7 +157,14 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                     {event.event_date_display}
                   </span>
                 </ItemHeader>
-                <ItemTitle>{auditActionLabel(event.action)}</ItemTitle>
+                <ItemTitle className="flex items-center gap-2">
+                  <Badge variant={auditActionVariant(event.action)}>
+                    {auditActionLabel(event.action)}
+                  </Badge>
+                  <span className="text-muted-foreground font-normal">
+                    {auditEntityLabel(event.entity)}
+                  </span>
+                </ItemTitle>
                 <ItemDescription>
                   {event.user_name ?? "—"}
                   {event.impersonator_name && ` (suplantado por ${event.impersonator_name})`}
