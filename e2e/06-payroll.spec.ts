@@ -23,6 +23,7 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
     await shot(page, "06-payroll", "severance-adjust-dialog-empty")
+    await pickTodayIn(page, dialog)
     await dialog.locator('input[type="number"]').fill("500000")
     await dialog.getByPlaceholder("Razón del ajuste").fill("Ajuste E2E de prueba")
     await shot(page, "06-payroll", "severance-adjust-dialog-filled")
@@ -38,22 +39,25 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     await shot(page, "06-payroll", "register-dialog-empty")
 
     await pickTodayIn(page, dialog.getByTestId("period-date-trigger"))
-    await dialog.locator('input[placeholder="Opcional"]').first().fill("LIQ-E2E-2026-07")
 
+    // Defaults to 2 pre-filled lines ("Sueldo pastor", "Imposiciones") — no need
+    // to click "Agregar otra transferencia" to get a second line anymore.
     const line1 = dialog.getByTestId("payroll-line-0")
     await line1.locator('input[inputmode="numeric"]').fill("800000")
     await pickTodayIn(page, line1)
 
-    await dialog.getByRole("button", { name: "Agregar otra transferencia" }).click()
     const line2 = dialog.getByTestId("payroll-line-1")
-    await line2.locator("select").selectOption("CONTRIBUTIONS")
     await line2.locator('input[inputmode="numeric"]').fill("150000")
     await pickTodayIn(page, line2)
     await shot(page, "06-payroll", "register-dialog-two-lines")
 
+    // Liquidación is a required upload, but actually completing it needs a real
+    // Google Drive service-account key (GOOGLE_APPLICATION_CREDENTIALS) that isn't
+    // configured in local/e2e envs — same reason no other spec in this suite
+    // exercises a real attachment upload. Cover the validation guard instead of
+    // faking a successful upload.
     await dialog.getByRole("button", { name: "Registrar" }).click()
-    await expect(page.getByText("Remuneración registrada")).toBeVisible({ timeout: 10_000 })
-    await page.waitForTimeout(1000)
-    await shot(page, "06-payroll", "history-after-register")
+    await expect(dialog.getByText("Debes adjuntar la liquidación")).toBeVisible()
+    await shot(page, "06-payroll", "register-dialog-liquidacion-required")
   })
 })

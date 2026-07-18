@@ -8,8 +8,7 @@ import { SeveranceReserveCard } from "@/components/dashboard/severance-reserve-c
 import { MinistryLeftoverWidget } from "@/components/dashboard/ministry-leftover-widget"
 import { MovementsTable } from "@/components/movements/movements-table"
 import { Label } from "@/components/ui/label"
-import { DateRangePicker } from "@/components/ui/date-range-picker"
-import { Button } from "@/components/ui/button"
+import { PeriodMonthSelector } from "@/components/dashboard/period-month-selector"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatCLP } from "@/lib/utils"
 
@@ -46,27 +45,12 @@ export default async function DashboardPage({
         </div>
 
         {/* Date filter */}
-        <form className="flex flex-wrap items-end gap-3" method="get">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground">
-              Período
-            </Label>
-            <DateRangePicker fromName="from" toName="to" defaultFrom={from} defaultTo={to} />
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" variant="outline" className="h-9 px-4 text-sm">
-              Filtrar
-            </Button>
-            <Button
-              render={<Link href="/dashboard" />}
-              nativeButton={false}
-              variant="ghost"
-              className="h-9 px-4 text-sm"
-            >
-              Limpiar
-            </Button>
-          </div>
-        </form>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground">
+            Período
+          </Label>
+          <PeriodMonthSelector defaultFrom={from} defaultTo={to} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

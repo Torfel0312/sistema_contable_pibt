@@ -2,7 +2,7 @@ import { z } from "zod"
 import { attachmentInputSchema } from "@/lib/validators/movement"
 
 export const payrollLineSchema = z.object({
-  kind: z.enum(["SALARY", "CONTRIBUTIONS", "OTHER"]),
+  title: z.string().min(1, "Ingresa un título"),
   amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
   movement_date: z.string().date("La fecha no tiene un formato válido"),
   delivered_by: z.string().optional().nullable(),
@@ -12,7 +12,7 @@ export const payrollLineSchema = z.object({
 
 export const createPayrollSchema = z.object({
   period: z.string().date("La fecha no tiene un formato válido"),
-  liquidacion_reference: z.string().optional().nullable(),
+  liquidacion: attachmentInputSchema,
   lines: z
     .array(payrollLineSchema)
     .min(1, "Agrega al menos una transferencia")
@@ -20,6 +20,7 @@ export const createPayrollSchema = z.object({
 })
 
 export const severanceAdjustmentSchema = z.object({
+  period: z.string().date("La fecha no tiene un formato válido"),
   amount_delta: z.number().refine((v) => v !== 0, "El ajuste no puede ser 0"),
   note: z.string().min(3, "Indica un motivo para el ajuste")
 })

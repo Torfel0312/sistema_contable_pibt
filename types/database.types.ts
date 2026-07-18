@@ -854,23 +854,23 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          kind: string
           movement_id: string
           payroll_record_id: string
+          title: string
         }
         Insert: {
           created_at?: string
           id?: string
-          kind: string
           movement_id: string
           payroll_record_id: string
+          title: string
         }
         Update: {
           created_at?: string
           id?: string
-          kind?: string
           movement_id?: string
           payroll_record_id?: string
+          title?: string
         }
         Relationships: [
           {
@@ -894,7 +894,11 @@ export type Database = {
           created_at: string
           created_by_id: string
           id: string
-          liquidacion_reference: string | null
+          liquidacion_drive_file_id: string | null
+          liquidacion_drive_view_link: string | null
+          liquidacion_file_name: string | null
+          liquidacion_mime_type: string | null
+          liquidacion_size_bytes: number | null
           period: string
           updated_at: string
         }
@@ -902,7 +906,11 @@ export type Database = {
           created_at?: string
           created_by_id: string
           id?: string
-          liquidacion_reference?: string | null
+          liquidacion_drive_file_id?: string | null
+          liquidacion_drive_view_link?: string | null
+          liquidacion_file_name?: string | null
+          liquidacion_mime_type?: string | null
+          liquidacion_size_bytes?: number | null
           period: string
           updated_at?: string
         }
@@ -910,7 +918,11 @@ export type Database = {
           created_at?: string
           created_by_id?: string
           id?: string
-          liquidacion_reference?: string | null
+          liquidacion_drive_file_id?: string | null
+          liquidacion_drive_view_link?: string | null
+          liquidacion_file_name?: string | null
+          liquidacion_mime_type?: string | null
+          liquidacion_size_bytes?: number | null
           period?: string
           updated_at?: string
         }
@@ -1035,6 +1047,7 @@ export type Database = {
           created_by_id: string
           id: string
           note: string
+          period: string
         }
         Insert: {
           amount_delta: number
@@ -1042,6 +1055,7 @@ export type Database = {
           created_by_id: string
           id?: string
           note: string
+          period: string
         }
         Update: {
           amount_delta?: number
@@ -1049,6 +1063,7 @@ export type Database = {
           created_by_id?: string
           id?: string
           note?: string
+          period?: string
         }
         Relationships: [
           {
@@ -1181,7 +1196,6 @@ export type Database = {
           p_category_id: string
           p_created_by_id: string
           p_lines: Json
-          p_liquidacion_reference: string
           p_period: string
         }
         Returns: Json
