@@ -71,7 +71,7 @@ export const settlementsService = {
     let query = db
       .from("expense_settlements")
       .select(
-        "*, settlement_attachments(*), budget_intentions(id, ministry_id, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
+        "*, settlement_attachments(*), budget_intentions(id, ministry_id, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email), reviewer:users!expense_settlements_reviewed_by_fkey(id, full_name, email)"
       )
       .order("created_at", { ascending: false })
 
@@ -99,7 +99,7 @@ export const settlementsService = {
     const { data, error } = await db
       .from("expense_settlements")
       .select(
-        "*, settlement_attachments(*), budget_intentions(id, ministry_id, amount, funding_method, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email)"
+        "*, settlement_attachments(*), budget_intentions(id, ministry_id, amount, funding_method, ministries(id, name)), users!expense_settlements_submitted_by_fkey(id, full_name, email), reviewer:users!expense_settlements_reviewed_by_fkey(id, full_name, email)"
       )
       .eq("id", id)
       .single()
