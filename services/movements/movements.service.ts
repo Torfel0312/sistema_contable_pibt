@@ -115,7 +115,7 @@ export const movementsService = {
         created_by:users!created_by_id(id, full_name, email),
         updated_by:users!updated_by_id(id, full_name, email),
         cancelled_by:users!cancelled_by_id(id, full_name, email),
-        movement_audit_log(*, users(id, full_name, email)),
+        movement_audit_log(*, users!movement_audit_log_user_id_fkey(id, full_name, email), impersonator:users!movement_audit_log_impersonator_id_fkey(id, full_name, email)),
         movement_attachments(*),
         payment_methods:payment_method_id(name),
         movement_categories:category_id(name),

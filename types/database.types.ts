@@ -222,6 +222,51 @@ export type Database = {
           },
         ]
       }
+      impersonation_sessions: {
+        Row: {
+          ended_at: string | null
+          ended_reason: string | null
+          expires_at: string
+          id: string
+          impersonator_id: string
+          started_at: string
+          target_user_id: string
+        }
+        Insert: {
+          ended_at?: string | null
+          ended_reason?: string | null
+          expires_at: string
+          id?: string
+          impersonator_id: string
+          started_at?: string
+          target_user_id: string
+        }
+        Update: {
+          ended_at?: string | null
+          ended_reason?: string | null
+          expires_at?: string
+          id?: string
+          impersonator_id?: string
+          started_at?: string
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impersonation_sessions_impersonator_id_fkey"
+            columns: ["impersonator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impersonation_sessions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbound_email_routes: {
         Row: {
           created_at: string
@@ -516,6 +561,7 @@ export type Database = {
           action: string
           event_date: string
           id: string
+          impersonator_id: string | null
           movement_id: string
           new_value: Json | null
           note: string | null
@@ -526,6 +572,7 @@ export type Database = {
           action: string
           event_date?: string
           id?: string
+          impersonator_id?: string | null
           movement_id: string
           new_value?: Json | null
           note?: string | null
@@ -536,6 +583,7 @@ export type Database = {
           action?: string
           event_date?: string
           id?: string
+          impersonator_id?: string | null
           movement_id?: string
           new_value?: Json | null
           note?: string | null
@@ -543,6 +591,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "movement_audit_log_impersonator_id_fkey"
+            columns: ["impersonator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "movement_audit_log_movement_id_fkey"
             columns: ["movement_id"]
@@ -1012,6 +1067,7 @@ export type Database = {
           entity_id: string | null
           event_date: string
           id: string
+          impersonator_id: string | null
           new_value: Json | null
           note: string | null
           previous_value: Json | null
@@ -1023,6 +1079,7 @@ export type Database = {
           entity_id?: string | null
           event_date?: string
           id?: string
+          impersonator_id?: string | null
           new_value?: Json | null
           note?: string | null
           previous_value?: Json | null
@@ -1034,12 +1091,20 @@ export type Database = {
           entity_id?: string | null
           event_date?: string
           id?: string
+          impersonator_id?: string | null
           new_value?: Json | null
           note?: string | null
           previous_value?: Json | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "system_audit_log_impersonator_id_fkey"
+            columns: ["impersonator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "system_audit_log_user_id_fkey"
             columns: ["user_id"]

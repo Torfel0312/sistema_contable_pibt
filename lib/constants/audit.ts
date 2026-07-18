@@ -81,7 +81,11 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   // movement_audit_log (rendered on /movements/[id], shares this same lookup)
   MOVEMENT_CREATED_FROM_TRANSFER: "Movimiento creado desde transferencia",
   MOVEMENT_CREATED_FROM_SETTLEMENT: "Movimiento creado desde rendición",
-  MOVEMENT_CREATED_FROM_PAYROLL: "Movimiento creado desde remuneración"
+  MOVEMENT_CREATED_FROM_PAYROLL: "Movimiento creado desde remuneración",
+
+  // Suplantación de usuario (impersonation)
+  IMPERSONATION_STARTED: "Sesión de suplantación iniciada",
+  IMPERSONATION_ENDED: "Sesión de suplantación finalizada"
 }
 
 export function auditActionLabel(action: string): string {

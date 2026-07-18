@@ -59,6 +59,7 @@ export default async function AuditPage() {
     action: event.action,
     note: event.note,
     user_name: event.users?.full_name ?? null,
+    impersonator_name: event.impersonator?.full_name ?? null,
     href: getHref(event.entity, event.entity_id),
     previous_value: event.previous_value,
     new_value: event.new_value

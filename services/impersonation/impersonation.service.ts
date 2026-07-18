@@ -1,0 +1,111 @@
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { auditService } from "@/services/audit/audit.service"
+
+const SESSION_TTL_MS = 30 * 60 * 1000
+
+export type ImpersonationSession = {
+  id: string
+  impersonator_id: string
+  target_user_id: string
+  started_at: string
+  expires_at: string
+}
+
+export const impersonationService = {
+  async start(impersonatorId: string, targetUserId: string): Promise<ImpersonationSession> {
+    if (targetUserId === impersonatorId) {
+      throw new Error("No puedes suplantar tu propia cuenta")
+    }
+
+    const admin = createSupabaseAdminClient()
+
+    const { data: target, error: targetError } = await admin
+      .from("users")
+      .select("id, full_name, email, role, status")
+      .eq("id", targetUserId)
+      .single()
+
+    if (targetError || !target) throw new Error("Usuario no encontrado")
+    if (target.status !== "ACTIVE") {
+      throw new Error("Solo se puede suplantar a un usuario activo")
+    }
+    if (target.role === "ADMIN") {
+      throw new Error("No se puede suplantar a otro administrador")
+    }
+
+    const { data: existing } = await admin
+      .from("impersonation_sessions")
+      .select("id")
+      .eq("impersonator_id", impersonatorId)
+      .is("ended_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle()
+
+    if (existing) {
+      throw new Error(
+        "Ya tienes una sesión de suplantación activa. Ciérrala antes de iniciar otra."
+      )
+    }
+
+    const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString()
+
+    const { data: session, error } = await admin
+      .from("impersonation_sessions")
+      .insert({
+        impersonator_id: impersonatorId,
+        target_user_id: targetUserId,
+        expires_at: expiresAt
+      })
+      .select("id, impersonator_id, target_user_id, started_at, expires_at")
+      .single()
+
+    if (error || !session) throw error ?? new Error("No se pudo iniciar la suplantación")
+
+    await auditService.logSystem({
+      entity: "users",
+      action: "IMPERSONATION_STARTED",
+      entity_id: targetUserId,
+      user_id: impersonatorId,
+      impersonator_id: null,
+      new_value: {
+        target_user_id: target.id,
+        target_email: target.email,
+        target_role: target.role
+      },
+      note: `Suplantación de ${target.full_name} iniciada`
+    })
+
+    return session
+  },
+
+  async stop(
+    sessionId: string,
+    endedBy: string,
+    reason: "manual" | "expired" | "target_inactive" | "forced" = "manual"
+  ): Promise<void> {
+    const admin = createSupabaseAdminClient()
+
+    const { data: session } = await admin
+      .from("impersonation_sessions")
+      .select("id, target_user_id")
+      .eq("id", sessionId)
+      .is("ended_at", null)
+      .maybeSingle()
+
+    if (!session) return
+
+    await admin
+      .from("impersonation_sessions")
+      .update({ ended_at: new Date().toISOString(), ended_reason: reason })
+      .eq("id", sessionId)
+
+    await auditService.logSystem({
+      entity: "users",
+      action: "IMPERSONATION_ENDED",
+      entity_id: session.target_user_id,
+      user_id: endedBy,
+      impersonator_id: null,
+      note: `Suplantación finalizada (${reason})`
+    })
+  }
+}

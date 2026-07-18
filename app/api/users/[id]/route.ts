@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, isImpersonating } from "@/lib/permissions/rbac"
 import { usersService } from "@/services/users/users.service"
 import { updateUserSchema } from "@/lib/validators/user"
 
@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function DELETE(_req: Request, { params }: Params) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS) || isImpersonating(user)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 
@@ -24,7 +24,7 @@ export async function DELETE(_req: Request, { params }: Params) {
 
 export async function PUT(request: Request, { params }: Params) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS) || isImpersonating(user)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 

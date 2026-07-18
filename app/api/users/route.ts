@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/supabase/server"
-import { PERMISSIONS, can } from "@/lib/permissions/rbac"
+import { PERMISSIONS, can, isImpersonating } from "@/lib/permissions/rbac"
 import { usersService } from "@/services/users/users.service"
 import { createUserSchema } from "@/lib/validators/user"
 
@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS)) {
+  if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS) || isImpersonating(user)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 
