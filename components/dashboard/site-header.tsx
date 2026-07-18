@@ -24,13 +24,18 @@ const PAGE_LABELS: Record<string, string> = {
   "/audit": "Auditoría",
   "/requests": "Solicitudes",
   "/ministries": "Ministerios",
-  "/settings": "Administración"
+  "/settings": "Administración",
+  "/payroll": "Remuneraciones",
+  "/profile": "Mi perfil",
+  "/voucher-book": "Talonario Unificado"
 }
 
 const SETTINGS_SUBPAGE_LABELS: Record<string, string> = {
   "/settings/general": "General",
   "/settings/inbound-email": "Correo entrante",
-  "/settings/permissions": "Permisos"
+  "/settings/permissions": "Permisos",
+  "/settings/payment-methods": "Medios de pago",
+  "/settings/categories": "Categorías"
 }
 
 function usePageLabel() {

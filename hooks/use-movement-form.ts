@@ -104,6 +104,11 @@ export function useMovementForm(props: UseMovementFormProps) {
   const currentCategoryId = useWatch({ control: form.control, name: "category_id" })
   const currentSubcategoryId = useWatch({ control: form.control, name: "subcategory_id" })
   const currentPaymentMethodId = useWatch({ control: form.control, name: "payment_method_id" })
+  const watchedAmount = useWatch({ control: form.control, name: "amount" })
+  // Capital injection is a single-page form (no wizard steps to gate progress),
+  // so — per the design spec — the save button itself stays disabled until an
+  // amount is entered rather than only validating on submit.
+  const isSaveDisabled = isCapitalInjection && (!watchedAmount || Number(watchedAmount) <= 0)
   const categoryOptions = useMemo(() => {
     const active = categories.filter((c) => c.movement_type === movementType && c.is_active)
     // The current value may not be in the active list — e.g. an existing movement
@@ -217,6 +222,7 @@ export function useMovementForm(props: UseMovementFormProps) {
     existingAttachments,
     attachmentUpload,
     attachmentsAtCap,
+    isSaveDisabled,
     categoryOptions,
     subcategoryOptions,
     paymentMethodOptions,

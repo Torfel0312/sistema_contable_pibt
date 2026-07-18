@@ -21,7 +21,8 @@ const eslintConfig = [
       "public/swe-worker-*.js",
       ".worktrees/**",
       ".claude/**",
-      "scripts/**"
+      "scripts/**",
+      "modernizaci-n-de-aplicaci-n/**"
     ]
   },
   ...nextVitals,

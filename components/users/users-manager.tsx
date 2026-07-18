@@ -301,7 +301,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           <DialogContent className="w-[95vw] sm:max-w-xl bg-card p-0 overflow-y-auto max-h-[90vh]">
             <div className="p-6 sm:p-10 flex flex-col gap-8">
               <DialogHeader>
-                <DialogTitle className="font-heading text-3xl font-bold tracking-tight text-foreground">
+                <DialogTitle className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
                   Invitar Usuario
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-base mt-2">
@@ -453,7 +453,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
         <DialogContent className="w-[95vw] sm:max-w-lg bg-card p-0">
           <div className="p-6 sm:p-10 flex flex-col gap-8">
             <DialogHeader>
-              <DialogTitle className="font-heading text-3xl font-bold tracking-tight text-foreground">
+              <DialogTitle className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
                 Editar Usuario
               </DialogTitle>
               <DialogDescription className="text-muted-foreground text-base mt-1">

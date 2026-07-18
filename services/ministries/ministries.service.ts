@@ -17,7 +17,11 @@ export const ministriesService = {
   },
 
   async getById(db: DB, id: string) {
-    const { data, error } = await db.from("ministries").select("*").eq("id", id).single()
+    const { data, error } = await db
+      .from("ministries")
+      .select("*, created_by_user:users!ministries_created_by_fkey(full_name)")
+      .eq("id", id)
+      .single()
     if (error) throw error
     return data
   },
@@ -152,5 +156,53 @@ export const ministriesService = {
       entity_id: ministryId,
       new_value: { ministry_id: ministryId }
     })
+  },
+
+  // A movement isn't tagged with a ministry directly — it's reached through the
+  // intention it was created from (registering a transfer or approving a
+  // settlement each create exactly one movement). Two queries: intentions for
+  // this ministry, then the movements those intentions' transfers/settlements
+  // point at.
+  async getAssociatedMovements(db: DB, ministryId: string) {
+    const { data: intentions, error: intentionsError } = await db
+      .from("budget_intentions")
+      .select("id")
+      .eq("ministry_id", ministryId)
+    if (intentionsError) throw intentionsError
+
+    const intentionIds = (intentions ?? []).map((i) => i.id)
+    if (intentionIds.length === 0) return []
+
+    const [{ data: transfers, error: transfersError }, { data: settlements, error: settlementsError }] =
+      await Promise.all([
+        db
+          .from("intention_transfers")
+          .select("movement_id")
+          .in("intention_id", intentionIds)
+          .not("movement_id", "is", null),
+        db
+          .from("expense_settlements")
+          .select("movement_id")
+          .in("intention_id", intentionIds)
+          .not("movement_id", "is", null)
+      ])
+    if (transfersError) throw transfersError
+    if (settlementsError) throw settlementsError
+
+    const movementIds = [
+      ...(transfers ?? []).map((t) => t.movement_id),
+      ...(settlements ?? []).map((s) => s.movement_id)
+    ].filter((id): id is string => !!id)
+    if (movementIds.length === 0) return []
+
+    const { data: movements, error: movementsError } = await db
+      .from("movements")
+      .select(
+        "id, movement_date, amount, movement_categories(name), created_by:users!movements_created_by_id_fkey(full_name)"
+      )
+      .in("id", movementIds)
+      .order("movement_date", { ascending: false })
+    if (movementsError) throw movementsError
+    return movements ?? []
   }
 }

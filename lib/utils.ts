@@ -46,3 +46,18 @@ export function formatCLP(amount: number): string {
 export function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 }
+
+// Deterministic avatar chip color/initials for entities without a stored color
+// (ministries, requests) — same name always maps to the same palette color.
+const AVATAR_PALETTE = ["#5b4df2", "#9a4dff", "#0dbd8b", "#ffb020"]
+
+export function avatarColorFor(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length]
+}
+
+export function initialsFor(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?"
+}
