@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Circle } from "lucide-react"
+import { Check, X } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -61,10 +61,9 @@ function buildSteps({
     })
   }
 
-  const readyForSettlement = includesTransfer ? hasTransfer : true
   const settlementState: StepState = hasSettlement
     ? "complete"
-    : readyForSettlement
+    : (!includesTransfer || hasTransfer)
       ? "current"
       : "pending"
   steps.push({ label: "Rendición enviada", state: settlementState })
@@ -84,25 +83,18 @@ function buildSteps({
   return steps
 }
 
-const STATE_ICON: Record<StepState, typeof CheckCircle> = {
-  complete: CheckCircle,
-  current: Circle,
-  pending: Circle,
-  rejected: XCircle
-}
-
-const STATE_ICON_CLASS: Record<StepState, string> = {
-  complete: "text-green-500",
-  current: "text-primary",
-  pending: "text-muted-foreground/40",
-  rejected: "text-red-500"
+const CIRCLE_STATE_CLASS: Record<StepState, string> = {
+  complete: "bg-income text-white",
+  current: "bg-primary text-primary-foreground ring-4 ring-primary/15",
+  pending: "bg-card border-2 border-input",
+  rejected: "bg-expense text-white"
 }
 
 const STATE_LABEL_CLASS: Record<StepState, string> = {
   complete: "text-foreground",
-  current: "text-primary font-semibold",
+  current: "text-primary font-extrabold",
   pending: "text-muted-foreground",
-  rejected: "text-red-500 font-semibold"
+  rejected: "text-expense font-extrabold"
 }
 
 export function IntentionProgress(props: IntentionProgressProps) {
@@ -110,28 +102,26 @@ export function IntentionProgress(props: IntentionProgressProps) {
 
   return (
     <Card className="p-4">
-      <div className="flex flex-wrap items-start gap-y-4">
+      <div className="flex items-start">
         {steps.map((step, index) => {
-          const Icon = STATE_ICON[step.state]
           const isLast = index === steps.length - 1
           const lineFilled = step.state === "complete"
 
           return (
-            <div
-              key={step.label}
-              className={cn("flex items-center", !isLast && "flex-1 min-w-[8rem]")}
-            >
-              <div className="flex flex-col items-center gap-1 px-1" title={step.title}>
-                <Icon
+            <div key={step.label} className={cn("flex items-start", !isLast && "flex-1")}>
+              <div className="flex flex-col items-center gap-1.5 flex-none w-[74px]" title={step.title}>
+                <div
                   className={cn(
-                    "size-5 shrink-0",
-                    STATE_ICON_CLASS[step.state],
-                    step.state === "current" && "animate-pulse"
+                    "flex size-[26px] items-center justify-center rounded-full",
+                    CIRCLE_STATE_CLASS[step.state]
                   )}
-                />
+                >
+                  {step.state === "complete" && <Check className="size-3.5" />}
+                  {step.state === "rejected" && <X className="size-3.5" />}
+                </div>
                 <span
                   className={cn(
-                    "text-xs text-center whitespace-nowrap",
+                    "text-[10.5px] text-center leading-tight",
                     STATE_LABEL_CLASS[step.state]
                   )}
                 >
@@ -140,10 +130,7 @@ export function IntentionProgress(props: IntentionProgressProps) {
               </div>
               {!isLast && (
                 <div
-                  className={cn(
-                    "h-px flex-1 min-w-[1.5rem] mx-1 mb-4",
-                    lineFilled ? "bg-green-500" : "bg-border"
-                  )}
+                  className={cn("h-0.5 flex-1 mt-3", lineFilled ? "bg-income" : "bg-border")}
                 />
               )}
             </div>

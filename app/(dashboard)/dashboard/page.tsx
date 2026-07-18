@@ -53,7 +53,11 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+          canViewFinanceWidgets && data.severanceBalance !== null ? "lg:grid-cols-4" : "lg:grid-cols-3"
+        }`}
+      >
         {/* Hero — saldo actual */}
         <div className="rounded-xl bg-primary p-6 flex flex-col gap-3 text-primary-foreground">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-foreground/70">
@@ -103,6 +107,10 @@ export default async function DashboardPage({
           </p>
           <p className="text-xs text-muted-foreground">En el período seleccionado</p>
         </div>
+
+        {canViewFinanceWidgets && data.severanceBalance !== null && (
+          <SeveranceReserveCard balance={data.severanceBalance} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -126,11 +134,8 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {canViewFinanceWidgets && data.severanceBalance !== null && data.ministryLeftoverTotals && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <SeveranceReserveCard balance={data.severanceBalance} />
-          <MinistryLeftoverWidget totals={data.ministryLeftoverTotals} />
-        </div>
+      {canViewFinanceWidgets && data.ministryLeftoverTotals && (
+        <MinistryLeftoverWidget totals={data.ministryLeftoverTotals} />
       )}
 
       <div className="flex flex-col gap-4">

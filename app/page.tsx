@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
+import { Landmark } from "lucide-react"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { LoginForm } from "@/components/auth/login-form"
 import { LoginPageEffects } from "@/components/auth/login-page-effects"
@@ -22,11 +23,9 @@ export default async function LoginPage() {
         <div className="pointer-events-none absolute -bottom-20 -left-20 size-80 rounded-full bg-white/5" />
 
         <div className="relative z-10 max-w-sm text-center flex flex-col gap-5">
-          {/* Cross icon */}
+          {/* Brand icon */}
           <div className="mx-auto flex size-14 items-center justify-center rounded-xl bg-white/15">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="size-7" fill="currentColor">
-              <path d="M11 2h2v7h7v2h-7v11h-2V11H4V9h7V2z" />
-            </svg>
+            <Landmark className="size-7" />
           </div>
 
           {/* Church name */}

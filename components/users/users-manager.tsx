@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from "@/lib/utils"
@@ -18,7 +18,19 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
-import { Plus, Users, Search, RotateCcw, Trash2, Send, Copy, Check, Link } from "lucide-react"
+import {
+  UserRoundPlus,
+  Users,
+  Search,
+  RotateCcw,
+  Trash2,
+  Send,
+  Copy,
+  Check,
+  Link,
+  Settings2,
+  VenetianMask
+} from "lucide-react"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import {
   Item,
@@ -34,6 +46,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
 import { toast } from "sonner"
 import { inviteUser, updateUser, deleteUser, resendInvite, resetUser } from "@/app/actions/users"
+import { startImpersonation } from "@/app/actions/impersonation"
 
 type UserStatus = "ACTIVE" | "INACTIVE" | "PENDING_ACTIVATION" | "PENDING_RESET"
 
@@ -70,8 +83,8 @@ function getInitials(name: string) {
 function roleBadgeClass(role: UserRole) {
   if (role === "ADMIN") return "bg-primary/10 text-primary"
   if (role === "BURSAR") return "bg-role-purple-surface text-role-purple"
-  if (role === "FINANCE") return "bg-emerald-100 text-emerald-700"
-  if (role === "MINISTER") return "bg-amber-100 text-amber-700"
+  if (role === "FINANCE") return "bg-income-surface text-on-income"
+  if (role === "MINISTER") return "bg-warn-surface text-on-warn"
   return "bg-muted text-muted-foreground"
 }
 
@@ -102,21 +115,20 @@ function statusMeta(status: UserStatus): StatusMeta {
     case "PENDING_ACTIVATION":
       return {
         label: "Sin activar",
-        badgeClass:
-          "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800",
+        badgeClass: "bg-warn-surface text-on-warn border border-warn-border",
         rowOpacity: false
       }
     case "PENDING_RESET":
       return {
         label: "Reset pendiente",
-        badgeClass:
-          "bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
+        badgeClass: "bg-expense-surface text-on-expense border border-expense-border",
         rowOpacity: false
       }
   }
 }
 
 export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const inviteMinister = searchParams.get("invite") === "MINISTER"
   const [users, setUsers] = useState<UserRow[]>(initialUsers)
@@ -229,6 +241,19 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
     })
   }
 
+  const handleImpersonate = (userId: string) => {
+    toast.promise(startImpersonation(userId), {
+      loading: "Iniciando suplantación...",
+      success: () => {
+        setEditingUser(null)
+        router.push("/dashboard")
+        router.refresh()
+        return "Ahora estás viendo la aplicación como este usuario"
+      },
+      error: (e: Error) => e.message
+    })
+  }
+
   const handleReset = (userId: string) => {
     toast.promise(resetUser(userId), {
       loading: "Enviando correo de restablecimiento...",
@@ -268,7 +293,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           <DialogTrigger
             render={
               <Button className="h-11 px-5 shrink-0">
-                <Plus data-icon="inline-start" />
+                <UserRoundPlus data-icon="inline-start" />
                 Invitar
               </Button>
             }
@@ -487,6 +512,60 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                 </Field>
               </FieldGroup>
 
+              {editingUser && (
+                <div className="flex flex-col gap-3 pt-4 border-t border-border">
+                  <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    Acciones de cuenta
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {editingUser.role !== "ADMIN" && editingUser.status === "ACTIVE" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleImpersonate(editingUser.id)}
+                      >
+                        <VenetianMask className="size-3.5" />
+                        Impersonar
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void handleReset(editingUser.id)}
+                    >
+                      <RotateCcw className="size-3.5" />
+                      Resetear contraseña
+                    </Button>
+                    {editingUser.status === "PENDING_ACTIVATION" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleResendInvite(editingUser.id)}
+                      >
+                        <Send className="size-3.5" />
+                        Reenviar invitación
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => {
+                        setDeletingUser(editingUser)
+                        setEditingUser(null)
+                      }}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Eliminar usuario
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-3 pt-4 border-t border-border">
                 <Button type="submit" disabled={editForm.formState.isSubmitting} className="h-11">
                   {editForm.formState.isSubmitting ? "Guardando..." : "Guardar Cambios"}
@@ -621,7 +700,12 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
             const isActive = user.status === "ACTIVE"
             const linkExpired = isLinkExpired(user)
             return (
-              <Item key={user.id} variant="outline" className={cn(meta.rowOpacity && "opacity-55")}>
+              <Item
+                key={user.id}
+                variant="outline"
+                onClick={() => openEdit(user)}
+                className={cn("cursor-pointer", meta.rowOpacity && "opacity-55")}
+              >
                 <div
                   className={cn(
                     "size-10 rounded-full flex items-center justify-center shrink-0",
@@ -682,42 +766,13 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                       Enlace expirado
                     </span>
                   )}
-                  {user.status === "PENDING_ACTIVATION" && (
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => void handleResendInvite(user.id)}
-                      title="Reenviar invitación"
-                      className="rounded-full px-2"
-                    >
-                      <Send className="size-3.5" />
-                    </Button>
-                  )}
                   <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => void handleReset(user.id)}
-                    title="Resetear contraseña"
-                    className="rounded-full px-2"
-                  >
-                    <RotateCcw className="size-3.5" />
-                  </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => setDeletingUser(user)}
-                    title="Eliminar usuario"
-                    className="rounded-full px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                  <Button
-                    size="xs"
+                    size="icon-sm"
                     variant="outline"
                     onClick={() => openEdit(user)}
-                    className="rounded-full px-4"
+                    title="Editar usuario"
                   >
-                    Editar
+                    <Settings2 className="size-3.5" />
                   </Button>
                 </ItemActions>
               </Item>

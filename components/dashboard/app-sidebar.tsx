@@ -6,17 +6,17 @@ import { usePathname } from "next/navigation"
 import { useMemo } from "react"
 import {
   LayoutDashboard,
-  Briefcase,
+  ArrowLeftRight,
   Users,
   ClipboardList,
-  Church,
-  FileCheck,
-  SlidersHorizontal,
+  Landmark,
+  History,
+  Settings2,
   Mail,
   ShieldCheck,
   CreditCard,
   Tags,
-  Wallet
+  Banknote
 } from "lucide-react"
 import {
   Sidebar,
@@ -64,13 +64,13 @@ const NAV_GROUPS: NavGroup[] = [
       {
         href: "/movements",
         label: "Movimientos",
-        icon: Briefcase,
+        icon: ArrowLeftRight,
         roles: ["ADMIN", "BURSAR", "FINANCE"]
       },
       {
         href: "/payroll",
         label: "Remuneraciones",
-        icon: Wallet,
+        icon: Banknote,
         roles: ["ADMIN"]
       }
     ]
@@ -78,11 +78,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Ministerios",
     links: [
-      { href: "/ministries", label: "Ministerios", icon: Church, roles: ["ADMIN", "BURSAR"] },
+      { href: "/ministries", label: "Ministerios", icon: Landmark, roles: ["ADMIN", "BURSAR"] },
       {
         href: "/requests",
         label: "Solicitudes",
-        icon: FileCheck,
+        icon: ClipboardList,
         roles: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
       }
     ]
@@ -90,7 +90,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Administración",
     links: [
-      { href: "/settings/general", label: "General", icon: SlidersHorizontal, roles: ["ADMIN"] },
+      { href: "/settings/general", label: "General", icon: Settings2, roles: ["ADMIN"] },
       { href: "/settings/inbound-email", label: "Correo entrante", icon: Mail, roles: ["ADMIN"] },
       { href: "/settings/permissions", label: "Permisos", icon: ShieldCheck, roles: ["ADMIN"] },
       {
@@ -106,7 +106,7 @@ const NAV_GROUPS: NavGroup[] = [
         roles: ["ADMIN", "BURSAR"]
       },
       { href: "/users", label: "Usuarios", icon: Users, roles: ["ADMIN"] },
-      { href: "/audit", label: "Auditoría", icon: ClipboardList, roles: ["ADMIN"] }
+      { href: "/audit", label: "Auditoría", icon: History, roles: ["ADMIN"] }
     ]
   }
 ]
@@ -165,7 +165,7 @@ export function AppSidebar({
           <SidebarMenuItem className="flex items-center">
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />} className="flex-1">
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <LayoutDashboard className="size-4" />
+                <Landmark className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Sistema Contable</span>

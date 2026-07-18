@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, Clock, CheckCircle, XCircle, FileText, Ban } from "lucide-react"
+import { Plus, Clock, CheckCircle2, XCircle, FileText, Ban } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -42,9 +42,9 @@ type Ministry = NonNullable<MinistryAssignment>["ministries"] | null
 
 const STATUS_ICONS = {
   DRAFT: <FileText className="size-4 text-muted-foreground" />,
-  PENDING: <Clock className="size-4 text-amber-500" />,
-  APPROVED: <CheckCircle className="size-4 text-green-500" />,
-  REJECTED: <XCircle className="size-4 text-red-500" />,
+  PENDING: <Clock className="size-4 text-warn" />,
+  APPROVED: <CheckCircle2 className="size-4 text-income" />,
+  REJECTED: <XCircle className="size-4 text-expense" />,
   CANCELLED: <Ban className="size-4 text-muted-foreground" />
 }
 
@@ -85,6 +85,8 @@ export function IntentionsClient({
   const openIntentions = intentions.filter(
     (i) => i.status !== "REJECTED" && i.status !== "CANCELLED" && !i.settlement_closed_at
   )
+  const openTotal = openIntentions.reduce((sum, i) => sum + i.amount, 0)
+  const rejectedCount = intentions.filter((i) => i.status === "REJECTED").length
 
   type IntentionFormValues = Omit<CreateIntentionInput, "amount"> & { amount: string }
   const form = useForm<IntentionFormValues, unknown, CreateIntentionInput>({
@@ -269,36 +271,79 @@ export function IntentionsClient({
         </Empty>
       ) : (
         <>
-          {openIntentions.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-muted-foreground">Abiertas</h2>
-              <ItemGroup>
-                {openIntentions.map((intention) => (
-                  <IntentionRow
-                    key={intention.id}
-                    intention={intention}
-                    isMinister={isMinister}
-                    onClick={() => router.push(`/requests/${intention.id}`)}
-                  />
-                ))}
-              </ItemGroup>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl bg-card border border-border p-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Solicitado (abiertas)
+              </div>
+              <div className="text-xl font-extrabold">{formatCLP(openTotal)}</div>
             </div>
-          )}
-          {closedIntentions.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-muted-foreground">Cerradas</h2>
-              <ItemGroup className="opacity-75">
-                {closedIntentions.map((intention) => (
-                  <IntentionRow
-                    key={intention.id}
-                    intention={intention}
-                    isMinister={isMinister}
-                    onClick={() => router.push(`/requests/${intention.id}`)}
-                  />
-                ))}
-              </ItemGroup>
+            <div className="rounded-xl bg-card border border-border p-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Solicitudes abiertas
+              </div>
+              <div className="text-xl font-extrabold">{openIntentions.length}</div>
             </div>
-          )}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Rechazadas
+              </div>
+              <div className="text-xl font-extrabold text-expense">{rejectedCount}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-income" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Abiertas
+                </h2>
+                <span className="text-xs font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                  {openIntentions.length}
+                </span>
+              </div>
+              {openIntentions.length > 0 ? (
+                <ItemGroup>
+                  {openIntentions.map((intention) => (
+                    <IntentionRow
+                      key={intention.id}
+                      intention={intention}
+                      isMinister={isMinister}
+                      onClick={() => router.push(`/requests/${intention.id}`)}
+                    />
+                  ))}
+                </ItemGroup>
+              ) : (
+                <p className="text-sm text-muted-foreground px-1">Sin solicitudes abiertas.</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-expense" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Cerradas
+                </h2>
+                <span className="text-xs font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                  {closedIntentions.length}
+                </span>
+              </div>
+              {closedIntentions.length > 0 ? (
+                <ItemGroup className="opacity-75">
+                  {closedIntentions.map((intention) => (
+                    <IntentionRow
+                      key={intention.id}
+                      intention={intention}
+                      isMinister={isMinister}
+                      onClick={() => router.push(`/requests/${intention.id}`)}
+                    />
+                  ))}
+                </ItemGroup>
+              ) : (
+                <p className="text-sm text-muted-foreground px-1">Sin solicitudes cerradas.</p>
+              )}
+            </div>
+          </div>
         </>
       )}
     </div>

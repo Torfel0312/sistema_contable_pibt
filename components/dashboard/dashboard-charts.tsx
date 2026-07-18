@@ -42,7 +42,7 @@ const incomeExpenseConfig = {
   },
   expense: {
     label: "Egresos",
-    color: "var(--color-expense)"
+    color: "var(--color-destructive)"
   }
 } satisfies ChartConfig
 

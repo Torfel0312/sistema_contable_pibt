@@ -38,7 +38,10 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     const dialog = page.getByRole("dialog")
     await shot(page, "06-payroll", "register-dialog-empty")
 
-    await pickTodayIn(page, dialog.getByTestId("period-date-trigger"))
+    // Período (mes/año) now defaults to the current month via two selects
+    // instead of a DatePicker — nothing to interact with to accept the default.
+
+    await dialog.getByTestId("severance-reserve-input").fill("150000")
 
     // Defaults to 2 pre-filled lines ("Sueldo pastor", "Imposiciones") — no need
     // to click "Agregar otra transferencia" to get a second line anymore.
@@ -56,7 +59,7 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     // configured in local/e2e envs — same reason no other spec in this suite
     // exercises a real attachment upload. Cover the validation guard instead of
     // faking a successful upload.
-    await dialog.getByRole("button", { name: "Registrar" }).click()
+    await dialog.getByRole("button", { name: "Registrar remuneración" }).click()
     await expect(dialog.getByText("Debes adjuntar la liquidación")).toBeVisible()
     await shot(page, "06-payroll", "register-dialog-liquidacion-required")
   })
