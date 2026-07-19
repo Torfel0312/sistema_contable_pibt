@@ -164,7 +164,7 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center">
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />} className="flex-1">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white/[0.18] text-white">
                 <Landmark className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
