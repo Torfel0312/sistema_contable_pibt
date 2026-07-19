@@ -6,10 +6,13 @@
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
-  /* Indigo & Violet palette — accent/brand colors stay fixed */
-  --color-primary: #5b4df2;
-  --color-primary-light: #9a4dff;
-  --color-primary-surface: var(--muted);
+  /* Indigo & Violet palette — hue shifts brighter in dark mode via :root/[data-theme="dark"] cascade */
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-2);
+  --color-primary-soft: var(--primary-soft);
+  --color-faint: var(--faint);
+  --color-primary-surface: var(--primary-soft);
   --color-primary-border: var(--input);
   --color-primary-container: var(--border);
   --color-on-primary: #ffffff;
@@ -34,7 +37,7 @@
   --color-on-surface-variant: var(--muted-foreground);
   --color-inverse-surface: var(--foreground);
   --color-inverse-on-surface: var(--muted);
-  --color-inverse-primary: #9a4dff;
+  --color-inverse-primary: var(--primary-2);
 
   --color-outline: var(--muted-foreground);
   --color-outline-variant: var(--border);
@@ -81,7 +84,7 @@
   --color-on-warn: var(--on-warn);
 
   /* Role badge tokens */
-  --color-role-purple: #9a4dff;
+  --color-role-purple: var(--primary-2);
   --color-role-purple-surface: var(--role-purple-surface);
 
   /* Font tokens */
@@ -98,6 +101,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* shadcn pass-through — wired to Indigo & Violet */
+  --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -175,11 +179,15 @@
   --popover: #ffffff;
   --popover-foreground: #1a1533;
   --primary: #5b4df2;
+  --primary-dark: #4638d1;
+  --primary-2: #9a4dff;
+  --primary-soft: #edebfe;
   --primary-foreground: #ffffff;
   --secondary: #f1effb;
   --secondary-foreground: #1a1533;
   --muted: #f1effb;
   --muted-foreground: #6d6790;
+  --faint: #9c96ba;
   --accent: #f1effb;
   --accent-foreground: #1a1533;
   --destructive: #ff5d55;
@@ -193,12 +201,13 @@
   --chart-4: #ffb020;
   --chart-5: #0dbd8b;
 
-  /* Sidebar — permanently dark indigo, independent of light/dark app mode */
+  /* Sidebar — light mode: matches --primary family; darkens further in dark mode below */
   --sidebar: #352abf;
+  --sidebar-hover: #4a3dd6;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #5b4df2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: var(--sidebar-hover);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #4636c4;
   --sidebar-ring: #7c6ef5;
@@ -227,12 +236,16 @@
   --card-foreground: #ece9fa;
   --popover: #1c1730;
   --popover-foreground: #ece9fa;
-  --primary: #5b4df2;
+  --primary: #7a6cff;
+  --primary-dark: #5b4df2;
+  --primary-2: #a877ff;
+  --primary-soft: #2b2452;
   --primary-foreground: #ffffff;
   --secondary: #241d3d;
   --secondary-foreground: #ece9fa;
   --muted: #241d3d;
   --muted-foreground: #9089b8;
+  --faint: #6f6994;
   --accent: #241d3d;
   --accent-foreground: #ece9fa;
   --destructive: #ff5d55;
@@ -245,10 +258,18 @@
   --chart-4: #ffb020;
   --chart-5: #0dbd8b;
 
-  /* Semantic income/expense/warn — dark mode */
+  /* Sidebar — darkens further in dark mode */
+  --sidebar: #221c46;
+  --sidebar-hover: #2f2760;
+  --sidebar-primary: #7a6cff;
+  --sidebar-accent: var(--sidebar-hover);
+
+  /* Semantic income/expense/warn — dark mode (brighter hues for contrast) */
+  --income: #26d3a2;
   --income-surface: #12362d;
   --income-border: #1d5443;
   --on-income: #8ff0cf;
+  --expense: #ff6f68;
   --expense-surface: #3a1f1e;
   --expense-border: #5c2e2b;
   --on-expense: #ffb3ae;

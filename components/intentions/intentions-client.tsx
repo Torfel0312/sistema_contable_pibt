@@ -6,6 +6,7 @@ import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Plus, Clock, CheckCircle2, XCircle, FileText, Ban } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -17,18 +18,10 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
-import {
-  Item,
-  ItemGroup,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions
-} from "@/components/ui/item"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { DatePicker } from "@/components/ui/date-picker"
-import { formatDate, formatCLP } from "@/lib/utils"
+import { formatDate, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
 import { createIntentionSchema } from "@/lib/validators/intention"
 import type { CreateIntentionInput } from "@/lib/validators/intention"
 import { MIN_REQUEST_AMOUNT, MAX_REQUEST_AMOUNT } from "@/lib/constants/requests"
@@ -40,12 +33,12 @@ type Intention = Awaited<ReturnType<typeof intentionsService.list>>[number]
 type MinistryAssignment = Awaited<ReturnType<typeof ministriesService.getMinistryForUser>>
 type Ministry = NonNullable<MinistryAssignment>["ministries"] | null
 
-const STATUS_ICONS = {
-  DRAFT: <FileText className="size-4 text-muted-foreground" />,
-  PENDING: <Clock className="size-4 text-warn" />,
-  APPROVED: <CheckCircle2 className="size-4 text-income" />,
-  REJECTED: <XCircle className="size-4 text-expense" />,
-  CANCELLED: <Ban className="size-4 text-muted-foreground" />
+const STATUS_LINE_META = {
+  DRAFT: { icon: FileText, color: "text-muted-foreground" },
+  PENDING: { icon: Clock, color: "text-warn" },
+  APPROVED: { icon: CheckCircle2, color: "text-income" },
+  REJECTED: { icon: XCircle, color: "text-expense" },
+  CANCELLED: { icon: Ban, color: "text-muted-foreground" }
 }
 
 const STATUS_LABELS = {
@@ -59,6 +52,13 @@ const STATUS_LABELS = {
 const FUNDING_METHOD_LABELS = {
   REIMBURSEMENT: "Reembolso",
   TRANSFER: "Transferencia anticipada"
+}
+
+// Method pill colors: transfer reads as the "primary-2" (violet) family per the
+// design spec, reimbursement stays a neutral primary tint.
+const FUNDING_METHOD_PILL = {
+  REIMBURSEMENT: "bg-primary-soft text-primary",
+  TRANSFER: "bg-role-purple-surface text-role-purple"
 }
 
 export function IntentionsClient({
@@ -128,7 +128,7 @@ export function IntentionsClient({
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
             Solicitudes de Dinero
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -304,16 +304,17 @@ export function IntentionsClient({
                 </span>
               </div>
               {openIntentions.length > 0 ? (
-                <ItemGroup>
+                <div className="flex flex-col gap-3">
                   {openIntentions.map((intention) => (
-                    <IntentionRow
+                    <IntentionCard
                       key={intention.id}
                       intention={intention}
                       isMinister={isMinister}
+                      closed={false}
                       onClick={() => router.push(`/requests/${intention.id}`)}
                     />
                   ))}
-                </ItemGroup>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground px-1">Sin solicitudes abiertas.</p>
               )}
@@ -329,16 +330,17 @@ export function IntentionsClient({
                 </span>
               </div>
               {closedIntentions.length > 0 ? (
-                <ItemGroup className="opacity-75">
+                <div className="flex flex-col gap-3">
                   {closedIntentions.map((intention) => (
-                    <IntentionRow
+                    <IntentionCard
                       key={intention.id}
                       intention={intention}
                       isMinister={isMinister}
+                      closed
                       onClick={() => router.push(`/requests/${intention.id}`)}
                     />
                   ))}
-                </ItemGroup>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground px-1">Sin solicitudes cerradas.</p>
               )}
@@ -350,40 +352,86 @@ export function IntentionsClient({
   )
 }
 
-function IntentionRow({
+function IntentionCard({
   intention,
   isMinister,
+  closed,
   onClick
 }: {
   intention: Intention
   isMinister: boolean
+  closed: boolean
   onClick: () => void
 }) {
+  const ministryName = intention.ministries?.name ?? "Sin ministerio"
+  const { icon: StatusIcon, color: statusColor } = STATUS_LINE_META[intention.status]
+
   return (
-    <Item className="cursor-pointer hover:bg-muted/40 transition-colors" onClick={onClick}>
-      <ItemContent>
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5">{STATUS_ICONS[intention.status]}</div>
-          <div className="flex-1 min-w-0">
-            <ItemTitle className="flex items-center gap-2">
-              {formatCLP(intention.amount)}
-            </ItemTitle>
-            <ItemDescription>{intention.purpose}</ItemDescription>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {FUNDING_METHOD_LABELS[intention.funding_method]}
-            </p>
-            {!isMinister && intention.ministries && (
-              <p className="text-xs text-muted-foreground mt-0.5">{intention.ministries.name}</p>
-            )}
+    <div
+      onClick={onClick}
+      className={cn(
+        "cursor-pointer rounded-2xl border border-border p-[18px] transition-colors",
+        closed ? "bg-muted/40" : "bg-card shadow-[0_1px_2px_rgba(22,17,41,.04)] hover:border-input"
+      )}
+    >
+      {!isMinister && (
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={cn(
+                "flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-[11px] font-extrabold text-white",
+                closed && "opacity-60"
+              )}
+              style={{ background: avatarColorFor(ministryName) }}
+            >
+              {initialsFor(ministryName)}
+            </div>
+            <span
+              className={cn(
+                "text-xs font-semibold",
+                closed ? "text-muted-foreground" : "text-foreground"
+              )}
+            >
+              {ministryName}
+            </span>
           </div>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[11px] font-bold",
+              closed ? "bg-muted text-muted-foreground" : FUNDING_METHOD_PILL[intention.funding_method]
+            )}
+          >
+            {FUNDING_METHOD_LABELS[intention.funding_method]}
+          </span>
         </div>
-      </ItemContent>
-      <ItemActions>
-        <div className="text-right">
-          <p className="text-xs font-medium">{STATUS_LABELS[intention.status]}</p>
-          <p className="text-xs text-muted-foreground">{formatDate(intention.created_at)}</p>
-        </div>
-      </ItemActions>
-    </Item>
+      )}
+
+      <p
+        className={cn(
+          "font-heading text-[22px] font-extrabold tracking-tight tabular-nums",
+          closed && "text-muted-foreground"
+        )}
+      >
+        {formatCLP(intention.amount)}
+      </p>
+      <p className={cn("text-sm mb-3.5", closed ? "text-muted-foreground/70" : "text-muted-foreground")}>
+        {intention.purpose}
+      </p>
+      {isMinister && (
+        <p className="text-xs text-muted-foreground mb-3.5 -mt-2.5">
+          {FUNDING_METHOD_LABELS[intention.funding_method]}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between border-t border-border pt-2.5">
+        <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", statusColor)}>
+          <StatusIcon className="size-3.5" />
+          {STATUS_LABELS[intention.status]}
+        </span>
+        <span className="text-[11.5px] text-muted-foreground">
+          {formatDate(intention.created_at)}
+        </span>
+      </div>
+    </div>
   )
 }

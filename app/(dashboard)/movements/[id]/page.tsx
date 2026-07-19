@@ -7,6 +7,7 @@ import { CancelButton } from "@/components/movements/cancel-button"
 import { RegeneratePdfButton } from "@/components/movements/regenerate-pdf-button"
 import { VoucherActions } from "@/components/vouchers/voucher-actions"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, formatDateTime, formatCLP } from "@/lib/utils"
 import { auditActionLabel } from "@/lib/constants/audit"
@@ -90,19 +91,12 @@ export default async function MovementDetailPage({ params }: Props) {
             Volver a la lista
           </Link>
           <div className="flex items-center gap-4">
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
               Detalle del movimiento
             </h1>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest",
-                row.status === "ACTIVE"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-destructive/10 text-destructive"
-              )}
-            >
+            <Badge variant={row.status === "ACTIVE" ? "primary" : "expense"} dot>
               {row.status === "ACTIVE" ? "Activo" : "Anulado"}
-            </span>
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             {row.movement_type === "INCOME" ? "Ingreso" : "Egreso"} • Registrado el{" "}

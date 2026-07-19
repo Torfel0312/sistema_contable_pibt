@@ -91,3 +91,20 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
 export function auditActionLabel(action: string): string {
   return AUDIT_ACTION_LABEL[action] ?? action
 }
+
+// Color-codes the (much richer) action vocabulary above onto the design spec's
+// four action colors: crear=income, aprobar/cerrar=primary, editar/ajustar=warn,
+// anular/rechazar/eliminar=expense. Checked in this order since a few actions
+// (e.g. RETURNED_FOR_CORRECTION) would otherwise also match a broader pattern.
+export type AuditActionVariant = "income" | "primary" | "warn" | "expense" | "neutral"
+
+const ACTION_VARIANT_RULES: Array<{ pattern: RegExp; variant: AuditActionVariant }> = [
+  { pattern: /(REJECTED|CANCELLED|DELETED|REMOVED|UNASSIGNED|RETURNED)/, variant: "expense" },
+  { pattern: /(APPROVED|TRANSFER_REGISTERED|SETTLEMENT_CLOSED|CLOSED)/, variant: "primary" },
+  { pattern: /(UPDATED|ADJUSTED|RENAMED|IN_REVIEW)/, variant: "warn" },
+  { pattern: /(CREATED|REGISTERED|ASSIGNED|SUBMITTED|STARTED)/, variant: "income" }
+]
+
+export function auditActionVariant(action: string): AuditActionVariant {
+  return ACTION_VARIANT_RULES.find((rule) => rule.pattern.test(action))?.variant ?? "neutral"
+}

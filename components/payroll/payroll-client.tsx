@@ -24,12 +24,7 @@ import {
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
 import { formatDate, formatCLP } from "@/lib/utils"
-import {
-  createPayrollSchema,
-  severanceAdjustmentSchema,
-  type CreatePayrollInput,
-  type SeveranceAdjustmentInput
-} from "@/lib/validators/payroll"
+import { createPayrollSchema, type CreatePayrollInput } from "@/lib/validators/payroll"
 import type { payrollService } from "@/services/payroll/payroll.service"
 import type { severanceReserveService } from "@/services/payroll/severance-reserve.service"
 import { createPayroll, addSeveranceAdjustment } from "@/app/actions/payroll"
@@ -398,8 +393,7 @@ export function PayrollClient({
 }) {
   const router = useRouter()
   const [payrollOpen, setPayrollOpen] = useState(false)
-  const [adjustOpen, setAdjustOpen] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
+  const recentAdjustments = severanceAdjustments.slice(0, 3)
 
   const defaultLines = () => [emptyLine("Sueldo pastor"), emptyLine("Imposiciones")]
 
@@ -433,11 +427,6 @@ export function PayrollClient({
   const lineAmounts = useWatch({ control: form.control, name: "lines" })
   const periodTotal = (lineAmounts ?? []).reduce((sum, l) => sum + (Number(l?.amount) || 0), 0)
 
-  const adjustForm = useForm<SeveranceAdjustmentInput>({
-    resolver: zodResolver(severanceAdjustmentSchema),
-    defaultValues: { period: "", amount_delta: 0, note: "" }
-  })
-
   function resetPayrollForm() {
     form.reset({
       period: buildPeriod(new Date().getMonth() + 1, new Date().getFullYear()),
@@ -470,18 +459,6 @@ export function PayrollClient({
     }
   }
 
-  async function handleAdjust(values: SeveranceAdjustmentInput) {
-    try {
-      await addSeveranceAdjustment(values)
-      setAdjustOpen(false)
-      adjustForm.reset({ period: "", amount_delta: 0, note: "" })
-      toast.success("Reserva ajustada")
-      router.refresh()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al ajustar la reserva")
-    }
-  }
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4 items-start">
       <div className="rounded-2xl bg-sidebar text-sidebar-foreground p-6 flex flex-col gap-4">
@@ -499,17 +476,17 @@ export function PayrollClient({
           </p>
         </div>
 
-        {historyOpen && severanceAdjustments.length > 0 && (
+        {recentAdjustments.length > 0 && (
           <div className="flex flex-col gap-2">
-            {severanceAdjustments.map((adj) => (
+            {recentAdjustments.map((adj) => (
               <div
                 key={adj.id}
-                className="flex items-center justify-between rounded-[9px] bg-white/8 px-3 py-2"
+                className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-2.5"
               >
-                <span className="text-xs font-semibold text-sidebar-foreground/85 capitalize">
+                <span className="text-sm font-semibold text-sidebar-foreground/90 capitalize">
                   {formatDate(adj.period)}
                 </span>
-                <span className="text-xs font-extrabold">
+                <span className="text-sm font-extrabold">
                   {Number(adj.amount_delta) > 0 ? "+" : ""}
                   {formatCLP(Number(adj.amount_delta))}
                 </span>
@@ -518,92 +495,6 @@ export function PayrollClient({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 pt-1">
-          {severanceAdjustments.length > 0 && (
-            <button
-              type="button"
-              className="text-xs font-semibold text-sidebar-foreground/70 hover:text-sidebar-foreground"
-              onClick={() => setHistoryOpen((o) => !o)}
-            >
-              {historyOpen ? "Ocultar historial" : "Ver historial de ajustes"}
-            </button>
-          )}
-          <Dialog
-            open={adjustOpen}
-            onOpenChange={(o) => {
-              setAdjustOpen(o)
-              if (!o) adjustForm.reset({ period: "", amount_delta: 0, note: "" })
-            }}
-          >
-            <DialogTrigger
-              render={
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="ml-auto border-white/25 bg-transparent text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
-                >
-                  Ajustar reserva
-                </Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajustar reserva de indemnización</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={adjustForm.handleSubmit(handleAdjust)} className="space-y-4 pt-2">
-                <Field data-invalid={!!adjustForm.formState.errors.period || undefined}>
-                  <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Período (mes) *</FieldLabel>
-                  <Controller
-                    control={adjustForm.control}
-                    name="period"
-                    render={({ field }) => (
-                      <DatePicker
-                        value={field.value ? new Date(field.value + "T00:00:00") : undefined}
-                        onChange={(date) =>
-                          field.onChange(
-                            date
-                              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`
-                              : ""
-                          )
-                        }
-                      />
-                    )}
-                  />
-                  <FieldError errors={[adjustForm.formState.errors.period]} />
-                </Field>
-                <Field data-invalid={!!adjustForm.formState.errors.amount_delta || undefined}>
-                  <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Monto del ajuste (CLP) *</FieldLabel>
-                  <Controller
-                    control={adjustForm.control}
-                    name="amount_delta"
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        placeholder="Positivo para sumar, negativo para restar"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                        onBlur={field.onBlur}
-                      />
-                    )}
-                  />
-                  <FieldError errors={[adjustForm.formState.errors.amount_delta]} />
-                </Field>
-                <Field data-invalid={!!adjustForm.formState.errors.note || undefined}>
-                  <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Motivo *</FieldLabel>
-                  <Input placeholder="Razón del ajuste" {...adjustForm.register("note")} />
-                  <FieldError errors={[adjustForm.formState.errors.note]} />
-                </Field>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={adjustForm.formState.isSubmitting}
-                >
-                  {adjustForm.formState.isSubmitting ? "Guardando..." : "Confirmar ajuste"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
       <Card className="p-6 space-y-4">

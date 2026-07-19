@@ -38,7 +38,7 @@ export default async function DashboardPage({
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-0.5">
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
             Dashboard
           </h1>
           <p className="text-sm text-muted-foreground">Resumen financiero de actividades</p>
@@ -59,7 +59,7 @@ export default async function DashboardPage({
         }`}
       >
         {/* Hero — saldo actual */}
-        <div className="rounded-xl bg-primary p-6 flex flex-col gap-3 text-primary-foreground">
+        <div className="rounded-[18px] bg-primary p-6 flex flex-col gap-3 text-primary-foreground">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-foreground/70">
             Saldo actual
           </p>
@@ -79,14 +79,16 @@ export default async function DashboardPage({
         </div>
 
         {/* Income */}
-        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-3">
+        <div className="rounded-[18px] bg-card border border-border p-6 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Ingresos
             </p>
-            <TrendingUp className="size-4 text-income" />
+            <div className="flex size-[26px] items-center justify-center rounded-lg bg-income-surface">
+              <TrendingUp className="size-3.5 text-income" />
+            </div>
           </div>
-          <p className="font-heading text-2xl font-bold tracking-tight text-income tabular-nums">
+          <p className="font-heading text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {formatCLP(data.kpis.totalIncome)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -95,14 +97,16 @@ export default async function DashboardPage({
         </div>
 
         {/* Expenses */}
-        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-3">
+        <div className="rounded-[18px] bg-card border border-border p-6 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Egresos
             </p>
-            <TrendingDown className="size-4 text-destructive" />
+            <div className="flex size-[26px] items-center justify-center rounded-lg bg-expense-surface">
+              <TrendingDown className="size-3.5 text-expense" />
+            </div>
           </div>
-          <p className="font-heading text-2xl font-bold tracking-tight text-destructive tabular-nums">
+          <p className="font-heading text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {formatCLP(data.kpis.totalExpense)}
           </p>
           <p className="text-xs text-muted-foreground">En el período seleccionado</p>

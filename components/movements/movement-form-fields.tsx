@@ -18,6 +18,45 @@ const labelClass = "text-[11px] font-bold uppercase tracking-wider text-muted-fo
 export function MovementStep1Fields({ state }: { state: MovementFormState }) {
   const { form, isCapitalInjection } = state
 
+  const amountField = (
+    <Field key="amount" data-invalid={!!form.formState.errors.amount || undefined}>
+      <FieldLabel className={labelClass}>Monto (CLP)</FieldLabel>
+      <Controller
+        name="amount"
+        control={form.control}
+        render={({ field }) => (
+          <CurrencyInput
+            className="h-12 sm:h-14 text-lg font-bold"
+            placeholder="0"
+            aria-invalid={!!form.formState.errors.amount}
+            value={field.value as number | string | undefined}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+          />
+        )}
+      />
+      <FieldError errors={[form.formState.errors.amount]} />
+    </Field>
+  )
+
+  const dateField = (
+    <Field key="date" data-invalid={!!form.formState.errors.movement_date || undefined}>
+      <FieldLabel className={labelClass}>Fecha de Registro</FieldLabel>
+      <Controller
+        name="movement_date"
+        control={form.control}
+        render={({ field }) => (
+          <DatePicker
+            value={field.value ? new Date(`${field.value}T12:00:00Z`) : undefined}
+            onChange={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+            className="h-12 sm:h-14"
+          />
+        )}
+      />
+      <FieldError errors={[form.formState.errors.movement_date]} />
+    </Field>
+  )
+
   return (
     <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2">
       {!isCapitalInjection && (
@@ -30,40 +69,17 @@ export function MovementStep1Fields({ state }: { state: MovementFormState }) {
         </Field>
       )}
 
-      <Field data-invalid={!!form.formState.errors.amount || undefined}>
-        <FieldLabel className={labelClass}>Monto (CLP)</FieldLabel>
-        <Controller
-          name="amount"
-          control={form.control}
-          render={({ field }) => (
-            <CurrencyInput
-              className="h-12 sm:h-14 text-lg font-bold"
-              placeholder="0"
-              aria-invalid={!!form.formState.errors.amount}
-              value={field.value as number | string | undefined}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-            />
-          )}
-        />
-        <FieldError errors={[form.formState.errors.amount]} />
-      </Field>
-
-      <Field data-invalid={!!form.formState.errors.movement_date || undefined}>
-        <FieldLabel className={labelClass}>Fecha de Registro</FieldLabel>
-        <Controller
-          name="movement_date"
-          control={form.control}
-          render={({ field }) => (
-            <DatePicker
-              value={field.value ? new Date(`${field.value}T12:00:00Z`) : undefined}
-              onChange={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-              className="h-12 sm:h-14"
-            />
-          )}
-        />
-        <FieldError errors={[form.formState.errors.movement_date]} />
-      </Field>
+      {isCapitalInjection ? (
+        <>
+          {dateField}
+          {amountField}
+        </>
+      ) : (
+        <>
+          {amountField}
+          {dateField}
+        </>
+      )}
     </div>
   )
 }

@@ -1,4 +1,6 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { MovementForm } from "@/components/movements/movement-form"
 import { MovementWizard } from "@/components/movements/movement-wizard"
 import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/server"
@@ -35,9 +37,16 @@ export default async function NewMovementPage({ searchParams }: Props) {
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-          {isCapitalInjection ? "Inyectar Capital" : "Registro de Movimiento"}
+      <div className="flex flex-col gap-3">
+        <Link
+          href="/movements"
+          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors w-fit"
+        >
+          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+          Volver a movimientos
+        </Link>
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+          {isCapitalInjection ? "Inyectar capital" : "Registro de Movimiento"}
         </h1>
         <p className="text-sm text-muted-foreground">
           {isCapitalInjection
