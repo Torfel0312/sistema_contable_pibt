@@ -27,6 +27,7 @@ export const categoriesService = {
       .insert({
         movement_type: input.movement_type,
         name: input.name,
+        description: input.description ?? null,
         created_by: userId
       })
       .select()
@@ -93,6 +94,7 @@ export const subcategoriesService = {
       .insert({
         category_id: input.category_id,
         name: input.name,
+        description: input.description ?? null,
         created_by: userId
       })
       .select()

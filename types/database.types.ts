@@ -618,6 +618,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          description: string | null
           id: string
           is_active: boolean
           is_system: boolean
@@ -628,6 +629,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
           is_system?: boolean
@@ -638,6 +640,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
           is_system?: boolean
@@ -660,6 +663,7 @@ export type Database = {
           category_id: string
           created_at: string
           created_by: string | null
+          description: string | null
           id: string
           is_active: boolean
           name: string
@@ -669,6 +673,7 @@ export type Database = {
           category_id: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -678,6 +683,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_active?: boolean
           name?: string
