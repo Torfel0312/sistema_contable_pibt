@@ -101,7 +101,7 @@ export function IntentionProgress(props: IntentionProgressProps) {
   const steps = buildSteps(props)
 
   return (
-    <Card className="p-4">
+    <Card className="px-6 py-[22px] rounded-2xl">
       <div className="flex items-start">
         {steps.map((step, index) => {
           const isLast = index === steps.length - 1

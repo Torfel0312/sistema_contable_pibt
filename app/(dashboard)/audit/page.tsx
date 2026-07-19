@@ -4,7 +4,7 @@ import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/serve
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { auditService } from "@/services/audit/audit.service"
 import { AuditTable, type SerializedAuditEvent } from "@/components/audit/audit-table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 async function resolveHrefs(
   db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
@@ -66,20 +66,17 @@ export default async function AuditPage() {
   }))
 
   return (
-    <section className="mx-auto max-w-6xl flex flex-col gap-8">
+    <section className="mx-auto max-w-6xl flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Auditoría
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-[13.5px] text-muted-foreground">
           Historial de auditoría del sistema — usuarios y eventos globales.
         </p>
       </div>
 
-      <Card className="p-0 overflow-hidden">
-        <CardHeader className="px-6 py-5 border-b border-border">
-          <CardTitle className="text-xl">Registro de Auditoría</CardTitle>
-        </CardHeader>
+      <Card className="p-0 overflow-hidden rounded-2xl">
         <CardContent className="p-0">
           <AuditTable rows={rows} />
         </CardContent>

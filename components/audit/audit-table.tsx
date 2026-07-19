@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
 import {
   AUDIT_ENTITY_LABEL,
   auditActionLabel,
@@ -62,80 +61,62 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
 
   return (
     <>
-      <div className="hidden sm:block overflow-x-auto px-6 pb-6">
-        <table className="min-w-full text-sm" aria-label="Registro de auditoría">
-          <thead>
-            <tr className="border-b border-border">
-              <th
-                scope="col"
-                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-              >
-                Fecha
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-              >
-                Entidad
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-              >
-                Acción
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-              >
-                Usuario
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-4 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-left align-middle"
-              >
-                Observación
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {rows.map((event, index) => (
-              <tr
-                key={event.id}
-                tabIndex={0}
-                onClick={() => setSelected(event)}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(event)}
-                className={cn(
-                  "cursor-pointer transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  index % 2 === 0 ? "bg-transparent" : "bg-muted/10"
+      <div className="hidden sm:block overflow-x-auto" role="table" aria-label="Registro de auditoría">
+        <div
+          role="row"
+          className="grid grid-cols-[160px_1fr_1fr_1fr_1.4fr] gap-x-3.5 px-6 py-3.5 border-b border-border min-w-[780px]"
+        >
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Fecha
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Entidad
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Acción
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Usuario
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Observación
+          </span>
+        </div>
+        <div role="rowgroup">
+          {rows.map((event) => (
+            <div
+              key={event.id}
+              role="row"
+              tabIndex={0}
+              onClick={() => setSelected(event)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(event)}
+              className="grid grid-cols-[160px_1fr_1fr_1fr_1.4fr] gap-x-3.5 items-center px-6 py-[15px] border-t border-border text-[13.5px] min-w-[780px] cursor-pointer transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span role="cell" className="text-muted-foreground whitespace-nowrap tabular-nums">
+                {event.event_date_display}
+              </span>
+              <span role="cell" className="font-semibold text-foreground">
+                {auditEntityLabel(event.entity)}
+              </span>
+              <span role="cell">
+                <Badge variant={auditActionVariant(event.action)}>
+                  {auditActionLabel(event.action)}
+                </Badge>
+              </span>
+              <span role="cell" className="text-muted-foreground">
+                {event.user_name ?? "—"}
+                {event.impersonator_name && (
+                  <span className="block text-xs italic text-muted-foreground/80">
+                    suplantado por {event.impersonator_name}
+                  </span>
                 )}
-              >
-                <td className="px-4 py-4 align-middle whitespace-nowrap text-muted-foreground font-medium tabular-nums text-xs">
-                  {event.event_date_display}
-                </td>
-                <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
-                  {auditEntityLabel(event.entity)}
-                </td>
-                <td className="px-4 py-4 align-middle">
-                  <Badge variant={auditActionVariant(event.action)}>
-                    {auditActionLabel(event.action)}
-                  </Badge>
-                </td>
-                <td className="px-4 py-4 align-middle text-muted-foreground font-medium text-sm">
-                  {event.user_name ?? "—"}
-                  {event.impersonator_name && (
-                    <span className="block text-xs italic text-muted-foreground/80">
-                      suplantado por {event.impersonator_name}
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-4 align-middle text-muted-foreground italic truncate max-w-xs text-xs">
-                  {event.note ?? "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </span>
+              <span role="cell" className="text-[12.5px] text-muted-foreground">
+                {event.note ?? "—"}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="sm:hidden px-4 pb-4">

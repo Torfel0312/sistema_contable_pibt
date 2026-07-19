@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { cn } from "@/lib/utils"
+import { cn, avatarColorFor, initialsFor } from "@/lib/utils"
 import type { UserRole } from "@/types/auth"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -68,16 +68,6 @@ function isLinkExpired(user: UserRow): boolean {
     user.updated_at ? new Date(user.updated_at).getTime() : 0
   )
   return Date.now() - lastAction > expiryMs
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
 }
 
 function roleBadgeClass(role: UserRole) {
@@ -276,7 +266,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-3.5">
       {/* Search + invite */}
       <div className="flex gap-3 items-center">
         <div className="relative flex-1">
@@ -285,7 +275,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
             placeholder="Buscar por nombre o correo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-11 bg-muted border-none rounded-xl text-sm"
+            className="pl-10 h-[42px] rounded-[10px] text-[13.5px]"
           />
         </div>
 
@@ -438,7 +428,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
       </div>
 
       {/* Count */}
-      <p className="text-sm text-muted-foreground -mt-4">
+      <p className="text-[12.5px] font-semibold text-muted-foreground">
         {filtered.length} integrante{filtered.length !== 1 ? "s" : ""}
         {search && ` — filtrando por "${search}"`}
       </p>
@@ -697,29 +687,22 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
         <ItemGroup>
           {filtered.map((user) => {
             const meta = statusMeta(user.status)
-            const isActive = user.status === "ACTIVE"
             const linkExpired = isLinkExpired(user)
             return (
               <Item
                 key={user.id}
                 variant="outline"
                 onClick={() => openEdit(user)}
-                className={cn("cursor-pointer", meta.rowOpacity && "opacity-55")}
+                className={cn(
+                  "cursor-pointer rounded-[14px] px-[18px]",
+                  meta.rowOpacity && "opacity-55"
+                )}
               >
                 <div
-                  className={cn(
-                    "size-10 rounded-full flex items-center justify-center shrink-0",
-                    isActive ? "bg-primary/10" : "bg-muted"
-                  )}
+                  className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] text-[13px] font-extrabold text-white"
+                  style={{ background: avatarColorFor(user.full_name || user.email) }}
                 >
-                  <span
-                    className={cn(
-                      "text-xs font-bold",
-                      isActive ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    {getInitials(user.full_name || "?")}
-                  </span>
+                  {initialsFor(user.full_name || "?")}
                 </div>
                 <ItemContent>
                   <ItemTitle>{user.full_name}</ItemTitle>
@@ -745,7 +728,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                 <ItemActions>
                   <span
                     className={cn(
-                      "hidden sm:inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest",
+                      "hidden sm:inline-flex rounded-full px-2.5 py-1 text-[10.5px] font-extrabold tracking-[0.05em] uppercase",
                       roleBadgeClass(user.role)
                     )}
                   >

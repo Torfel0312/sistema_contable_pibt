@@ -36,26 +36,26 @@ export default async function NewMovementPage({ searchParams }: Props) {
     : undefined
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col max-w-5xl mx-auto">
+      <div className="mb-6">
         <Link
           href="/movements"
-          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors w-fit"
+          className="group flex items-center gap-1.5 text-[12.5px] font-bold text-muted-foreground hover:text-foreground transition-colors w-fit mb-3.5"
         >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+          <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-1" />
           Volver a movimientos
         </Link>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
           {isCapitalInjection ? "Inyectar capital" : "Registro de Movimiento"}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[13.5px] text-muted-foreground">
           {isCapitalInjection
             ? "Registro de un aporte de capital como ingreso."
             : "Formulario para el control de ingresos y egresos."}
         </p>
       </div>
       {isCapitalInjection ? (
-        <div className="rounded-xl bg-card border border-border p-6 sm:p-10">
+        <div className="rounded-2xl bg-card border border-border p-7">
           <MovementForm
             mode="create"
             paymentMethods={paymentMethods}

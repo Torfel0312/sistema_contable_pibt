@@ -35,13 +35,13 @@ export default async function DashboardPage({
   )
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+    <div className="flex flex-col max-w-6xl mx-auto">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-[22px]">
+        <div>
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">Resumen financiero de actividades</p>
+          <p className="text-[13.5px] text-muted-foreground">Resumen financiero de actividades</p>
         </div>
 
         {/* Date filter */}
@@ -54,24 +54,24 @@ export default async function DashboardPage({
       </div>
 
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+        className={`grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5 ${
           canViewFinanceWidgets && data.severanceBalance !== null ? "lg:grid-cols-4" : "lg:grid-cols-3"
         }`}
       >
         {/* Hero — saldo actual */}
-        <div className="rounded-[18px] bg-primary p-6 flex flex-col gap-3 text-primary-foreground">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-foreground/70">
+        <div className="rounded-[18px] bg-primary px-5 py-[18px] flex flex-col text-primary-foreground">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-primary-foreground/70 mb-[10px]">
             Saldo actual
           </p>
-          <p className="font-heading text-3xl font-bold tracking-tight tabular-nums">
+          <p className="font-heading text-[26px] font-extrabold tracking-tight tabular-nums mb-3">
             {formatCLP(data.kpis.currentBalance)}
           </p>
-          <div className="flex flex-wrap gap-3 mt-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-[9px] py-[3px] text-[11.5px] font-semibold">
               <TrendingUp className="size-3" />
               {formatCLP(data.kpis.totalIncome)}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-[9px] py-[3px] text-[11.5px] font-semibold">
               <TrendingDown className="size-3" />
               {formatCLP(data.kpis.totalExpense)}
             </span>
@@ -79,16 +79,16 @@ export default async function DashboardPage({
         </div>
 
         {/* Income */}
-        <div className="rounded-[18px] bg-card border border-border p-6 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
               Ingresos
             </p>
-            <div className="flex size-[26px] items-center justify-center rounded-lg bg-income-surface">
+            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-income-surface">
               <TrendingUp className="size-3.5 text-income" />
             </div>
           </div>
-          <p className="font-heading text-2xl font-bold tracking-tight text-foreground tabular-nums">
+          <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
             {formatCLP(data.kpis.totalIncome)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -97,16 +97,16 @@ export default async function DashboardPage({
         </div>
 
         {/* Expenses */}
-        <div className="rounded-[18px] bg-card border border-border p-6 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
               Egresos
             </p>
-            <div className="flex size-[26px] items-center justify-center rounded-lg bg-expense-surface">
+            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-expense-surface">
               <TrendingDown className="size-3.5 text-expense" />
             </div>
           </div>
-          <p className="font-heading text-2xl font-bold tracking-tight text-foreground tabular-nums">
+          <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
             {formatCLP(data.kpis.totalExpense)}
           </p>
           <p className="text-xs text-muted-foreground">En el período seleccionado</p>
@@ -117,44 +117,42 @@ export default async function DashboardPage({
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-              Ingresos vs Egresos
-            </h2>
-            <p className="text-xs text-muted-foreground">Tendencia por período</p>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-3.5 mb-3.5">
+        <div className="rounded-[14px] bg-card border border-border px-5 py-[18px] flex flex-col">
+          <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground mb-0.5">
+            Ingresos vs Egresos
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3.5">Tendencia por período</p>
           <IncomeExpenseChart data={data.incomeExpenseSeries} />
         </div>
-        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-              Por categoría
-            </h2>
-            <p className="text-xs text-muted-foreground">Distribución del período</p>
-          </div>
+        <div className="rounded-[14px] bg-card border border-border px-5 py-[18px] flex flex-col">
+          <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground mb-0.5">
+            Por categoría
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3.5">Distribución del período</p>
           <CategoryChart data={data.categoryBreakdown} />
         </div>
       </div>
 
       {canViewFinanceWidgets && data.ministryLeftoverTotals && (
-        <MinistryLeftoverWidget totals={data.ministryLeftoverTotals} />
+        <div className="mb-3.5">
+          <MinistryLeftoverWidget totals={data.ministryLeftoverTotals} />
+        </div>
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+          <h2 className="font-heading text-[15px] font-bold tracking-tight text-foreground">
             Últimos movimientos
           </h2>
           <Link
             href="/movements"
-            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            className="text-[12.5px] font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             Ver todos →
           </Link>
         </div>
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <div className="rounded-[14px] bg-card border border-border overflow-hidden">
           <MovementsTable
             canWrite={canWrite}
             rows={data.recentMovements.map((row) => ({

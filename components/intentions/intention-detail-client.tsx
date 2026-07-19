@@ -10,7 +10,9 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-  MessageSquare,
+  MessageCircle,
+  MessageSquareQuote,
+  MessagesSquare,
   ArrowLeft,
   Banknote,
   FileText,
@@ -36,12 +38,11 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { DatePicker } from "@/components/ui/date-picker"
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
-import { formatDate, formatDateTime, formatCLP } from "@/lib/utils"
+import { formatDate, formatDateTime, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
 import {
   reviewIntentionSchema,
   registerTransferSchema,
@@ -85,6 +86,20 @@ const STATUS_CONFIG = {
   APPROVED: { icon: CheckCircle2, color: "text-income", label: "Aprobada" },
   REJECTED: { icon: XCircle, color: "text-expense", label: "Rechazada" },
   CANCELLED: { icon: Ban, color: "text-muted-foreground line-through", label: "Cancelada" }
+}
+
+// Colored status pill for the header card — icon in a soft-tint chip, per design spec.
+const STATUS_PILL_CLASS = {
+  DRAFT: "bg-muted text-muted-foreground",
+  PENDING: "bg-warn-surface text-on-warn",
+  APPROVED: "bg-income-surface text-income",
+  REJECTED: "bg-expense-surface text-expense",
+  CANCELLED: "bg-muted text-muted-foreground"
+}
+
+const REVIEW_BANNER_CLASS = {
+  APPROVED: { wrap: "bg-income-surface", icon: "text-income" },
+  REJECTED: { wrap: "bg-expense-surface", icon: "text-expense" }
 }
 
 const CANCELLABLE_INTENTION_STATUSES = new Set(["DRAFT", "PENDING"])
@@ -420,11 +435,18 @@ export function IntentionDetailClient({
     }
   }
 
+  const reviewBanner = REVIEW_BANNER_CLASS[intention.status as "APPROVED" | "REJECTED"]
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.back()}>
-        <ArrowLeft className="size-4" />
-        Volver
+    <div className="max-w-[720px] mx-auto space-y-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2 text-[12.5px] font-bold"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="size-3.5" />
+        Volver a solicitudes
       </Button>
 
       <IntentionProgress
@@ -437,65 +459,99 @@ export function IntentionDetailClient({
       />
 
       {/* Header */}
-      <Card className="p-5 space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <StatusIcon className={`size-5 ${status.color}`} />
-              <span className="font-semibold">{status.label}</span>
+      <Card className="px-6 py-6 rounded-2xl space-y-0">
+        <div className="flex items-start justify-between mb-[18px]">
+          <div>
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-bold mb-2.5 ${STATUS_PILL_CLASS[intention.status]}`}
+            >
+              <StatusIcon className="size-3.5" />
+              {status.label}
             </div>
-            <p className="text-2xl font-bold">{formatCLP(intention.amount)}</p>
+            <p className="text-[30px] font-extrabold tracking-tight">{formatCLP(intention.amount)}</p>
           </div>
-          <div className="text-right text-sm text-muted-foreground">
-            <p>{intention.ministries?.name}</p>
-            <p>{formatDate(intention.created_at)}</p>
+          <div className="text-right">
+            {intention.ministries?.name && (
+              <div className="inline-flex items-center gap-2 mb-1.5">
+                <div
+                  className="flex size-[26px] items-center justify-center rounded-[8px] text-[10px] font-extrabold text-white"
+                  style={{ background: avatarColorFor(intention.ministries.name) }}
+                >
+                  {initialsFor(intention.ministries.name)}
+                </div>
+                <span className="text-[13px] font-bold">{intention.ministries.name}</span>
+              </div>
+            )}
+            <div className="text-xs text-faint">{formatDate(intention.created_at)}</div>
           </div>
         </div>
 
-        <Separator />
-
-        <div className="grid gap-2 text-sm">
+        <div className="border-t border-border pt-[18px] mb-[18px] grid grid-cols-2 gap-4">
           <div>
-            <span className="text-muted-foreground">Propósito: </span>
-            {intention.purpose}
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+              Propósito
+            </p>
+            <p className="text-[13.5px] font-semibold">{intention.purpose}</p>
           </div>
           <div>
-            <span className="text-muted-foreground">Método de financiamiento: </span>
-            {intention.funding_method === "TRANSFER" ? "Transferencia anticipada" : "Reembolso"}
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+              Método
+            </p>
+            <p className="text-[13.5px] font-semibold">
+              {intention.funding_method === "TRANSFER" ? "Transferencia anticipada" : "Reembolso"}
+            </p>
           </div>
           {intention.date_needed && (
             <div>
-              <span className="text-muted-foreground">Fecha requerida: </span>
-              {formatDate(intention.date_needed)}
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                Fecha requerida
+              </p>
+              <p className="text-[13.5px] font-semibold">{formatDate(intention.date_needed)}</p>
             </div>
           )}
           {intention.users && (
             <div>
-              <span className="text-muted-foreground">Solicitado por: </span>
-              {intention.users.full_name}
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                Solicitado por
+              </p>
+              <p className="text-[13.5px] font-semibold">{intention.users.full_name}</p>
             </div>
           )}
           {intention.reviewer && (
             <div>
-              <span className="text-muted-foreground">
-                {intention.status === "REJECTED" ? "Rechazado por: " : "Aprobado por: "}
-              </span>
-              {intention.reviewer.full_name}
-              {intention.reviewed_at && ` · ${formatDate(intention.reviewed_at)}`}
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                {intention.status === "REJECTED" ? "Rechazada por" : "Aprobada por"}
+              </p>
+              <p className="text-[13.5px] font-semibold flex items-center gap-1.5">
+                {intention.status !== "REJECTED" && <CheckCircle2 className="size-3.5 text-income" />}
+                {intention.reviewer.full_name}
+                {intention.reviewed_at && ` · ${formatDate(intention.reviewed_at)}`}
+              </p>
             </div>
           )}
         </div>
 
-        {intention.review_message && (
-          <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-            <span className="font-medium">Mensaje del revisor: </span>
-            {intention.review_message}
+        {intention.review_message && reviewBanner && (
+          <div className={`flex gap-2.5 rounded-[10px] px-3.5 py-3 ${reviewBanner.wrap} mb-[18px]`}>
+            <MessageSquareQuote className={`size-[15px] shrink-0 mt-0.5 ${reviewBanner.icon}`} />
+            <div className="flex-1">
+              <p className="text-[12.5px] leading-relaxed">
+                <strong>Mensaje del revisor:</strong> {intention.review_message}
+              </p>
+              {intention.reviewer && (
+                <p className="text-[11.5px] text-muted-foreground mt-0.5">
+                  {intention.status === "REJECTED" ? "Rechazada" : "Aprobada"} por{" "}
+                  <strong className="text-foreground">{intention.reviewer.full_name}</strong>
+                  {intention.reviewed_at && ` · ${formatDate(intention.reviewed_at)}`}
+                </p>
+              )}
+            </div>
           </div>
         )}
 
         {/* Actions for tesorería */}
         {canReview && intention.status === "PENDING" && (
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2">
             <Dialog
               open={reviewOpen}
               onOpenChange={(o) => {
@@ -559,7 +615,7 @@ export function IntentionDetailClient({
 
         {/* Actions for the minister who owns this request */}
         {isRequestOwner && CANCELLABLE_INTENTION_STATUSES.has(intention.status) && (
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2">
             {intention.status === "DRAFT" && (
               <Button size="sm" onClick={handleSubmitRequest}>
                 <Send className="size-4" />
@@ -576,10 +632,10 @@ export function IntentionDetailClient({
 
       {/* Transfer section */}
       {intention.status === "APPROVED" && intention.funding_method === "TRANSFER" && (
-        <Card className="p-5 space-y-3">
+        <Card className="px-6 py-6 rounded-2xl space-y-3.5">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Banknote className="size-4" />
+            <h2 className="text-[15px] font-bold flex items-center gap-2">
+              <Banknote className="size-4 text-primary" />
               Transferencia
             </h2>
             {canReview && !currentTransfer && (
@@ -679,33 +735,43 @@ export function IntentionDetailClient({
             )}
           </div>
           {currentTransfer ? (
-            <div className="grid gap-1.5 text-sm bg-income-surface rounded-md p-3">
+            <div className="grid grid-cols-2 gap-3 bg-income-surface rounded-[10px] p-4">
               <div>
-                <span className="text-muted-foreground">Monto: </span>
-                {formatCLP(currentTransfer.amount)}
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                  Monto
+                </p>
+                <p className="text-[13.5px] font-semibold">{formatCLP(currentTransfer.amount)}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Fecha: </span>
-                {formatDate(currentTransfer.transfer_date)}
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                  Fecha
+                </p>
+                <p className="text-[13.5px] font-semibold">
+                  {formatDate(currentTransfer.transfer_date)}
+                </p>
               </div>
               {currentTransfer.reference && (
                 <div>
-                  <span className="text-muted-foreground">Referencia: </span>
-                  {currentTransfer.reference}
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                    Referencia
+                  </p>
+                  <p className="text-[13.5px] font-semibold">{currentTransfer.reference}</p>
                 </div>
               )}
               {currentTransfer.notes && (
                 <div>
-                  <span className="text-muted-foreground">Notas: </span>
-                  {currentTransfer.notes}
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
+                    Notas
+                  </p>
+                  <p className="text-[13.5px] font-semibold">{currentTransfer.notes}</p>
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-sm text-warn flex items-center gap-1.5">
-              <AlertTriangle className="size-4" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-warn-surface text-on-warn text-[12.5px] font-semibold px-3.5 py-1.5">
+              <AlertTriangle className="size-3.5" />
               Transferencia pendiente de registro
-            </p>
+            </div>
           )}
         </Card>
       )}
@@ -713,10 +779,10 @@ export function IntentionDetailClient({
       {/* Settlement section */}
       {intention.status === "APPROVED" &&
         (intention.funding_method === "REIMBURSEMENT" || currentTransfer) && (
-        <Card className="p-5 space-y-3">
+        <Card className="px-6 py-6 rounded-2xl space-y-3.5">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2">
-              <FileText className="size-4" />
+            <h2 className="text-[15px] font-bold flex items-center gap-2">
+              <FileText className="size-4 text-primary" />
               Rendición de gastos
             </h2>
             {isMinister && (
@@ -849,7 +915,7 @@ export function IntentionDetailClient({
                 const isOwner = s.submitted_by === currentUserId
                 const settlementThread = commentsBySettlement[s.id] ?? []
                 return (
-                  <div key={s.id} className="rounded-md border p-3 text-sm space-y-2">
+                  <div key={s.id} className="rounded-xl border border-border p-4 text-sm space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{formatCLP(s.amount)}</span>
                       <span className={`text-xs font-medium ${statusConfig.color}`}>
@@ -1044,14 +1110,14 @@ export function IntentionDetailClient({
         settlements.length > 0 &&
         settlements.every((s) => TERMINAL_SETTLEMENT_STATUSES.has(s.status)) &&
         settlements.some((s) => s.status === "APPROVED") && (
-        <Card className="p-5 space-y-3">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Archive className="size-4" />
+        <Card className="px-6 py-6 rounded-2xl space-y-3.5">
+          <h2 className="text-[15px] font-bold flex items-center gap-2">
+            <Archive className="size-4 text-primary" />
             Cierre de solicitud
           </h2>
           {isClosed ? (
             <div className="space-y-2">
-              <p className="text-sm text-income flex items-center gap-1.5">
+              <p className="text-[13px] font-semibold text-income flex items-center gap-1.5">
                 <CheckCircle2 className="size-4" />
                 Solicitud cerrada
               </p>
@@ -1109,37 +1175,55 @@ export function IntentionDetailClient({
       )}
 
       {/* Comments */}
-      <Card className="p-5 space-y-4">
-        <h2 className="font-semibold flex items-center gap-2">
-          <MessageSquare className="size-4" />
+      <Card className="px-6 py-6 rounded-2xl space-y-4">
+        <h2 className="text-[15px] font-bold flex items-center gap-2">
+          <MessageCircle className="size-4 text-primary" />
           Comentarios
         </h2>
-        {comments.length === 0 && (
-          <p className="text-sm text-muted-foreground">Sin comentarios aún.</p>
-        )}
-        <div className="space-y-3">
-          {comments.map((c) => (
-            <div key={c.id} className="text-sm border-l-2 border-muted pl-3 space-y-0.5">
-              <p className="font-medium">{c.users?.full_name ?? "Usuario"}</p>
-              <p className="text-muted-foreground">{c.message}</p>
-              <p className="text-xs text-muted-foreground">{formatDateTime(c.created_at)}</p>
+        {comments.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-5">
+            <div className="flex size-11 items-center justify-center rounded-[13px] bg-muted">
+              <MessagesSquare className="size-[19px] text-faint" />
             </div>
-          ))}
-        </div>
-        <form onSubmit={commentForm.handleSubmit(handleAddComment)} className="flex gap-2 pt-1">
-          <Input
-            placeholder="Escribe un comentario..."
-            className="flex-1"
-            {...commentForm.register("message")}
-          />
-          <Button
-            size="sm"
-            type="submit"
-            disabled={commentForm.formState.isSubmitting || !commentForm.watch("message").trim()}
-          >
-            {commentForm.formState.isSubmitting ? "..." : "Comentar"}
-          </Button>
-        </form>
+            <span className="text-[12.5px] text-muted-foreground">
+              No hubo comentarios durante la revisión.
+            </span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {comments.map((c) => (
+              <div key={c.id} className="text-sm border-l-2 border-muted pl-3 space-y-0.5">
+                <p className="font-medium">{c.users?.full_name ?? "Usuario"}</p>
+                <p className="text-muted-foreground">{c.message}</p>
+                <p className="text-xs text-muted-foreground">{formatDateTime(c.created_at)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {intention.status === "PENDING" ? (
+          <form onSubmit={commentForm.handleSubmit(handleAddComment)} className="flex gap-2">
+            <Input
+              placeholder="Escribe un comentario..."
+              className="flex-1"
+              {...commentForm.register("message")}
+            />
+            <Button
+              size="sm"
+              type="submit"
+              disabled={commentForm.formState.isSubmitting || !commentForm.watch("message").trim()}
+            >
+              {commentForm.formState.isSubmitting ? "..." : "Comentar"}
+            </Button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2.5 bg-muted rounded-[10px] px-3.5 py-2.5">
+            <Lock className="size-3.5 shrink-0 text-faint" />
+            <span className="text-xs text-muted-foreground">
+              Los comentarios se cierran al aprobar o rechazar — solo se puede comentar mientras la
+              solicitud está en revisión.
+            </span>
+          </div>
+        )}
       </Card>
     </div>
   )
