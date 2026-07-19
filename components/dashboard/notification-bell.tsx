@@ -30,16 +30,32 @@ type NotificationItem = {
   description?: string
   href: string
   count?: number
+  created_at?: string
 }
 
-function getNotificationMessage(item: NotificationItem): string {
+function getNotificationTitle(item: NotificationItem): string {
   switch (item.type) {
     case "INTENTION_APPROVED":
-      return `Solicitud aprobada: ${item.description}`
+      return "Solicitud aprobada"
     case "SETTLEMENT_DRAFT":
-      return `Rendición sin enviar: ${item.description}`
+      return "Rendición sin enviar"
     case "SETTLEMENT_RETURNED":
-      return `Rendición devuelta para corrección: ${item.description}`
+      return "Rendición devuelta para corrección"
+    case "INTENTIONS_PENDING":
+      return "Solicitudes pendientes"
+    case "SETTLEMENTS_PENDING":
+      return "Rendiciones pendientes"
+    case "MISSING_TRANSFERS":
+      return "Transferencias sin registrar"
+  }
+}
+
+function getNotificationDescription(item: NotificationItem): string {
+  switch (item.type) {
+    case "INTENTION_APPROVED":
+    case "SETTLEMENT_DRAFT":
+    case "SETTLEMENT_RETURNED":
+      return item.description ?? ""
     case "INTENTIONS_PENDING":
       return `${item.count} solicitud(es) pendiente(s)`
     case "SETTLEMENTS_PENDING":
@@ -49,6 +65,20 @@ function getNotificationMessage(item: NotificationItem): string {
   }
 }
 
+function getRelativeTime(isoDate?: string): string | null {
+  if (!isoDate) return null
+  const diffMs = Date.now() - new Date(isoDate).getTime()
+  const minutes = Math.floor(diffMs / 60_000)
+  if (minutes < 1) return "Hace instantes"
+  if (minutes < 60) return `Hace ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Hace ${hours} h`
+  const days = Math.floor(hours / 24)
+  if (days === 1) return "Ayer"
+  if (days < 7) return `Hace ${days} días`
+  return new Date(isoDate).toLocaleDateString("es-CL")
+}
+
 const NOTIFICATION_META: Record<
   NotificationType,
   { icon: LucideIcon; tile: string; icon_cls: string }
@@ -56,8 +86,8 @@ const NOTIFICATION_META: Record<
   INTENTION_APPROVED: { icon: CheckCircle2, tile: "bg-income-surface", icon_cls: "text-on-income" },
   SETTLEMENT_DRAFT: { icon: FileText, tile: "bg-warn-surface", icon_cls: "text-on-warn" },
   SETTLEMENT_RETURNED: { icon: RotateCcw, tile: "bg-warn-surface", icon_cls: "text-on-warn" },
-  INTENTIONS_PENDING: { icon: Clock, tile: "bg-warn-surface", icon_cls: "text-on-warn" },
-  SETTLEMENTS_PENDING: { icon: Clock, tile: "bg-warn-surface", icon_cls: "text-on-warn" },
+  INTENTIONS_PENDING: { icon: Clock, tile: "bg-primary-surface", icon_cls: "text-primary" },
+  SETTLEMENTS_PENDING: { icon: Clock, tile: "bg-primary-surface", icon_cls: "text-primary" },
   MISSING_TRANSFERS: { icon: TriangleAlert, tile: "bg-expense-surface", icon_cls: "text-on-expense" }
 }
 
@@ -176,12 +206,13 @@ export function NotificationBell() {
               const meta = NOTIFICATION_META[item.type]
               const Icon = meta.icon
               const isUnread = !readKeys.has(itemKey(item))
+              const time = getRelativeTime(item.created_at)
               return (
                 <li key={i}>
                   <Link
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="flex items-start gap-3 px-[18px] py-3.5 text-sm hover:bg-muted/50 transition-colors"
+                    className="flex items-start gap-3 px-[18px] py-3.5 hover:bg-muted/50 transition-colors"
                   >
                     <div
                       className={cn(
@@ -191,7 +222,17 @@ export function NotificationBell() {
                     >
                       <Icon className={cn("size-4", meta.icon_cls)} />
                     </div>
-                    <span className="flex-1 leading-snug">{getNotificationMessage(item)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold">{getNotificationTitle(item)}</p>
+                      <p className="text-xs text-muted-foreground leading-snug mt-0.5">
+                        {getNotificationDescription(item)}
+                      </p>
+                      {time && (
+                        <p className="text-[11px] font-semibold text-muted-foreground/70 mt-1">
+                          {time}
+                        </p>
+                      )}
+                    </div>
                     {isUnread && (
                       <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
                     )}
