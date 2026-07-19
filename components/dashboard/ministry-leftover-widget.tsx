@@ -8,10 +8,10 @@ export function MinistryLeftoverWidget({ totals }: { totals: MinistryLeftoverTot
   const grandTotal = totals.reduce((sum, t) => sum + t.leftover, 0)
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-4">
+    <div className="rounded-[14px] bg-card border border-border px-5 py-[18px] flex flex-col gap-4">
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+          <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground">
             Remanente por ministerio
           </h2>
           <Landmark className="size-4 text-muted-foreground" />

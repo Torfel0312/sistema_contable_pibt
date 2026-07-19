@@ -248,7 +248,7 @@ export function MinistryDetailClient({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div
-            className="flex size-[52px] shrink-0 items-center justify-center rounded-2xl text-lg font-extrabold text-white"
+            className="flex size-[52px] shrink-0 items-center justify-center rounded-[15px] text-[16px] font-extrabold text-white"
             style={{ background: avatarColorFor(ministry.name) }}
           >
             {initialsFor(ministry.name)}
@@ -263,7 +263,7 @@ export function MinistryDetailClient({
               </Badge>
             </div>
             {ministry.description && (
-              <p className="text-sm text-muted-foreground">{ministry.description}</p>
+              <p className="text-[13.5px] text-muted-foreground">{ministry.description}</p>
             )}
           </div>
         </div>
@@ -324,12 +324,12 @@ export function MinistryDetailClient({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-3">
+        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
               Fondos transferidos
             </span>
-            <div className="flex size-[26px] items-center justify-center rounded-lg bg-primary-soft">
+            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-primary-soft">
               <ArrowLeftRight className="size-3.5 text-primary" />
             </div>
           </div>
@@ -340,12 +340,12 @@ export function MinistryDetailClient({
             </p>
           </div>
         </div>
-        <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-3">
+        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
               Rendido
             </span>
-            <div className="flex size-[26px] items-center justify-center rounded-lg bg-income-surface">
+            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-income-surface">
               <BadgeCheck className="size-3.5 text-income" />
             </div>
           </div>
@@ -356,12 +356,12 @@ export function MinistryDetailClient({
             </p>
           </div>
         </div>
-        <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-3">
+        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
               Solicitudes
             </span>
-            <div className="flex size-[26px] items-center justify-center rounded-lg bg-warn-surface">
+            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-warn-surface">
               <ClipboardList className="size-3.5 text-on-warn" />
             </div>
           </div>
@@ -378,7 +378,7 @@ export function MinistryDetailClient({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4 items-start">
         <div className="flex flex-col gap-4">
           <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-foreground">Ministro asignado</h2>
+            <h2 className="text-[13px] font-bold text-foreground">Ministro asignado</h2>
             {current?.users ? (
               <div className="flex items-center gap-3">
                 <div
@@ -421,7 +421,7 @@ export function MinistryDetailClient({
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-foreground">Información</h2>
+            <h2 className="text-[13px] font-bold text-foreground">Información</h2>
             <div className="flex flex-col gap-3">
               <div>
                 <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -469,7 +469,7 @@ export function MinistryDetailClient({
                       href={`/requests/${intention.id}`}
                       className="flex items-center gap-3 px-5 py-3.5 border-t border-border first:border-t-0 hover:bg-muted/40 transition-colors"
                     >
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <div className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-muted border border-border">
                         <ClipboardList className="size-4 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -506,7 +506,7 @@ export function MinistryDetailClient({
                     href={`/movements/${movement.id}`}
                     className="flex items-center gap-3 px-5 py-3.5 border-t border-border first:border-t-0 hover:bg-muted/40 transition-colors"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-expense-surface">
+                    <div className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-expense-surface">
                       <TrendingDown className="size-4 text-expense" />
                     </div>
                     <div className="min-w-0 flex-1">

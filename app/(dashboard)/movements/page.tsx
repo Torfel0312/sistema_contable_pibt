@@ -52,13 +52,13 @@ export default async function MovementsPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-5 max-w-6xl mx-auto">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+        <div>
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
             Movimientos
           </h1>
-          <p className="text-sm text-muted-foreground">Registro de ingresos y egresos</p>
+          <p className="text-[13.5px] text-muted-foreground">Registro de ingresos y egresos</p>
         </div>
         {canWrite && (
           <div className="flex gap-2">
@@ -86,6 +86,7 @@ export default async function MovementsPage({ searchParams }: Props) {
       />
 
       <MovementsTable
+        variant="full"
         canWrite={canWrite}
         rows={rows.map((row) => ({
           id: row.id,
@@ -103,7 +104,8 @@ export default async function MovementsPage({ searchParams }: Props) {
           status: row.status,
           created_by: {
             full_name: (row.users as { full_name: string } | null)?.full_name ?? ""
-          }
+          },
+          cancelled_by: row.cancelled_by as { full_name: string } | null
         }))}
       />
 

@@ -131,7 +131,7 @@ export function IntentionsClient({
           <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
             Solicitudes de Dinero
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-[13.5px] text-muted-foreground">
             {isMinister
               ? `Ministerio: ${ministry?.name ?? "Sin asignar"}`
               : "Todas las solicitudes"}
@@ -271,35 +271,35 @@ export function IntentionsClient({
         </Empty>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-xl bg-card border border-border p-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-7">
+            <div className="rounded-[14px] bg-card border border-border px-[18px] py-4">
+              <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-2">
                 Solicitado (abiertas)
               </div>
-              <div className="text-xl font-extrabold">{formatCLP(openTotal)}</div>
+              <div className="text-[21px] font-extrabold">{formatCLP(openTotal)}</div>
             </div>
-            <div className="rounded-xl bg-card border border-border p-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            <div className="rounded-[14px] bg-card border border-border px-[18px] py-4">
+              <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-2">
                 Solicitudes abiertas
               </div>
-              <div className="text-xl font-extrabold">{openIntentions.length}</div>
+              <div className="text-[21px] font-extrabold">{openIntentions.length}</div>
             </div>
-            <div className="rounded-xl bg-card border border-border p-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            <div className="rounded-[14px] bg-card border border-border px-[18px] py-4">
+              <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-2">
                 Rechazadas
               </div>
-              <div className="text-xl font-extrabold text-expense">{rejectedCount}</div>
+              <div className="text-[21px] font-extrabold text-expense">{rejectedCount}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-income" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                <h2 className="text-[12.5px] font-bold uppercase tracking-[0.04em] text-foreground">
                   Abiertas
                 </h2>
-                <span className="text-xs font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                <span className="text-[11.5px] font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                   {openIntentions.length}
                 </span>
               </div>
@@ -322,10 +322,10 @@ export function IntentionsClient({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-expense" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                <h2 className="text-[12.5px] font-bold uppercase tracking-[0.04em] text-foreground">
                   Cerradas
                 </h2>
-                <span className="text-xs font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                <span className="text-[11.5px] font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                   {closedIntentions.length}
                 </span>
               </div>
@@ -397,7 +397,7 @@ function IntentionCard({
           </div>
           <span
             className={cn(
-              "rounded-full px-2.5 py-1 text-[11px] font-bold",
+              "rounded-full px-[9px] py-[3px] text-[11px] font-bold",
               closed ? "bg-muted text-muted-foreground" : FUNDING_METHOD_PILL[intention.funding_method]
             )}
           >
@@ -414,7 +414,7 @@ function IntentionCard({
       >
         {formatCLP(intention.amount)}
       </p>
-      <p className={cn("text-sm mb-3.5", closed ? "text-muted-foreground/70" : "text-muted-foreground")}>
+      <p className={cn("text-[13px] mb-3.5", closed ? "text-muted-foreground/70" : "text-muted-foreground")}>
         {intention.purpose}
       </p>
       {isMinister && (
@@ -428,7 +428,7 @@ function IntentionCard({
           <StatusIcon className="size-3.5" />
           {STATUS_LABELS[intention.status]}
         </span>
-        <span className="text-[11.5px] text-muted-foreground">
+        <span className="text-[11.5px] text-faint">
           {formatDate(intention.created_at)}
         </span>
       </div>

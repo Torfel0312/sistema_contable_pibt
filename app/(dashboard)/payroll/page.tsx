@@ -19,12 +19,12 @@ export default async function PayrollPage() {
   ])
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+      <div>
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
           Remuneraciones
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[13.5px] text-muted-foreground">
           Registro mensual de remuneraciones del pastor y reserva de indemnización.
         </p>
       </div>

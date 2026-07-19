@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { formatDate, formatCLP } from "@/lib/utils"
+import { cn, formatDate, formatCLP } from "@/lib/utils"
 import { CancelButton } from "./cancel-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,11 +23,11 @@ import {
   ItemHeader,
   ItemActions
 } from "@/components/ui/item"
-import { FileSearch, TrendingUp, TrendingDown } from "lucide-react"
+import { FileSearch, ArrowDownCircle, ArrowUpCircle } from "lucide-react"
 
 function MovementTypeBadge({ type }: { type: string }) {
   const isIncome = type === "INCOME"
-  const Icon = isIncome ? TrendingUp : TrendingDown
+  const Icon = isIncome ? ArrowDownCircle : ArrowUpCircle
   return (
     <Badge variant={isIncome ? "income" : "expense"} className="uppercase tracking-wide">
       <Icon className="size-3" />
@@ -36,11 +36,13 @@ function MovementTypeBadge({ type }: { type: string }) {
   )
 }
 
-function MovementStatusBadge({ status }: { status: string }) {
+function MovementStatus({ status }: { status: string }) {
+  const isActive = status === "ACTIVE"
   return (
-    <Badge variant={status === "ACTIVE" ? "primary" : "expense"} dot className="uppercase tracking-wide">
+    <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground">
+      <span className={cn("size-[7px] shrink-0 rounded-full", isActive ? "bg-primary" : "bg-expense")} />
       {STATUS_LABEL[status] ?? status}
-    </Badge>
+    </span>
   )
 }
 
@@ -58,6 +60,7 @@ export type SerializedMovement = {
   cancellation_reason: string | null
   status: string
   created_by: { full_name: string }
+  cancelled_by?: { full_name: string } | null
 }
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -83,12 +86,15 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function MovementsTable({
   rows,
-  canWrite
+  canWrite,
+  variant = "compact"
 }: {
   rows: SerializedMovement[]
   canWrite: boolean
+  variant?: "full" | "compact"
 }) {
   const [selected, setSelected] = useState<SerializedMovement | null>(null)
+  const isFull = variant === "full"
 
   return (
     <>
@@ -134,7 +140,7 @@ export function MovementsTable({
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <MovementStatusBadge status={row.status} />
+                  <MovementStatus status={row.status} />
                 </ItemActions>
               </Item>
             ))}
@@ -142,95 +148,99 @@ export function MovementsTable({
         )}
       </div>
 
-      <div className="hidden sm:block bg-card rounded-xl overflow-hidden border border-border">
-        <div className="overflow-x-auto">
-          <table
-            className="w-full text-left border-collapse min-w-[640px]"
-            aria-label="Lista de movimientos"
-          >
-            <thead>
-              <tr className="border-b border-border">
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
-                >
-                  Fecha
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
-                >
-                  Tipo
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground text-right"
-                >
-                  Monto
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
-                >
-                  Categoría
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 sm:px-6 py-4 font-bold text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
-                >
-                  Estado
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map((row) => (
-                <tr
-                  key={row.id}
-                  tabIndex={0}
-                  onClick={() => setSelected(row)}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(row)}
-                  className="cursor-pointer transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <td className="px-4 sm:px-6 py-4 text-muted-foreground font-medium text-sm whitespace-nowrap tabular-nums">
-                    {formatDate(row.movement_date)}
-                  </td>
-                  <td className="px-4 sm:px-6 py-4">
-                    <MovementTypeBadge type={row.movement_type} />
-                  </td>
-                  <td className="px-4 sm:px-6 py-4 text-right font-bold text-foreground tabular-nums text-sm">
-                    {formatCLP(Number(row.amount))}
-                  </td>
-                  <td className="px-4 sm:px-6 py-4">
-                    <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                      {row.category_name}
-                      {row.subcategory_name ? ` › ${row.subcategory_name}` : ""}
-                    </span>
-                  </td>
-                  <td className="px-4 sm:px-6 py-4">
-                    <MovementStatusBadge status={row.status} />
-                  </td>
-                </tr>
-              ))}
-              {!rows.length && (
-                <tr>
-                  <td colSpan={5}>
-                    <Empty className="border-0 py-16">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <FileSearch />
-                        </EmptyMedia>
-                        <EmptyTitle>Sin resultados</EmptyTitle>
-                        <EmptyDescription>
-                          No hay registros para los filtros seleccionados.
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      <div
+        className={cn(
+          "hidden sm:block overflow-x-auto bg-card rounded-[14px] border border-border",
+          !rows.length && "overflow-hidden"
+        )}
+        role="table"
+        aria-label="Lista de movimientos"
+      >
+        <div
+          role="row"
+          className={cn(
+            "grid gap-x-3.5 border-b border-border",
+            isFull
+              ? "grid-cols-[96px_110px_100px_1fr_130px_100px] px-6 py-3.5 min-w-[860px]"
+              : "grid-cols-[84px_108px_84px_1fr_84px] px-5 py-4 min-w-[640px]"
+          )}
+        >
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Fecha
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Tipo
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Monto
+          </span>
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Categoría
+          </span>
+          {isFull && (
+            <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+              Registrado por
+            </span>
+          )}
+          <span role="columnheader" className="font-extrabold text-[10.5px] uppercase tracking-[0.06em] text-faint">
+            Estado
+          </span>
         </div>
+        <div role="rowgroup">
+          {rows.map((row) => (
+            <div
+              key={row.id}
+              role="row"
+              tabIndex={0}
+              onClick={() => setSelected(row)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(row)}
+              className={cn(
+                "grid gap-x-3.5 items-center border-t border-border cursor-pointer transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isFull
+                  ? "grid-cols-[96px_110px_100px_1fr_130px_100px] px-6 py-[15px] text-[13.5px] min-w-[860px]"
+                  : "grid-cols-[84px_108px_84px_1fr_84px] px-5 py-4 text-[13px] min-w-[640px]"
+              )}
+            >
+              <span role="cell" className="text-muted-foreground whitespace-nowrap tabular-nums">
+                {formatDate(row.movement_date)}
+              </span>
+              <span role="cell">
+                <MovementTypeBadge type={row.movement_type} />
+              </span>
+              <span role="cell" className="font-bold text-foreground tabular-nums">
+                {formatCLP(Number(row.amount))}
+              </span>
+              <span role="cell" className="text-muted-foreground">
+                {row.category_name}
+                {row.subcategory_name ? ` › ${row.subcategory_name}` : ""}
+              </span>
+              {isFull && (
+                <span role="cell" className="text-muted-foreground">
+                  {row.created_by.full_name}
+                  {row.status === "CANCELLED" && row.cancelled_by && (
+                    <span className="block text-[11px] font-bold text-expense">
+                      Anuló: {row.cancelled_by.full_name}
+                    </span>
+                  )}
+                </span>
+              )}
+              <span role="cell">
+                <MovementStatus status={row.status} />
+              </span>
+            </div>
+          ))}
+        </div>
+        {!rows.length && (
+          <Empty className="border-0 py-16">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FileSearch />
+              </EmptyMedia>
+              <EmptyTitle>Sin resultados</EmptyTitle>
+              <EmptyDescription>No hay registros para los filtros seleccionados.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
       </div>
 
       <Dialog
@@ -248,7 +258,7 @@ export function MovementsTable({
                     Detalle del movimiento
                   </DialogTitle>
                   <MovementTypeBadge type={selected.movement_type} />
-                  <MovementStatusBadge status={selected.status} />
+                  <MovementStatus status={selected.status} />
                 </div>
                 <DialogDescription className="sr-only">
                   Información completa del movimiento seleccionado

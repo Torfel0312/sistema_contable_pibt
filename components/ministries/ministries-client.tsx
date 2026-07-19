@@ -109,10 +109,10 @@ export function MinistriesClient({
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
             Ministerios
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-[13.5px] text-muted-foreground">
             Gestiona los ministerios y sus ministros asignados
           </p>
         </div>
@@ -201,10 +201,15 @@ export function MinistriesClient({
           {ministries.map((m) => {
             const ministerName = getMinister(m.id)?.full_name ?? null
             return (
-              <Item key={m.id} variant="outline" render={<Link href={`/ministries/${m.id}`} />}>
+              <Item
+                key={m.id}
+                variant="outline"
+                render={<Link href={`/ministries/${m.id}`} />}
+                className="rounded-2xl px-5 py-5 gap-4"
+              >
                 <ItemMedia>
                   <div
-                    className="flex size-[30px] items-center justify-center rounded-[9px] text-[11px] font-extrabold text-white"
+                    className="flex size-[42px] items-center justify-center rounded-[13px] text-[13px] font-extrabold text-white"
                     style={{ background: avatarColorFor(m.name) }}
                   >
                     {initialsFor(m.name)}
@@ -212,7 +217,7 @@ export function MinistriesClient({
                 </ItemMedia>
                 <ItemContent>
                   <div className="flex items-center gap-2">
-                    <ItemTitle>{m.name}</ItemTitle>
+                    <ItemTitle className="text-[15px] font-bold">{m.name}</ItemTitle>
                     {!m.is_active && (
                       <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                         Inactivo
@@ -223,7 +228,7 @@ export function MinistriesClient({
                 </ItemContent>
                 <ItemActions>
                   {ministerName ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-primary-soft text-primary px-2.5 py-1 rounded-full font-medium">
+                    <span className="inline-flex items-center gap-1.5 text-[11.5px] bg-primary-soft text-primary px-[11px] py-1 rounded-full font-bold">
                       <UserRound className="size-3" />
                       {ministerName}
                     </span>

@@ -331,20 +331,20 @@ function PayrollHistory({ records }: { records: PayrollRecord[] }) {
           <div key={record.id} className="rounded-xl border border-border overflow-hidden">
             <button
               type="button"
-              className="w-full flex items-center gap-3.5 p-4 text-left hover:bg-muted/50 transition-colors"
+              className="w-full flex items-center gap-3.5 px-[18px] py-4 text-left hover:bg-muted transition-colors"
               onClick={() => setOpenId(isOpen ? null : record.id)}
             >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-primary/10">
+              <div className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-primary-surface">
                 <Banknote className="size-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold capitalize">{formatDate(record.period)}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-[11.5px] text-muted-foreground">
                   {lineCount} {lineCount === 1 ? "transferencia" : "transferencias"}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-extrabold">{formatCLP(total)}</div>
+                <div className="text-[15px] font-extrabold">{formatCLP(total)}</div>
               </div>
               <ChevronRight
                 className={`size-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`}
@@ -461,16 +461,16 @@ export function PayrollClient({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4 items-start">
-      <div className="rounded-2xl bg-sidebar text-sidebar-foreground p-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <span className="text-[10.5px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
+      <div className="rounded-[18px] bg-sidebar text-sidebar-foreground p-[22px] flex flex-col gap-4">
+        <div className="flex items-center justify-between mb-[2px]">
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-sidebar-foreground/70">
             Fondo de indemnización
           </span>
           <Vault className="size-4 text-sidebar-foreground/70" />
         </div>
         <div>
-          <p className="text-[28px] font-extrabold leading-none">{formatCLP(severanceBalance)}</p>
-          <p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/65">
+          <p className="text-[28px] font-extrabold leading-none mb-1">{formatCLP(severanceBalance)}</p>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-sidebar-foreground/65">
             Monto acumulado que se reserva mes a mes. No se paga ni se transfiere; se entrega al
             pastor cuando se retire.
           </p>
@@ -481,12 +481,12 @@ export function PayrollClient({
             {recentAdjustments.map((adj) => (
               <div
                 key={adj.id}
-                className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-2.5"
+                className="flex items-center justify-between rounded-[9px] bg-white/10 px-3 py-[9px]"
               >
-                <span className="text-sm font-semibold text-sidebar-foreground/90 capitalize">
+                <span className="text-xs font-semibold text-sidebar-foreground/90 capitalize">
                   {formatDate(adj.period)}
                 </span>
-                <span className="text-sm font-extrabold">
+                <span className="text-[12.5px] font-extrabold">
                   {Number(adj.amount_delta) > 0 ? "+" : ""}
                   {formatCLP(Number(adj.amount_delta))}
                 </span>
@@ -497,9 +497,9 @@ export function PayrollClient({
 
       </div>
 
-      <Card className="p-6 space-y-4">
+      <Card className="p-[22px] rounded-[18px] space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Remuneraciones registradas</h2>
+          <h2 className="text-[15px] font-bold">Remuneraciones registradas</h2>
           <Dialog
             open={payrollOpen}
             onOpenChange={(o) => {

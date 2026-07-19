@@ -32,7 +32,6 @@ import {
   useSidebar
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/dashboard/nav-user"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 type NavLink = {
   href: string
@@ -174,7 +173,6 @@ export function AppSidebar({
                 </span>
               </div>
             </SidebarMenuButton>
-            <ThemeToggle />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

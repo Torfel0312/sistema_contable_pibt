@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { NotificationBell } from "@/components/dashboard/notification-bell"
 
 const PAGE_LABELS: Record<string, string> = {
@@ -102,6 +103,7 @@ export function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <NotificationBell />
           <a
             href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}

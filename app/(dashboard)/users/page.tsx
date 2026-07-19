@@ -13,10 +13,12 @@ export default async function UsersPage() {
   const users = await usersService.list()
 
   return (
-    <section className="mx-auto max-w-6xl flex flex-col gap-8">
+    <section className="mx-auto max-w-6xl flex flex-col gap-6">
       <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">Usuarios</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
+          Usuarios
+        </h1>
+        <p className="text-[13.5px] text-muted-foreground">
           Gestión de usuarios del sistema (solo administradores).
         </p>
       </div>

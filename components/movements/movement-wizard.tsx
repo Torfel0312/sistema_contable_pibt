@@ -65,31 +65,31 @@ export function MovementWizard(props: UseMovementFormProps) {
             <div className="flex flex-col items-center gap-1.5 flex-none">
               <div
                 className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-bold border",
+                  "flex size-7 items-center justify-center rounded-full text-[12px] font-bold border",
                   index < step && "bg-income border-income text-white",
                   index === step && "bg-primary border-primary text-primary-foreground",
-                  index > step && "bg-muted border-border text-muted-foreground"
+                  index > step && "bg-muted border-border text-faint"
                 )}
               >
                 {index < step ? <Check className="size-4" /> : index + 1}
               </div>
               <span
                 className={cn(
-                  "text-xs font-semibold whitespace-nowrap",
-                  index === step ? "text-foreground" : "text-muted-foreground"
+                  "text-[11px] font-semibold whitespace-nowrap",
+                  index === step || index < step ? "text-foreground" : "text-faint"
                 )}
               >
                 {s.label}
               </span>
             </div>
             {index < STEPS.length - 1 && (
-              <div className={cn("h-px flex-1 mx-2", index < step ? "bg-income" : "bg-border")} />
+              <div className={cn("h-0.5 flex-1 mx-2", index < step ? "bg-income" : "bg-border")} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="rounded-xl bg-card border border-border p-6 sm:p-8 flex flex-col gap-6 min-h-[280px]">
+      <div className="rounded-2xl bg-card border border-border p-7 flex flex-col gap-6 min-h-[320px]">
         <Alert variant="info">
           <StepIcon className="size-4" />
           <AlertDescription>{STEPS[step].hint}</AlertDescription>
