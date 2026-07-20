@@ -87,18 +87,42 @@ const STATUS_LABEL: Record<string, string> = {
 export function MovementsTable({
   rows,
   canWrite,
-  variant = "compact"
+  variant = "compact",
+  title,
+  viewAllHref
 }: {
   rows: SerializedMovement[]
   canWrite: boolean
   variant?: "full" | "compact"
+  title?: string
+  viewAllHref?: string
 }) {
   const [selected, setSelected] = useState<SerializedMovement | null>(null)
   const isFull = variant === "full"
 
   return (
     <>
-      <div className="sm:hidden">
+      {title && (
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card rounded-t-[14px] border-x border-t">
+          <h2 className="font-heading text-[15px] font-bold tracking-tight text-foreground">
+            {title}
+          </h2>
+          {viewAllHref && (
+            <Link
+              href={viewAllHref}
+              className="text-[12.5px] font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              Ver todos →
+            </Link>
+          )}
+        </div>
+      )}
+      <div
+        className={cn(
+          "sm:hidden",
+          title && "bg-card border-x border-b border-border rounded-b-[14px] overflow-hidden"
+        )}
+      >
         {rows.length === 0 ? (
           <Empty className="border-0 py-16">
             <EmptyHeader>
@@ -150,7 +174,10 @@ export function MovementsTable({
 
       <div
         className={cn(
-          "hidden sm:block overflow-x-auto bg-card rounded-[14px] border border-border",
+          "hidden sm:block overflow-x-auto bg-card",
+          title
+            ? "border-x border-b border-border rounded-b-[14px]"
+            : "rounded-[14px] border border-border",
           !rows.length && "overflow-hidden"
         )}
         role="table"

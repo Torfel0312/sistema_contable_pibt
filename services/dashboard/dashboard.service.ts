@@ -4,7 +4,13 @@ import { ministryLeftoverService } from "@/services/ministries/ministry-leftover
 
 type SeriesItem = { name: string; income: number; expense: number }
 type CategoryItem = { category: string; total: number }
-type MinistryLeftoverTotal = { ministry_id: string; ministry_name: string; leftover: number }
+type MinistryLeftoverTotal = {
+  ministry_id: string
+  ministry_name: string
+  transferred: number
+  settled: number
+  leftover: number
+}
 
 type DashboardPeriod = {
   from?: string
@@ -70,6 +76,8 @@ export const dashboardService = {
             acc[row.ministry_id] = {
               ministry_id: row.ministry_id,
               ministry_name: row.ministry_name,
+              transferred: (existing?.transferred ?? 0) + row.transferred_amount,
+              settled: (existing?.settled ?? 0) + row.settled_amount,
               leftover: (existing?.leftover ?? 0) + row.leftover
             }
             return acc

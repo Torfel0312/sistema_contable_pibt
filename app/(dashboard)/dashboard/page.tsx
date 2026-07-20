@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { redirect } from "next/navigation"
 import { dashboardService } from "@/services/dashboard/dashboard.service"
 import { getCurrentUser } from "@/lib/supabase/server"
@@ -7,8 +6,7 @@ import { IncomeExpenseChart, CategoryChart } from "@/components/dashboard/dashbo
 import { SeveranceReserveCard } from "@/components/dashboard/severance-reserve-card"
 import { MinistryLeftoverWidget } from "@/components/dashboard/ministry-leftover-widget"
 import { MovementsTable } from "@/components/movements/movements-table"
-import { Label } from "@/components/ui/label"
-import { PeriodMonthSelector } from "@/components/dashboard/period-month-selector"
+import { DashboardFilterBar } from "@/components/dashboard/dashboard-filter-bar"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatCLP } from "@/lib/utils"
 
@@ -44,13 +42,7 @@ export default async function DashboardPage({
           <p className="text-[13.5px] text-muted-foreground">Resumen financiero de actividades</p>
         </div>
 
-        {/* Date filter */}
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground">
-            Período
-          </Label>
-          <PeriodMonthSelector defaultFrom={from} defaultTo={to} />
-        </div>
+        <DashboardFilterBar defaultFrom={from} defaultTo={to} />
       </div>
 
       <div
@@ -140,43 +132,29 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-[15px] font-bold tracking-tight text-foreground">
-            Últimos movimientos
-          </h2>
-          <Link
-            href="/movements"
-            className="text-[12.5px] font-semibold text-primary hover:text-primary/80 transition-colors"
-          >
-            Ver todos →
-          </Link>
-        </div>
-        <div className="rounded-[14px] bg-card border border-border overflow-hidden">
-          <MovementsTable
-            canWrite={canWrite}
-            rows={data.recentMovements.map((row) => ({
-              id: row.id,
-              movement_date: row.movement_date,
-              movement_type: row.movement_type,
-              amount: String(row.amount),
-              category_name:
-                (row.movement_categories as { name: string } | null)?.name ?? "—",
-              subcategory_name:
-                (row.movement_subcategories as { name: string } | null)?.name ?? null,
-              delivered_by: null,
-              receipt_email: null,
-              payment_method_name: null,
-              notes: null,
-              cancellation_reason: null,
-              status: row.status,
-              created_by: {
-                full_name: (row.created_by as { full_name: string } | null)?.full_name ?? ""
-              }
-            }))}
-          />
-        </div>
-      </div>
+      <MovementsTable
+        title="Últimos movimientos"
+        viewAllHref="/movements"
+        canWrite={canWrite}
+        rows={data.recentMovements.map((row) => ({
+          id: row.id,
+          movement_date: row.movement_date,
+          movement_type: row.movement_type,
+          amount: String(row.amount),
+          category_name: (row.movement_categories as { name: string } | null)?.name ?? "—",
+          subcategory_name:
+            (row.movement_subcategories as { name: string } | null)?.name ?? null,
+          delivered_by: null,
+          receipt_email: null,
+          payment_method_name: null,
+          notes: null,
+          cancellation_reason: null,
+          status: row.status,
+          created_by: {
+            full_name: (row.created_by as { full_name: string } | null)?.full_name ?? ""
+          }
+        }))}
+      />
     </div>
   )
 }

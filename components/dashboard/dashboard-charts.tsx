@@ -102,22 +102,38 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
               iconType="circle"
               content={({ payload }) => (
                 <div className="flex justify-end gap-4 sm:gap-6 mb-6">
-                  {payload?.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div
-                        className="size-2.5 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        {entry.value}
-                      </span>
-                    </div>
-                  ))}
+                  {payload?.map((entry, index) => {
+                    const key = entry.dataKey as keyof typeof incomeExpenseConfig
+                    const label = incomeExpenseConfig[key]?.label ?? entry.value
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        <div
+                          className="size-2.5 rounded-full"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          {label}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             />
-            <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} barSize={20} />
-            <Bar dataKey="expense" fill="var(--color-expense)" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar
+              dataKey="income"
+              name="Ingresos"
+              fill="var(--color-income)"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
+            />
+            <Bar
+              dataKey="expense"
+              name="Egresos"
+              fill="var(--color-expense)"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
+            />
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
