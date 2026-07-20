@@ -97,8 +97,7 @@ export default async function MovementsPage({ searchParams }: Props) {
           subcategory_name: (row.movement_subcategories as { name: string } | null)?.name ?? null,
           delivered_by: row.delivered_by,
           receipt_email: row.receipt_email,
-          payment_method_name:
-            (row.payment_methods as { name: string } | null)?.name ?? null,
+          payment_method_name: (row.payment_methods as { name: string } | null)?.name ?? null,
           notes: row.notes,
           cancellation_reason: row.cancellation_reason,
           status: row.status,
@@ -117,7 +116,6 @@ export default async function MovementsPage({ searchParams }: Props) {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               render={page > 1 ? <Link href={buildUrl(page - 1)} /> : undefined}
               disabled={page <= 1}
               className="gap-1"
@@ -127,7 +125,6 @@ export default async function MovementsPage({ searchParams }: Props) {
             </Button>
             <Button
               variant="outline"
-              size="sm"
               render={page < totalPages ? <Link href={buildUrl(page + 1)} /> : undefined}
               disabled={page >= totalPages}
               className="gap-1"

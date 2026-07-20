@@ -78,7 +78,9 @@ type Intention = Awaited<ReturnType<typeof intentionsService.getById>>
 type Transfer = Awaited<ReturnType<typeof intentionsService.getTransfer>>
 type Comment = Awaited<ReturnType<typeof intentionsService.getComments>>[number]
 type Settlement = Awaited<ReturnType<typeof settlementsService.list>>[number]
-type SettlementComment = Awaited<ReturnType<typeof settlementsService.getCommentsBySettlementIds>>[number]
+type SettlementComment = Awaited<
+  ReturnType<typeof settlementsService.getCommentsBySettlementIds>
+>[number]
 
 const STATUS_CONFIG = {
   DRAFT: { icon: FileText, color: "text-muted-foreground", label: "Borrador" },
@@ -158,9 +160,7 @@ export function IntentionDetailClient({
   )
 
   function updateSettlement(updated: { id: string } & Partial<Settlement>) {
-    setSettlements((prev) =>
-      prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
-    )
+    setSettlements((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)))
   }
 
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -441,7 +441,6 @@ export function IntentionDetailClient({
     <div className="max-w-[720px] mx-auto space-y-4">
       <Button
         variant="ghost"
-        size="sm"
         className="-ml-2 text-[12.5px] font-bold"
         onClick={() => router.back()}
       >
@@ -468,7 +467,9 @@ export function IntentionDetailClient({
               <StatusIcon className="size-3.5" />
               {status.label}
             </div>
-            <p className="text-[30px] font-extrabold tracking-tight">{formatCLP(intention.amount)}</p>
+            <p className="text-[30px] font-extrabold tracking-tight">
+              {formatCLP(intention.amount)}
+            </p>
           </div>
           <div className="text-right">
             {intention.ministries?.name && (
@@ -523,7 +524,9 @@ export function IntentionDetailClient({
                 {intention.status === "REJECTED" ? "Rechazada por" : "Aprobada por"}
               </p>
               <p className="text-[13.5px] font-semibold flex items-center gap-1.5">
-                {intention.status !== "REJECTED" && <CheckCircle2 className="size-3.5 text-income" />}
+                {intention.status !== "REJECTED" && (
+                  <CheckCircle2 className="size-3.5 text-income" />
+                )}
                 {intention.reviewer.full_name}
                 {intention.reviewed_at && ` · ${formatDate(intention.reviewed_at)}`}
               </p>
@@ -562,7 +565,7 @@ export function IntentionDetailClient({
               <DialogTrigger
                 onClick={() => reviewForm.setValue("action", "APPROVED")}
                 render={
-                  <Button size="sm">
+                  <Button>
                     <CheckCircle2 className="size-4" />
                     Aprobar
                   </Button>
@@ -571,7 +574,7 @@ export function IntentionDetailClient({
               <DialogTrigger
                 onClick={() => reviewForm.setValue("action", "REJECTED")}
                 render={
-                  <Button size="sm" variant="outline">
+                  <Button variant="outline">
                     <XCircle className="size-4" />
                     Rechazar
                   </Button>
@@ -617,12 +620,12 @@ export function IntentionDetailClient({
         {isRequestOwner && CANCELLABLE_INTENTION_STATUSES.has(intention.status) && (
           <div className="flex gap-2">
             {intention.status === "DRAFT" && (
-              <Button size="sm" onClick={handleSubmitRequest}>
+              <Button onClick={handleSubmitRequest}>
                 <Send className="size-4" />
                 Enviar solicitud
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={handleCancelRequest}>
+            <Button variant="ghost" onClick={handleCancelRequest}>
               <Ban className="size-4" />
               Cancelar solicitud
             </Button>
@@ -646,7 +649,7 @@ export function IntentionDetailClient({
                   if (!o) transferForm.reset()
                 }}
               >
-                <DialogTrigger render={<Button size="sm">Registrar transferencia</Button>} />
+                <DialogTrigger render={<Button>Registrar transferencia</Button>} />
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Registrar transferencia</DialogTitle>
@@ -779,330 +782,339 @@ export function IntentionDetailClient({
       {/* Settlement section */}
       {intention.status === "APPROVED" &&
         (intention.funding_method === "REIMBURSEMENT" || currentTransfer) && (
-        <Card className="px-6 py-6 rounded-2xl space-y-3.5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-bold flex items-center gap-2">
-              <FileText className="size-4 text-primary" />
-              Rendición de gastos
-            </h2>
-            {isMinister && (
-              <Dialog
-                open={settlementOpen}
-                onOpenChange={(o) => {
-                  setSettlementOpen(o)
-                  if (!o)
-                    settlementForm.reset({
-                      intention_id: intention.id,
-                      amount: "",
-                      description: "",
-                      expense_date: ""
-                    })
-                }}
-              >
-                <DialogTrigger
-                  render={
-                    <Button size="sm">
-                      <Plus className="size-4" />
-                      Nueva rendición
-                    </Button>
-                  }
-                />
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Rendición de gastos</DialogTitle>
-                  </DialogHeader>
-                  {lateExpiry && (
-                    <div className="flex items-center gap-2 rounded-md border border-warn-border bg-warn-surface px-3 py-2 text-sm text-on-warn">
-                      <AlertTriangle className="size-4 shrink-0" />
-                      La fecha del gasto supera los 30 días. Esta rendición podría ser rechazada por
-                      el equipo de tesorería.
-                    </div>
-                  )}
-                  <form className="space-y-4">
-                    <Field>
-                      <FieldLabel>Monto del gasto (CLP) *</FieldLabel>
-                      <Controller
-                        control={settlementForm.control}
-                        name="amount"
-                        render={({ field }) => (
-                          <CurrencyInput
-                            value={field.value}
-                            onChange={(value) =>
-                              field.onChange(value === undefined ? "" : String(value))
-                            }
-                            onBlur={field.onBlur}
-                          />
+          <Card className="px-6 py-6 rounded-2xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[15px] font-bold flex items-center gap-2">
+                <FileText className="size-4 text-primary" />
+                Rendición de gastos
+              </h2>
+              {isMinister && (
+                <Dialog
+                  open={settlementOpen}
+                  onOpenChange={(o) => {
+                    setSettlementOpen(o)
+                    if (!o)
+                      settlementForm.reset({
+                        intention_id: intention.id,
+                        amount: "",
+                        description: "",
+                        expense_date: ""
+                      })
+                  }}
+                >
+                  <DialogTrigger
+                    render={
+                      <Button>
+                        <Plus className="size-4" />
+                        Nueva rendición
+                      </Button>
+                    }
+                  />
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Rendición de gastos</DialogTitle>
+                    </DialogHeader>
+                    {lateExpiry && (
+                      <div className="flex items-center gap-2 rounded-md border border-warn-border bg-warn-surface px-3 py-2 text-sm text-on-warn">
+                        <AlertTriangle className="size-4 shrink-0" />
+                        La fecha del gasto supera los 30 días. Esta rendición podría ser rechazada
+                        por el equipo de tesorería.
+                      </div>
+                    )}
+                    <form className="space-y-4">
+                      <Field>
+                        <FieldLabel>Monto del gasto (CLP) *</FieldLabel>
+                        <Controller
+                          control={settlementForm.control}
+                          name="amount"
+                          render={({ field }) => (
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={(value) =>
+                                field.onChange(value === undefined ? "" : String(value))
+                              }
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                        <FieldError errors={[settlementForm.formState.errors.amount]} />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Descripción *</FieldLabel>
+                        <Input
+                          placeholder="Detalle del gasto realizado"
+                          {...settlementForm.register("description")}
+                        />
+                        <FieldError errors={[settlementForm.formState.errors.description]} />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Fecha del gasto *</FieldLabel>
+                        <Controller
+                          control={settlementForm.control}
+                          name="expense_date"
+                          render={({ field }) => (
+                            <DatePicker
+                              value={field.value ? new Date(field.value + "T00:00:00") : undefined}
+                              onChange={(date) =>
+                                field.onChange(
+                                  date
+                                    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+                                    : ""
+                                )
+                              }
+                            />
+                          )}
+                        />
+                        <FieldError errors={[settlementForm.formState.errors.expense_date]} />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Comprobantes</FieldLabel>
+                        <AttachmentInput
+                          items={settlementAttachmentUpload.items}
+                          isUploading={settlementAttachmentUpload.isUploading}
+                          onAddFiles={settlementAttachmentUpload.addFiles}
+                          onRemove={settlementAttachmentUpload.remove}
+                        />
+                        {settlementAttachmentUpload.error && (
+                          <p className="text-sm font-normal text-destructive">
+                            {settlementAttachmentUpload.error}
+                          </p>
                         )}
-                      />
-                      <FieldError errors={[settlementForm.formState.errors.amount]} />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Descripción *</FieldLabel>
-                      <Input
-                        placeholder="Detalle del gasto realizado"
-                        {...settlementForm.register("description")}
-                      />
-                      <FieldError errors={[settlementForm.formState.errors.description]} />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Fecha del gasto *</FieldLabel>
-                      <Controller
-                        control={settlementForm.control}
-                        name="expense_date"
-                        render={({ field }) => (
-                          <DatePicker
-                            value={field.value ? new Date(field.value + "T00:00:00") : undefined}
-                            onChange={(date) =>
-                              field.onChange(
-                                date
-                                  ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-                                  : ""
-                              )
-                            }
-                          />
-                        )}
-                      />
-                      <FieldError errors={[settlementForm.formState.errors.expense_date]} />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Comprobantes</FieldLabel>
-                      <AttachmentInput
-                        items={settlementAttachmentUpload.items}
-                        isUploading={settlementAttachmentUpload.isUploading}
-                        onAddFiles={settlementAttachmentUpload.addFiles}
-                        onRemove={settlementAttachmentUpload.remove}
-                      />
-                      {settlementAttachmentUpload.error && (
-                        <p className="text-sm font-normal text-destructive">
-                          {settlementAttachmentUpload.error}
+                      </Field>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          disabled={settlementForm.formState.isSubmitting}
+                          onClick={settlementForm.handleSubmit((values) =>
+                            handleSubmitSettlement({ ...values, isDraft: true })
+                          )}
+                        >
+                          Guardar borrador
+                        </Button>
+                        <Button
+                          type="button"
+                          className="flex-1"
+                          disabled={settlementForm.formState.isSubmitting}
+                          onClick={settlementForm.handleSubmit((values) =>
+                            handleSubmitSettlement({ ...values, isDraft: false })
+                          )}
+                        >
+                          {settlementForm.formState.isSubmitting
+                            ? "Enviando..."
+                            : "Enviar a revisión"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+            {settlements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin rendiciones aún.</p>
+            ) : (
+              <div className="space-y-2">
+                {settlements.map((s) => {
+                  const statusConfig = SETTLEMENT_STATUS_CONFIG[s.status]
+                  const isOwner = s.submitted_by === currentUserId
+                  const settlementThread = commentsBySettlement[s.id] ?? []
+                  return (
+                    <div
+                      key={s.id}
+                      className="rounded-xl border border-border p-4 text-sm space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{formatCLP(s.amount)}</span>
+                        <span className={`text-xs font-medium ${statusConfig.color}`}>
+                          {statusConfig.label}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground">{s.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Gasto: {formatDate(s.expense_date)}
+                      </p>
+                      {s.is_late && (
+                        <p className="text-xs text-warn flex items-center gap-1">
+                          <AlertTriangle className="size-3" />
+                          Gasto tardío (+30 días)
                         </p>
                       )}
-                    </Field>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex-1"
-                        disabled={settlementForm.formState.isSubmitting}
-                        onClick={settlementForm.handleSubmit((values) =>
-                          handleSubmitSettlement({ ...values, isDraft: true })
-                        )}
-                      >
-                        Guardar borrador
-                      </Button>
-                      <Button
-                        type="button"
-                        className="flex-1"
-                        disabled={settlementForm.formState.isSubmitting}
-                        onClick={settlementForm.handleSubmit((values) =>
-                          handleSubmitSettlement({ ...values, isDraft: false })
-                        )}
-                      >
-                        {settlementForm.formState.isSubmitting ? "Enviando..." : "Enviar a revisión"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-          {settlements.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sin rendiciones aún.</p>
-          ) : (
-            <div className="space-y-2">
-              {settlements.map((s) => {
-                const statusConfig = SETTLEMENT_STATUS_CONFIG[s.status]
-                const isOwner = s.submitted_by === currentUserId
-                const settlementThread = commentsBySettlement[s.id] ?? []
-                return (
-                  <div key={s.id} className="rounded-xl border border-border p-4 text-sm space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{formatCLP(s.amount)}</span>
-                      <span className={`text-xs font-medium ${statusConfig.color}`}>
-                        {statusConfig.label}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground">{s.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Gasto: {formatDate(s.expense_date)}
-                    </p>
-                    {s.is_late && (
-                      <p className="text-xs text-warn flex items-center gap-1">
-                        <AlertTriangle className="size-3" />
-                        Gasto tardío (+30 días)
-                      </p>
-                    )}
-                    {(s.settlement_attachments?.length ?? 0) > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {s.settlement_attachments!.map((a) => (
-                          <span
-                            key={a.id}
-                            className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-1 text-xs"
-                          >
-                            <Paperclip className="size-3" />
-                            <a
-                              href={a.drive_view_link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="underline"
+                      {(s.settlement_attachments?.length ?? 0) > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {s.settlement_attachments!.map((a) => (
+                            <span
+                              key={a.id}
+                              className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-1 text-xs"
                             >
-                              {a.file_name}
-                            </a>
-                            {isOwner && CANCELLABLE_SETTLEMENT_STATUSES.has(s.status) && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSettlementAttachment(a.id, s.id)}
-                                aria-label="Eliminar adjunto"
+                              <Paperclip className="size-3" />
+                              <a
+                                href={a.drive_view_link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
                               >
-                                <X className="size-3" />
-                              </button>
-                            )}
+                                {a.file_name}
+                              </a>
+                              {isOwner && CANCELLABLE_SETTLEMENT_STATUSES.has(s.status) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSettlementAttachment(a.id, s.id)}
+                                  aria-label="Eliminar adjunto"
+                                >
+                                  <X className="size-3" />
+                                </button>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {(s.status === "APPROVED" || s.status === "REJECTED") && s.reviewer && (
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium">
+                            {s.status === "REJECTED" ? "Rechazado por: " : "Aprobado por: "}
                           </span>
-                        ))}
-                      </div>
-                    )}
-                    {(s.status === "APPROVED" || s.status === "REJECTED") && s.reviewer && (
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium">
-                          {s.status === "REJECTED" ? "Rechazado por: " : "Aprobado por: "}
-                        </span>
-                        {s.reviewer.full_name}
-                        {s.reviewed_at && ` · ${formatDate(s.reviewed_at)}`}
-                      </p>
-                    )}
-                    {s.review_message && (s.status === "APPROVED" || s.status === "REJECTED") && (
-                      <p className="text-xs bg-muted/50 rounded px-2 py-1">
-                        <span className="font-medium">Mensaje: </span>
-                        {s.review_message}
-                      </p>
-                    )}
-                    {settlementThread.length > 0 && (
-                      <div className="space-y-1 border-l-2 border-warn-border pl-2">
-                        {settlementThread.map((c) => (
-                          <div key={c.id} className="text-xs">
-                            <span className="font-medium">{c.users?.full_name ?? "Tesorería"}: </span>
-                            <span className="text-muted-foreground">{c.message}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {isOwner && RESUBMITTABLE_SETTLEMENT_STATUSES.has(s.status) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSubmitSettlementForReview(s.id)}
-                        >
-                          {s.status === "RETURNED_FOR_CORRECTION" ? "Reenviar" : "Enviar a revisión"}
-                        </Button>
+                          {s.reviewer.full_name}
+                          {s.reviewed_at && ` · ${formatDate(s.reviewed_at)}`}
+                        </p>
                       )}
-                      {isOwner && CANCELLABLE_SETTLEMENT_STATUSES.has(s.status) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCancelSettlement(s.id)}
-                        >
-                          <Ban className="size-4" />
-                          Cancelar
-                        </Button>
+                      {s.review_message && (s.status === "APPROVED" || s.status === "REJECTED") && (
+                        <p className="text-xs bg-muted/50 rounded px-2 py-1">
+                          <span className="font-medium">Mensaje: </span>
+                          {s.review_message}
+                        </p>
                       )}
-                      {canReview && s.status === "PENDING" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStartReviewSettlement(s.id)}
-                        >
-                          <Eye className="size-4" />
-                          Tomar para revisión
-                        </Button>
+                      {settlementThread.length > 0 && (
+                        <div className="space-y-1 border-l-2 border-warn-border pl-2">
+                          {settlementThread.map((c) => (
+                            <div key={c.id} className="text-xs">
+                              <span className="font-medium">
+                                {c.users?.full_name ?? "Tesorería"}:{" "}
+                              </span>
+                              <span className="text-muted-foreground">{c.message}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                      {canReview && s.status === "IN_REVIEW" && (
-                        <Dialog
-                          open={settlementReviewOpenId === s.id}
-                          onOpenChange={(o) => {
-                            setSettlementReviewOpenId(o ? s.id : null)
-                            if (!o) settlementReviewForm.reset()
-                          }}
-                        >
-                          <DialogTrigger
-                            onClick={() => settlementReviewForm.setValue("action", "APPROVED")}
-                            render={
-                              <Button size="sm">
-                                <CheckCircle2 className="size-4" />
-                                Aprobar
-                              </Button>
-                            }
-                          />
-                          <DialogTrigger
-                            onClick={() => settlementReviewForm.setValue("action", "REJECTED")}
-                            render={
-                              <Button size="sm" variant="outline">
-                                <XCircle className="size-4" />
-                                Rechazar
-                              </Button>
-                            }
-                          />
-                          <DialogTrigger
-                            onClick={() =>
-                              settlementReviewForm.setValue("action", "RETURNED_FOR_CORRECTION")
-                            }
-                            render={
-                              <Button size="sm" variant="outline">
-                                <Undo2 className="size-4" />
-                                Devolver
-                              </Button>
-                            }
-                          />
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
-                                {settlementReviewAction === "APPROVED"
-                                  ? "Aprobar rendición"
-                                  : settlementReviewAction === "REJECTED"
-                                    ? "Rechazar rendición"
-                                    : "Devolver para corrección"}
-                              </DialogTitle>
-                            </DialogHeader>
-                            <form
-                              onSubmit={settlementReviewForm.handleSubmit(handleReviewSettlement)}
-                              className="space-y-4 pt-2"
-                            >
-                              <Field>
-                                <FieldLabel>Mensaje *</FieldLabel>
-                                <Input
-                                  placeholder="Escribe un mensaje para el ministro"
-                                  {...settlementReviewForm.register("message")}
-                                />
-                                <FieldError errors={[settlementReviewForm.formState.errors.message]} />
-                              </Field>
-                              <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={settlementReviewForm.formState.isSubmitting}
-                                variant={settlementReviewAction === "REJECTED" ? "destructive" : "default"}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {isOwner && RESUBMITTABLE_SETTLEMENT_STATUSES.has(s.status) && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSubmitSettlementForReview(s.id)}
+                          >
+                            {s.status === "RETURNED_FOR_CORRECTION"
+                              ? "Reenviar"
+                              : "Enviar a revisión"}
+                          </Button>
+                        )}
+                        {isOwner && CANCELLABLE_SETTLEMENT_STATUSES.has(s.status) && (
+                          <Button variant="ghost" onClick={() => handleCancelSettlement(s.id)}>
+                            <Ban className="size-4" />
+                            Cancelar
+                          </Button>
+                        )}
+                        {canReview && s.status === "PENDING" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleStartReviewSettlement(s.id)}
+                          >
+                            <Eye className="size-4" />
+                            Tomar para revisión
+                          </Button>
+                        )}
+                        {canReview && s.status === "IN_REVIEW" && (
+                          <Dialog
+                            open={settlementReviewOpenId === s.id}
+                            onOpenChange={(o) => {
+                              setSettlementReviewOpenId(o ? s.id : null)
+                              if (!o) settlementReviewForm.reset()
+                            }}
+                          >
+                            <DialogTrigger
+                              onClick={() => settlementReviewForm.setValue("action", "APPROVED")}
+                              render={
+                                <Button>
+                                  <CheckCircle2 className="size-4" />
+                                  Aprobar
+                                </Button>
+                              }
+                            />
+                            <DialogTrigger
+                              onClick={() => settlementReviewForm.setValue("action", "REJECTED")}
+                              render={
+                                <Button variant="outline">
+                                  <XCircle className="size-4" />
+                                  Rechazar
+                                </Button>
+                              }
+                            />
+                            <DialogTrigger
+                              onClick={() =>
+                                settlementReviewForm.setValue("action", "RETURNED_FOR_CORRECTION")
+                              }
+                              render={
+                                <Button variant="outline">
+                                  <Undo2 className="size-4" />
+                                  Devolver
+                                </Button>
+                              }
+                            />
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>
+                                  {settlementReviewAction === "APPROVED"
+                                    ? "Aprobar rendición"
+                                    : settlementReviewAction === "REJECTED"
+                                      ? "Rechazar rendición"
+                                      : "Devolver para corrección"}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <form
+                                onSubmit={settlementReviewForm.handleSubmit(handleReviewSettlement)}
+                                className="space-y-4 pt-2"
                               >
-                                {settlementReviewForm.formState.isSubmitting
-                                  ? "Procesando..."
-                                  : "Confirmar"}
-                              </Button>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                      {s.status === "IN_REVIEW" && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Lock className="size-3" />
-                          En revisión, no editable
-                        </span>
-                      )}
+                                <Field>
+                                  <FieldLabel>Mensaje *</FieldLabel>
+                                  <Input
+                                    placeholder="Escribe un mensaje para el ministro"
+                                    {...settlementReviewForm.register("message")}
+                                  />
+                                  <FieldError
+                                    errors={[settlementReviewForm.formState.errors.message]}
+                                  />
+                                </Field>
+                                <Button
+                                  type="submit"
+                                  className="w-full"
+                                  disabled={settlementReviewForm.formState.isSubmitting}
+                                  variant={
+                                    settlementReviewAction === "REJECTED"
+                                      ? "destructive"
+                                      : "default"
+                                  }
+                                >
+                                  {settlementReviewForm.formState.isSubmitting
+                                    ? "Procesando..."
+                                    : "Confirmar"}
+                                </Button>
+                              </form>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                        {s.status === "IN_REVIEW" && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Lock className="size-3" />
+                            En revisión, no editable
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </Card>
-      )}
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        )}
 
       {/* Close-out section */}
       {canReview &&
@@ -1110,69 +1122,74 @@ export function IntentionDetailClient({
         settlements.length > 0 &&
         settlements.every((s) => TERMINAL_SETTLEMENT_STATUSES.has(s.status)) &&
         settlements.some((s) => s.status === "APPROVED") && (
-        <Card className="px-6 py-6 rounded-2xl space-y-3.5">
-          <h2 className="text-[15px] font-bold flex items-center gap-2">
-            <Archive className="size-4 text-primary" />
-            Cierre de solicitud
-          </h2>
-          {isClosed ? (
-            <div className="space-y-2">
-              <p className="text-[13px] font-semibold text-income flex items-center gap-1.5">
-                <CheckCircle2 className="size-4" />
-                Solicitud cerrada
-              </p>
-              {(intention.intention_attachments?.length ?? 0) > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {intention.intention_attachments!.map((a) => (
-                    <span
-                      key={a.id}
-                      className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-1 text-xs"
-                    >
-                      <Paperclip className="size-3" />
-                      <a href={a.drive_view_link} target="_blank" rel="noreferrer" className="underline">
-                        {a.file_name}
-                      </a>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <Dialog
-              open={closeOpen}
-              onOpenChange={(o) => {
-                setCloseOpen(o)
-              }}
-            >
-              <DialogTrigger render={<Button size="sm">Cerrar solicitud</Button>} />
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Cerrar solicitud</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <Field>
-                    <FieldLabel>Comprobante de la transferencia de devolución *</FieldLabel>
-                    <AttachmentInput
-                      items={closeAttachmentUpload.items}
-                      isUploading={closeAttachmentUpload.isUploading}
-                      onAddFiles={closeAttachmentUpload.addFiles}
-                      onRemove={closeAttachmentUpload.remove}
-                    />
-                    {closeAttachmentUpload.error && (
-                      <p className="text-sm font-normal text-destructive">
-                        {closeAttachmentUpload.error}
-                      </p>
-                    )}
-                  </Field>
-                  <Button className="w-full" onClick={handleCloseIntention}>
-                    Confirmar cierre
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </Card>
-      )}
+          <Card className="px-6 py-6 rounded-2xl space-y-3.5">
+            <h2 className="text-[15px] font-bold flex items-center gap-2">
+              <Archive className="size-4 text-primary" />
+              Cierre de solicitud
+            </h2>
+            {isClosed ? (
+              <div className="space-y-2">
+                <p className="text-[13px] font-semibold text-income flex items-center gap-1.5">
+                  <CheckCircle2 className="size-4" />
+                  Solicitud cerrada
+                </p>
+                {(intention.intention_attachments?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {intention.intention_attachments!.map((a) => (
+                      <span
+                        key={a.id}
+                        className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-1 text-xs"
+                      >
+                        <Paperclip className="size-3" />
+                        <a
+                          href={a.drive_view_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          {a.file_name}
+                        </a>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Dialog
+                open={closeOpen}
+                onOpenChange={(o) => {
+                  setCloseOpen(o)
+                }}
+              >
+                <DialogTrigger render={<Button>Cerrar solicitud</Button>} />
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Cerrar solicitud</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <Field>
+                      <FieldLabel>Comprobante de la transferencia de devolución *</FieldLabel>
+                      <AttachmentInput
+                        items={closeAttachmentUpload.items}
+                        isUploading={closeAttachmentUpload.isUploading}
+                        onAddFiles={closeAttachmentUpload.addFiles}
+                        onRemove={closeAttachmentUpload.remove}
+                      />
+                      {closeAttachmentUpload.error && (
+                        <p className="text-sm font-normal text-destructive">
+                          {closeAttachmentUpload.error}
+                        </p>
+                      )}
+                    </Field>
+                    <Button className="w-full" onClick={handleCloseIntention}>
+                      Confirmar cierre
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </Card>
+        )}
 
       {/* Comments */}
       <Card className="px-6 py-6 rounded-2xl space-y-4">
@@ -1208,7 +1225,6 @@ export function IntentionDetailClient({
               {...commentForm.register("message")}
             />
             <Button
-              size="sm"
               type="submit"
               disabled={commentForm.formState.isSubmitting || !commentForm.watch("message").trim()}
             >

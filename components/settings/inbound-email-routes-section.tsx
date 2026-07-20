@@ -189,7 +189,7 @@ export function InboundEmailRoutesSection({
         >
           <DialogTrigger
             render={
-              <Button size="sm" className="shrink-0">
+              <Button className="shrink-0">
                 <Plus className="size-4" />
                 Nuevo grupo
               </Button>

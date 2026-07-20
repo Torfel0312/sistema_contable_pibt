@@ -511,7 +511,6 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     {editingUser.role !== "ADMIN" && editingUser.status === "ACTIVE" && (
                       <Button
                         type="button"
-                        size="sm"
                         variant="outline"
                         onClick={() => handleImpersonate(editingUser.id)}
                       >
@@ -521,7 +520,6 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     )}
                     <Button
                       type="button"
-                      size="sm"
                       variant="outline"
                       onClick={() => void handleReset(editingUser.id)}
                     >
@@ -531,7 +529,6 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     {editingUser.status === "PENDING_ACTIVATION" && (
                       <Button
                         type="button"
-                        size="sm"
                         variant="outline"
                         onClick={() => void handleResendInvite(editingUser.id)}
                       >
@@ -541,7 +538,6 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     )}
                     <Button
                       type="button"
-                      size="sm"
                       variant="outline"
                       className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => {
@@ -631,7 +627,6 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                 onFocus={(e) => e.target.select()}
               />
               <Button
-                size="sm"
                 variant={linkCopied ? "outline" : "default"}
                 onClick={copyInviteLink}
                 className="h-11 px-4 shrink-0 gap-1.5"
