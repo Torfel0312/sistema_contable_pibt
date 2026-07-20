@@ -39,7 +39,12 @@ function MovementTypeBadge({ type }: { type: string }) {
 function MovementStatus({ status }: { status: string }) {
   const isActive = status === "ACTIVE"
   return (
-    <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground">
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[12.5px] font-semibold",
+        isActive ? "text-primary" : "text-expense"
+      )}
+    >
       <span className={cn("size-[7px] shrink-0 rounded-full", isActive ? "bg-primary" : "bg-expense")} />
       {STATUS_LABEL[status] ?? status}
     </span>
