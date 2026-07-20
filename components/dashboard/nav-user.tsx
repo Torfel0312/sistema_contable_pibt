@@ -16,7 +16,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, UserCog } from "lucide-react"
 import Link from "next/link"
-import { ImpersonationDialog } from "@/components/dashboard/impersonation-picker"
+import { ImpersonationDialog, roleLabel } from "@/components/dashboard/impersonation-picker"
 import { useTheme } from "@/hooks/use-theme"
 
 export function NavUser({
@@ -47,63 +47,74 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton
-                size="lg"
-                className="aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
-              />
+              <SidebarMenuButton className="h-auto gap-2.5 rounded-[11px] p-2 hover:bg-white/10 aria-expanded:bg-white/[0.12] aria-expanded:hover:bg-white/[0.12]" />
             }
           >
             <Avatar className="size-8">
-              <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
+              <AvatarFallback className="bg-white/20 text-xs font-bold text-white">
                 {user.initials}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium text-sidebar-foreground">{user.name}</span>
-              <span className="truncate text-xs text-sidebar-foreground/60 uppercase tracking-wide">
-                {user.role}
+            <div className="grid min-w-0 flex-1 text-left leading-tight">
+              <span className="truncate text-[12.5px] font-semibold text-sidebar-foreground">
+                {user.name}
+              </span>
+              <span className="truncate text-[11px] text-sidebar-foreground/50">
+                {roleLabel(user.role)}
               </span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/60" />
+            <ChevronsUpDown className="size-[15px] flex-none text-sidebar-foreground/50" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-64 rounded-2xl"
-            side="bottom"
-            align="end"
-            sideOffset={8}
+            className="w-[232px] rounded-[14px] p-1.5 shadow-[0_18px_40px_-12px_rgba(15,14,30,0.4)]"
+            side="top"
+            align="start"
+            sideOffset={6}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2.5 px-2 py-2 text-left text-sm">
-                <Avatar className="size-9">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+              <div className="mb-1.5 flex items-center gap-2.5 border-b border-border px-2.5 pt-2.5 pb-3">
+                <Avatar className="size-[34px]">
+                  <AvatarFallback className="bg-primary text-xs font-extrabold text-primary-foreground">
                     {user.initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <div className="grid min-w-0 flex-1 text-left leading-tight">
+                  <span className="truncate text-[13px] font-bold">{user.name}</span>
+                  <span className="truncate text-[11px] text-muted-foreground">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/profile" />}>
+              <DropdownMenuItem
+                className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
+                render={<Link href="/profile" />}
+              >
                 <UserCircle />
                 Perfil
               </DropdownMenuItem>
               {user.canImpersonate && (
-                <DropdownMenuItem onClick={() => setImpersonationOpen(true)}>
+                <DropdownMenuItem
+                  className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
+                  onClick={() => setImpersonationOpen(true)}
+                >
                   <UserCog />
                   Suplantar usuario...
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={toggleTheme}>
+              <DropdownMenuItem
+                className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
+                onClick={toggleTheme}
+              >
                 {dark ? <Sun /> : <Moon />}
                 {dark ? "Modo claro" : "Modo oscuro"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}>
+            <DropdownMenuItem
+              className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-bold hover:bg-expense-surface"
+              variant="destructive"
+              onClick={() => void handleSignOut()}
+            >
               <LogOut />
               Cerrar sesión
             </DropdownMenuItem>

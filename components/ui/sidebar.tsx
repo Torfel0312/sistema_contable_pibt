@@ -321,7 +321,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-header"
       data-sidebar="header"
       className={cn(
-        "flex flex-col gap-2 border-b border-sidebar-foreground/10 px-2 py-5 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0",
+        "flex flex-col gap-2 border-b border-sidebar-foreground/10 px-[18px] py-5 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0",
         className
       )}
       {...props}
@@ -334,7 +334,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 border-t border-sidebar-foreground/10 p-3.5", className)}
+      className={cn("flex flex-col gap-2 border-t border-sidebar-foreground/10 p-2.5", className)}
       {...props}
     />
   )
