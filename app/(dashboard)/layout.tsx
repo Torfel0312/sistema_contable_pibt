@@ -27,7 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <SidebarProvider>
       <UserProvider user={sessionUser}>
-        <AppSidebar user={{ name: user.name ?? "", initials, role: user.role, canImpersonate }} />
+        <AppSidebar
+          user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role, canImpersonate }}
+        />
         <SidebarInset>
           <ImpersonationBanner />
           <SiteHeader />

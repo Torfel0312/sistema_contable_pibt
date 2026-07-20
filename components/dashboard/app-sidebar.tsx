@@ -117,6 +117,7 @@ export function AppSidebar({
 }: {
   user: {
     name: string
+    email: string
     initials: string
     role: string
     canImpersonate: boolean

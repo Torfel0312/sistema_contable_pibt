@@ -13,28 +13,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar
-} from "@/components/ui/sidebar"
-import { ChevronsUpDown, LogOut, UserCircle, UserCog } from "lucide-react"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
+import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, UserCog } from "lucide-react"
 import Link from "next/link"
 import { ImpersonationDialog } from "@/components/dashboard/impersonation-picker"
+import { useTheme } from "@/hooks/use-theme"
 
 export function NavUser({
   user
 }: {
   user: {
     name: string
+    email: string
     initials: string
     role: string
     canImpersonate: boolean
   }
 }) {
-  const { isMobile } = useSidebar()
   const router = useRouter()
+  const { dark, toggle: toggleTheme } = useTheme()
   const [impersonationOpen, setImpersonationOpen] = useState(false)
 
   const handleSignOut = useCallback(async () => {
@@ -70,23 +67,21 @@ export function NavUser({
             <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/60" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            className="min-w-64 rounded-2xl"
+            side="bottom"
             align="end"
-            sideOffset={4}
+            sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="size-8">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+              <div className="flex items-center gap-2.5 px-2 py-2 text-left text-sm">
+                <Avatar className="size-9">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                     {user.initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground uppercase tracking-wide">
-                    {user.role}
-                  </span>
+                  <span className="truncate font-semibold">{user.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -94,23 +89,24 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link href="/profile" />}>
                 <UserCircle />
-                Mi perfil
+                Perfil
               </DropdownMenuItem>
               {user.canImpersonate && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setImpersonationOpen(true)}>
-                    <UserCog />
-                    Suplantar usuario...
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem onClick={() => setImpersonationOpen(true)}>
+                  <UserCog />
+                  Suplantar usuario...
+                </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => void handleSignOut()}>
-                <LogOut />
-                Cerrar Sesión
+              <DropdownMenuItem onClick={toggleTheme}>
+                {dark ? <Sun /> : <Moon />}
+                {dark ? "Modo claro" : "Modo oscuro"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}>
+              <LogOut />
+              Cerrar sesión
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
