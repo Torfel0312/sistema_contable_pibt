@@ -159,7 +159,7 @@ export function AppSidebar({
     })
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar>
       <SidebarHeader>
         <Link
           href="/dashboard"
