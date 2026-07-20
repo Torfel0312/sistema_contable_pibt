@@ -168,8 +168,8 @@ export function AppSidebar({
           <div className="flex aspect-square size-9 flex-none items-center justify-center rounded-[10px] bg-white/[0.18] text-white">
             <Landmark className="size-5" />
           </div>
-          <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-[13.5px] font-bold text-sidebar-foreground">
+          <div className="grid flex-1 text-left group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-[13.5px] leading-[1.2] font-bold text-sidebar-foreground">
               Sistema Contable
             </span>
             <span className="truncate text-[11px] font-medium text-sidebar-foreground/50">
