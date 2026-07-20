@@ -52,7 +52,7 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
 }) {
   if (!data.length) {
     return (
-      <Empty className="border-dashed h-[300px] sm:h-72">
+      <Empty className="border-dashed h-[170px]">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <BarChart2 />
@@ -65,32 +65,20 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
   }
 
   return (
-    <div className="h-[300px] sm:h-72 w-full">
+    <div className="h-[170px] w-full">
       <ChartContainer config={incomeExpenseConfig} className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="hsl(var(--outline-variant) / 0.3)"
-            />
+          <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }} barGap={5}>
             <XAxis
               dataKey="name"
               tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-              fontSize={11}
-              stroke="var(--color-muted-foreground)"
+              axisLine={{ stroke: "var(--color-border)" }}
+              tickMargin={6}
+              fontSize={10.5}
+              fontWeight={700}
+              stroke="var(--color-faint)"
             />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={5}
-              fontSize={11}
-              width={40}
-              stroke="var(--color-muted-foreground)"
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-            />
+            <YAxis hide />
             <ChartTooltip
               cursor={{ fill: "hsl(var(--on-surface-variant) / 0.05)" }}
               content={<ChartTooltipContent indicator="dashed" />}
@@ -98,19 +86,21 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
             <Legend
               verticalAlign="top"
               align="right"
-              iconType="circle"
+              iconType="square"
               content={({ payload }) => (
-                <div className="flex justify-end gap-4 sm:gap-6 mb-6">
-                  {payload?.map((entry, index) => {
+                <div className="flex justify-end gap-3.5 mb-2">
+                  {[...(payload ?? [])]
+                    .sort((a, b) => (a.dataKey === "income" ? -1 : b.dataKey === "income" ? 1 : 0))
+                    .map((entry, index) => {
                     const key = entry.dataKey as keyof typeof incomeExpenseConfig
                     const label = incomeExpenseConfig[key]?.label ?? entry.value
                     return (
-                      <div key={index} className="flex items-center gap-2">
+                      <div key={index} className="flex items-center gap-1.5">
                         <div
-                          className="size-2.5 rounded-full"
+                          className="size-[9px] rounded-[3px]"
                           style={{ backgroundColor: entry.color }}
                         />
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        <span className="text-[11.5px] font-semibold text-muted-foreground">
                           {label}
                         </span>
                       </div>
@@ -237,7 +227,7 @@ export const CategoryChart = memo(function CategoryChart({ data }: { data: Categ
   }
 
   return (
-    <div className="flex flex-col justify-between gap-2 h-[170px] w-full min-w-0">
+    <div className="flex flex-col gap-4 w-full min-w-0">
       {data.map((item, index) => {
         const pct = grandTotal > 0 ? (item.total / grandTotal) * 100 : 0
         return (
