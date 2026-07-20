@@ -24,17 +24,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const sessionUser = { ...user, permissions: [...user.permissions] }
 
   return (
-    <SidebarProvider>
-      <UserProvider user={sessionUser}>
-        <AppSidebar
-          user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role }}
-        />
-        <SidebarInset>
-          <ImpersonationBanner />
-          <SiteHeader />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-h-0 overflow-x-hidden">{children}</main>
-        </SidebarInset>
-      </UserProvider>
-    </SidebarProvider>
+    <UserProvider user={sessionUser}>
+      <div className="flex min-h-svh flex-col">
+        <ImpersonationBanner />
+        <SidebarProvider className="min-h-0 flex-1 transform-gpu">
+          <AppSidebar
+            user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role }}
+          />
+          <SidebarInset>
+            <SiteHeader />
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 min-h-0 overflow-x-hidden">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </div>
+    </UserProvider>
   )
 }
