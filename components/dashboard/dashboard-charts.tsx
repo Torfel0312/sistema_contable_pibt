@@ -37,11 +37,11 @@ const COLORS = [
 const incomeExpenseConfig = {
   income: {
     label: "Ingresos",
-    color: "var(--color-primary)"
+    color: "var(--income)"
   },
   expense: {
     label: "Egresos",
-    color: "var(--color-destructive)"
+    color: "var(--expense)"
   }
 } satisfies ChartConfig
 
