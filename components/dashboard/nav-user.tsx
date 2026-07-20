@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -14,10 +14,14 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, UserCog } from "lucide-react"
+import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, UserCog, VenetianMask } from "lucide-react"
 import Link from "next/link"
 import { ImpersonationDialog, roleLabel } from "@/components/dashboard/impersonation-picker"
+import { stopImpersonation } from "@/app/actions/impersonation"
+import { useUser } from "@/components/providers/user-provider"
 import { useTheme } from "@/hooks/use-theme"
+
+const ITEM_CLASS = "h-[38px] gap-2.5 rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
 
 export function NavUser({
   user
@@ -32,7 +36,9 @@ export function NavUser({
 }) {
   const router = useRouter()
   const { dark, toggle: toggleTheme } = useTheme()
+  const { impersonatorId } = useUser()
   const [impersonationOpen, setImpersonationOpen] = useState(false)
+  const [isStoppingImpersonation, startStopImpersonation] = useTransition()
 
   const handleSignOut = useCallback(async () => {
     const supabase = createSupabaseBrowserClient()
@@ -40,6 +46,13 @@ export function NavUser({
     router.push("/")
     router.refresh()
   }, [router])
+
+  const handleStopImpersonating = () => {
+    startStopImpersonation(async () => {
+      await stopImpersonation()
+      router.refresh()
+    })
+  }
 
   return (
     <SidebarMenu>
@@ -85,33 +98,34 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
-                render={<Link href="/profile" />}
-              >
+              {impersonatorId && (
+                <DropdownMenuItem
+                  className={ITEM_CLASS}
+                  disabled={isStoppingImpersonation}
+                  onClick={handleStopImpersonating}
+                >
+                  <VenetianMask />
+                  Dejar de personificar
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className={ITEM_CLASS} render={<Link href="/profile" />}>
                 <UserCircle />
                 Perfil
               </DropdownMenuItem>
               {user.canImpersonate && (
-                <DropdownMenuItem
-                  className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
-                  onClick={() => setImpersonationOpen(true)}
-                >
+                <DropdownMenuItem className={ITEM_CLASS} onClick={() => setImpersonationOpen(true)}>
                   <UserCog />
                   Suplantar usuario...
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
-                onClick={toggleTheme}
-              >
+              <DropdownMenuItem className={ITEM_CLASS} onClick={toggleTheme}>
                 {dark ? <Sun /> : <Moon />}
                 {dark ? "Modo claro" : "Modo oscuro"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-1 my-1.5" />
             <DropdownMenuItem
-              className="h-[38px] rounded-[9px] px-2.5 text-[13px] font-bold hover:bg-expense-surface"
+              className="h-[38px] gap-2.5 rounded-[9px] px-2.5 text-[13px] font-bold hover:bg-expense-surface"
               variant="destructive"
               onClick={() => void handleSignOut()}
             >
