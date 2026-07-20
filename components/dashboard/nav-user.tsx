@@ -52,7 +52,7 @@ export function NavUser({
             render={
               <SidebarMenuButton
                 size="lg"
-                className="aria-expanded:bg-muted aria-expanded:text-foreground"
+                className="aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
               />
             }
           >

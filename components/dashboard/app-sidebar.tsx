@@ -47,7 +47,7 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: null,
+    label: "Principal",
     links: [
       {
         href: "/dashboard",
@@ -160,21 +160,22 @@ export function AppSidebar({
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center">
-            <SidebarMenuButton size="lg" render={<Link href="/dashboard" />} className="flex-1">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white/[0.18] text-white">
-                <Landmark className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Sistema Contable</span>
-                <span className="truncate text-xs text-muted-foreground uppercase tracking-widest font-semibold">
-                  PIBT
-                </span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center"
+        >
+          <div className="flex aspect-square size-9 flex-none items-center justify-center rounded-[10px] bg-white/[0.18] text-white">
+            <Landmark className="size-5" />
+          </div>
+          <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-[13.5px] font-bold text-sidebar-foreground">
+              Sistema Contable
+            </span>
+            <span className="truncate text-[11px] font-medium text-sidebar-foreground/50">
+              PIBT
+            </span>
+          </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         {useGroups ? (
