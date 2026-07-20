@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, useTransition } from "react"
+import { useCallback, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -14,12 +14,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, UserCog, VenetianMask } from "lucide-react"
+import { ChevronsUpDown, LogOut, Moon, Sun, UserCircle, VenetianMask } from "lucide-react"
 import Link from "next/link"
-import { ImpersonationDialog, roleLabel } from "@/components/dashboard/impersonation-picker"
 import { stopImpersonation } from "@/app/actions/impersonation"
 import { useUser } from "@/components/providers/user-provider"
 import { useTheme } from "@/hooks/use-theme"
+import { roleLabel } from "@/lib/constants/roles"
 
 const ITEM_CLASS = "h-[38px] gap-2.5 rounded-[9px] px-2.5 text-[13px] font-semibold [&_svg]:text-muted-foreground"
 
@@ -31,13 +31,11 @@ export function NavUser({
     email: string
     initials: string
     role: string
-    canImpersonate: boolean
   }
 }) {
   const router = useRouter()
   const { dark, toggle: toggleTheme } = useTheme()
   const { impersonatorId } = useUser()
-  const [impersonationOpen, setImpersonationOpen] = useState(false)
   const [isStoppingImpersonation, startStopImpersonation] = useTransition()
 
   const handleSignOut = useCallback(async () => {
@@ -112,12 +110,6 @@ export function NavUser({
                 <UserCircle />
                 Perfil
               </DropdownMenuItem>
-              {user.canImpersonate && (
-                <DropdownMenuItem className={ITEM_CLASS} onClick={() => setImpersonationOpen(true)}>
-                  <UserCog />
-                  Suplantar usuario...
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem className={ITEM_CLASS} onClick={toggleTheme}>
                 {dark ? <Sun /> : <Moon />}
                 {dark ? "Modo claro" : "Modo oscuro"}
@@ -135,9 +127,6 @@ export function NavUser({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-      {user.canImpersonate && (
-        <ImpersonationDialog open={impersonationOpen} onOpenChange={setImpersonationOpen} />
-      )}
     </SidebarMenu>
   )
 }

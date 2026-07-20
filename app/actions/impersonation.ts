@@ -49,7 +49,7 @@ export async function stopImpersonation() {
   const realUser = await getRealUser()
   if (!realUser) return
 
-  await impersonationService.stop(sessionId, realUser.id, "manual")
+  await impersonationService.stop(sessionId, "manual")
   revalidatePath("/", "layout")
 }
 

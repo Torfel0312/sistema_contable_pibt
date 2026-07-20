@@ -120,7 +120,6 @@ export function AppSidebar({
     email: string
     initials: string
     role: string
-    canImpersonate: boolean
   }
 }) {
   const pathname = usePathname()

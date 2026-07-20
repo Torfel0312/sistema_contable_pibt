@@ -22,13 +22,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : "U"
 
   const sessionUser = { ...user, permissions: [...user.permissions] }
-  const canImpersonate = (user.realUser?.role ?? user.role) === "ADMIN" && !user.impersonatorId
 
   return (
     <SidebarProvider>
       <UserProvider user={sessionUser}>
         <AppSidebar
-          user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role, canImpersonate }}
+          user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role }}
         />
         <SidebarInset>
           <ImpersonationBanner />

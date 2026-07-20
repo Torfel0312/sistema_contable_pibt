@@ -2,11 +2,10 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { LogOut, VenetianMask } from "lucide-react"
+import { VenetianMask } from "lucide-react"
 import { useUser } from "@/components/providers/user-provider"
 import { stopImpersonation } from "@/app/actions/impersonation"
-import { Button } from "@/components/ui/button"
-import { roleLabel } from "@/components/dashboard/impersonation-picker"
+import { roleLabel } from "@/lib/constants/roles"
 
 export function ImpersonationBanner() {
   const user = useUser()
@@ -23,22 +22,19 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 border-b border-[#ffd977]/30 bg-[#3b2f00] px-4 py-[9px] text-[12.5px] font-semibold text-[#ffd977]">
+    <div className="flex items-center justify-center gap-3 bg-[#3b2f00] px-4 py-[9px] text-[12.5px] font-semibold text-[#ffd977]">
       <VenetianMask className="size-[15px] shrink-0" />
       <span>
-        Viendo como <strong className="text-white">{user.name}</strong> ({roleLabel(user.role)}) —
-        suplantado por {user.realUser.name}
+        Estás viendo la aplicación como <strong className="text-white">{user.name}</strong> (
+        {roleLabel(user.role)}) — se aplican sus permisos.
       </span>
-      <Button
-        size="sm"
-        variant="outline"
+      <button
         onClick={handleExit}
         disabled={isPending}
-        className="border-[#ffd977]/50 bg-transparent text-[#ffd977] hover:bg-[#ffd977]/10 hover:text-[#ffd977]"
+        className="h-[26px] rounded-full border border-[#ffd977]/50 bg-transparent px-3 text-[11.5px] font-bold text-[#ffd977] disabled:opacity-50 hover:bg-[#ffd977]/12"
       >
-        <LogOut className="size-3.5" />
-        Salir de suplantación
-      </Button>
+        Salir
+      </button>
     </div>
   )
 }
