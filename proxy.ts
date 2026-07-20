@@ -33,6 +33,7 @@ export async function proxy(request: NextRequest) {
     "/",
     "/auth/callback",
     "/activate",
+    "/forgot-password",
     "/api/auth/verify",
     "/api/auth/forgot-password"
   ]

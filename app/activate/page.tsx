@@ -3,6 +3,7 @@ import { ShieldCheck } from "lucide-react"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { SetPasswordForm } from "@/components/auth/set-password-form"
+import { PasswordResetFlow } from "@/components/auth/password-reset-flow"
 import { AuthShell } from "@/components/auth/auth-shell"
 
 export default async function ActivatePage() {
@@ -30,33 +31,38 @@ export default async function ActivatePage() {
 
   return (
     <AuthShell
+      maxWidth={isReset ? "380px" : "360px"}
       bottom={
         <div className="flex flex-col gap-4">
           <div className="flex size-11 items-center justify-center rounded-xl bg-white/[0.12]">
             <ShieldCheck className="size-[22px]" />
           </div>
-          <p className="text-[19px] leading-[1.5] font-medium text-primary-foreground/90">
+          <p className="text-[19px] leading-[1.5] font-medium text-primary-foreground">
             Tu cuenta protege información financiera sensible. Sigue los pasos para restablecer
             tu acceso de forma segura.
           </p>
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary-foreground/60">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/60">
             {isReset ? "Recuperación de cuenta" : "Activación de cuenta"}
           </span>
         </div>
       }
     >
-      <div className="flex flex-col gap-1.5 mb-7">
-        <h1 className="font-heading text-[26px] font-extrabold tracking-tight text-foreground">
-          {isReset ? "Crea una nueva contraseña" : "Activa tu cuenta"}
-        </h1>
-        <p className="text-[13.5px] text-muted-foreground">
-          {isReset
-            ? "Crea una nueva contraseña para restablecer tu acceso."
-            : `Hola ${profile.full_name}, establece tu contraseña para comenzar.`}
-        </p>
-      </div>
+      {isReset ? (
+        <PasswordResetFlow email={user.email ?? ""} />
+      ) : (
+        <>
+          <div className="flex flex-col gap-1.5 mb-7">
+            <h1 className="font-heading text-[26px] font-extrabold tracking-tight text-foreground">
+              Activa tu cuenta
+            </h1>
+            <p className="text-[13.5px] text-muted-foreground">
+              Hola {profile.full_name}, establece tu contraseña para comenzar.
+            </p>
+          </div>
 
-      <SetPasswordForm />
+          <SetPasswordForm />
+        </>
+      )}
     </AuthShell>
   )
 }

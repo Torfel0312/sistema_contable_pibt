@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { CheckCircle2, Circle, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { PasswordInput } from "@/components/ui/password-input"
@@ -13,17 +14,37 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { setPasswordSchema, type SetPasswordValues } from "@/lib/validators/auth"
 import { activateAccount } from "@/app/actions/auth"
 
-export function SetPasswordForm() {
+export function SetPasswordForm({
+  showRequirements = false,
+  submitLabel = "Establecer contraseña",
+  onSuccess
+}: {
+  showRequirements?: boolean
+  submitLabel?: string
+  onSuccess?: () => void
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting }
   } = useForm<SetPasswordValues>({
     resolver: zodResolver(setPasswordSchema)
   })
+
+  const password = useWatch({ control, name: "password" }) ?? ""
+  const confirmPassword = useWatch({ control, name: "confirmPassword" }) ?? ""
+
+  const requirements = [
+    { label: "Mínimo 8 caracteres", met: password.length >= 8 },
+    { label: "Al menos una mayúscula", met: /[A-ZÁÉÍÓÚÑ]/.test(password) },
+    { label: "Al menos un número", met: /\d/.test(password) },
+    { label: "Las contraseñas coinciden", met: password.length > 0 && password === confirmPassword }
+  ]
+  const requirementsMet = requirements.every((r) => r.met)
 
   const onSubmit = async (values: SetPasswordValues) => {
     setError(null)
@@ -40,6 +61,11 @@ export function SetPasswordForm() {
 
     await activateAccount()
 
+    if (onSuccess) {
+      onSuccess()
+      return
+    }
+
     router.push("/dashboard")
     router.refresh()
   }
@@ -50,7 +76,7 @@ export function SetPasswordForm() {
         <Field data-invalid={!!errors.password || undefined}>
           <FieldLabel
             htmlFor="password"
-            className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground"
+            className="text-[11.5px] font-semibold uppercase tracking-[0.04em] text-muted-foreground"
           >
             Nueva contraseña
           </FieldLabel>
@@ -60,13 +86,13 @@ export function SetPasswordForm() {
             aria-invalid={!!errors.password}
             {...register("password")}
           />
-          <FieldError errors={[errors.password]} />
+          {!showRequirements && <FieldError errors={[errors.password]} />}
         </Field>
 
         <Field data-invalid={!!errors.confirmPassword || undefined}>
           <FieldLabel
             htmlFor="confirmPassword"
-            className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground"
+            className="text-[11.5px] font-semibold uppercase tracking-[0.04em] text-muted-foreground"
           >
             Confirmar contraseña
           </FieldLabel>
@@ -76,9 +102,31 @@ export function SetPasswordForm() {
             aria-invalid={!!errors.confirmPassword}
             {...register("confirmPassword")}
           />
-          <FieldError errors={[errors.confirmPassword]} />
+          {!showRequirements && <FieldError errors={[errors.confirmPassword]} />}
         </Field>
       </FieldGroup>
+
+      {showRequirements && (
+        <div className="flex flex-col gap-[7px]">
+          {requirements.map((req) => (
+            <div key={req.label} className="flex items-center gap-2">
+              {req.met ? (
+                <CheckCircle2 className="size-[14px] shrink-0 text-income" />
+              ) : (
+                <Circle className="size-[14px] shrink-0 text-faint" />
+              )}
+              <span
+                className={cn(
+                  "text-[12.5px] font-semibold",
+                  req.met ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {req.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -86,14 +134,18 @@ export function SetPasswordForm() {
         </Alert>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full">
+      <Button
+        type="submit"
+        disabled={isSubmitting || (showRequirements && !requirementsMet)}
+        className="w-full"
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="size-4 animate-spin" data-icon="inline-start" />
             Guardando...
           </>
         ) : (
-          "Establecer contraseña"
+          submitLabel
         )}
       </Button>
     </form>
