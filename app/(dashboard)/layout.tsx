@@ -27,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <UserProvider user={sessionUser}>
       <div className="flex min-h-svh flex-col">
         <ImpersonationBanner />
-        <SidebarProvider className="min-h-0 flex-1 transform-gpu">
+        <SidebarProvider className="min-h-0 flex-1">
           <AppSidebar
             user={{ name: user.name ?? "", email: user.email ?? "", initials, role: user.role }}
           />
