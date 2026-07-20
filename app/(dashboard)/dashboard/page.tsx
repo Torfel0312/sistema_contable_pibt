@@ -2,7 +2,11 @@ import { redirect } from "next/navigation"
 import { dashboardService } from "@/services/dashboard/dashboard.service"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { PERMISSIONS, can } from "@/lib/permissions/rbac"
-import { IncomeExpenseChart, CategoryChart } from "@/components/dashboard/dashboard-charts"
+import {
+  IncomeExpenseChart,
+  CategoryChart,
+  BalanceHistoryChart
+} from "@/components/dashboard/dashboard-charts"
 import { SeveranceReserveCard } from "@/components/dashboard/severance-reserve-card"
 import { MinistryLeftoverWidget } from "@/components/dashboard/ministry-leftover-widget"
 import { MovementsTable } from "@/components/movements/movements-table"
@@ -45,68 +49,61 @@ export default async function DashboardPage({
         <DashboardFilterBar defaultFrom={from} defaultTo={to} />
       </div>
 
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5 ${
-          canViewFinanceWidgets && data.severanceBalance !== null ? "lg:grid-cols-4" : "lg:grid-cols-3"
-        }`}
-      >
-        {/* Hero — saldo actual */}
-        <div className="rounded-[18px] bg-primary px-5 py-[18px] flex flex-col text-primary-foreground">
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-primary-foreground/70 mb-[10px]">
-            Saldo actual
-          </p>
-          <p className="font-heading text-[26px] font-extrabold tracking-tight tabular-nums mb-3">
-            {formatCLP(data.kpis.currentBalance)}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-[9px] py-[3px] text-[11.5px] font-semibold">
-              <TrendingUp className="size-3" />
+      <div className="flex flex-wrap gap-3.5 mb-3.5">
+        {/* Merged KPI surface — saldo / ingresos / egresos */}
+        <div className="flex-[2.4_1_460px] min-w-0 rounded-[18px] bg-card border border-border overflow-hidden grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
+          <div className="bg-primary text-primary-foreground px-5 py-[18px]">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-primary-foreground/70 mb-[10px]">
+              Saldo actual
+            </p>
+            <p className="font-heading text-[26px] font-extrabold tracking-tight tabular-nums mb-3">
+              {formatCLP(data.kpis.currentBalance)}
+            </p>
+            <p className="text-xs text-primary-foreground/65">Al cierre del período</p>
+          </div>
+
+          <div className="px-5 py-[18px]">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">Ingresos</p>
+              <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-income-surface">
+                <TrendingUp className="size-3.5 text-income" />
+              </div>
+            </div>
+            <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
               {formatCLP(data.kpis.totalIncome)}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-[9px] py-[3px] text-[11.5px] font-semibold">
-              <TrendingDown className="size-3" />
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {data.kpis.movementCount} movimientos en el período
+            </p>
+          </div>
+
+          <div className="px-5 py-[18px] border-l border-border">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">Egresos</p>
+              <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-expense-surface">
+                <TrendingDown className="size-3.5 text-expense" />
+              </div>
+            </div>
+            <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
               {formatCLP(data.kpis.totalExpense)}
-            </span>
-          </div>
-        </div>
-
-        {/* Income */}
-        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
-              Ingresos
             </p>
-            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-income-surface">
-              <TrendingUp className="size-3.5 text-income" />
-            </div>
+            <p className="text-xs text-muted-foreground">En el período seleccionado</p>
           </div>
-          <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
-            {formatCLP(data.kpis.totalIncome)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {data.kpis.movementCount} movimientos en el período
-          </p>
-        </div>
-
-        {/* Expenses */}
-        <div className="rounded-[18px] bg-card border border-border px-5 py-[18px] flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
-              Egresos
-            </p>
-            <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-expense-surface">
-              <TrendingDown className="size-3.5 text-expense" />
-            </div>
-          </div>
-          <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular-nums mb-1.5">
-            {formatCLP(data.kpis.totalExpense)}
-          </p>
-          <p className="text-xs text-muted-foreground">En el período seleccionado</p>
         </div>
 
         {canViewFinanceWidgets && data.severanceBalance !== null && (
-          <SeveranceReserveCard balance={data.severanceBalance} />
+          <div className="flex-[1_1_240px] min-w-0">
+            <SeveranceReserveCard balance={data.severanceBalance} />
+          </div>
         )}
+      </div>
+
+      <div className="rounded-[14px] bg-card border border-border px-5 py-[18px] mb-3.5">
+        <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground mb-0.5">
+          Historial de saldo
+        </h2>
+        <p className="text-xs text-muted-foreground mb-3.5">Saldo acumulado al cierre de cada mes</p>
+        <BalanceHistoryChart data={data.incomeExpenseSeries} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-3.5 mb-3.5">
@@ -119,9 +116,11 @@ export default async function DashboardPage({
         </div>
         <div className="rounded-[14px] bg-card border border-border px-5 py-[18px] flex flex-col">
           <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground mb-0.5">
-            Por categoría
+            Egresos por categoría
           </h2>
-          <p className="text-xs text-muted-foreground mb-3.5">Distribución del período</p>
+          <p className="text-xs text-muted-foreground mb-3.5">
+            Distribución del período · {formatCLP(data.kpis.totalExpense)}
+          </p>
           <CategoryChart data={data.categoryBreakdown} />
         </div>
       </div>
