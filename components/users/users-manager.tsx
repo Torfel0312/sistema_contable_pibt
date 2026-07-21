@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, type ComponentProps } from "react"
+import { useState, useMemo, useEffect, type ComponentProps } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,7 +29,11 @@ import {
   Check,
   Link,
   Settings2,
-  VenetianMask
+  VenetianMask,
+  LayoutList,
+  List,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import {
@@ -87,6 +91,16 @@ function roleLabel(role: UserRole) {
   if (role === "FINANCE") return "Finanzas"
   if (role === "MINISTER") return "Ministro"
   return role
+}
+
+const ROLE_ORDER: UserRole[] = ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
+
+function roleDotClass(role: UserRole) {
+  if (role === "ADMIN") return "bg-primary"
+  if (role === "BURSAR") return "bg-role-purple"
+  if (role === "FINANCE") return "bg-income"
+  if (role === "MINISTER") return "bg-warn"
+  return "bg-muted-foreground"
 }
 
 type StatusMeta = {
@@ -185,6 +199,16 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const [search, setSearch] = useState("")
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">(() => {
+    const stored = window.localStorage.getItem("users-view-mode")
+    if (stored === "flat" || stored === "grouped") return stored
+    return "grouped"
+  })
+  const [collapsedRoles, setCollapsedRoles] = useState<Set<UserRole>>(new Set())
+
+  useEffect(() => {
+    window.localStorage.setItem("users-view-mode", viewMode)
+  }, [viewMode])
 
   function copyInviteLink() {
     if (!inviteLink) return
@@ -201,6 +225,22 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
       (u) => u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
     )
   }, [users, search])
+
+  const groups = useMemo(() => {
+    return ROLE_ORDER.map((role) => ({
+      role,
+      members: filtered.filter((u) => u.role === role)
+    })).filter((g) => g.members.length > 0)
+  }, [filtered])
+
+  function toggleRoleCollapsed(role: UserRole) {
+    setCollapsedRoles((prev) => {
+      const next = new Set(prev)
+      if (next.has(role)) next.delete(role)
+      else next.add(role)
+      return next
+    })
+  }
 
   const createForm = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
@@ -448,11 +488,41 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
         </Dialog>
       </div>
 
-      {/* Count */}
-      <p className="text-[12.5px] font-semibold text-muted-foreground">
-        {filtered.length} integrante{filtered.length !== 1 ? "s" : ""}
-        {search && ` — filtrando por "${search}"`}
-      </p>
+      {/* Count + view toggle */}
+      <div className="flex items-center justify-between">
+        <p className="text-[12.5px] font-semibold text-muted-foreground">
+          {filtered.length} integrante{filtered.length !== 1 ? "s" : ""}
+          {search && ` — filtrando por "${search}"`}
+        </p>
+        <div className="flex gap-0.5 rounded-[11px] bg-muted p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode("grouped")}
+            className={cn(
+              "flex h-7 items-center gap-1.5 rounded-[9px] px-3 text-xs font-semibold transition-colors",
+              viewMode === "grouped"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LayoutList className="size-3.5" />
+            Por rol
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("flat")}
+            className={cn(
+              "flex h-7 items-center gap-1.5 rounded-[9px] px-3 text-xs font-semibold transition-colors",
+              viewMode === "flat"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <List className="size-3.5" />
+            Lista
+          </button>
+        </div>
+      </div>
 
       {/* Edit dialog */}
       <Dialog
@@ -672,7 +742,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
             <EmptyDescription>No hay usuarios que coincidan con la búsqueda.</EmptyDescription>
           </EmptyHeader>
         </Empty>
-      ) : (
+      ) : viewMode === "flat" ? (
         <ItemGroup>
           {filtered.map((user) => (
             <UserListItem
@@ -683,6 +753,45 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
             />
           ))}
         </ItemGroup>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => {
+            const collapsed = collapsedRoles.has(group.role)
+            return (
+              <div key={group.role}>
+                <button
+                  type="button"
+                  onClick={() => toggleRoleCollapsed(group.role)}
+                  className="mb-3.5 flex w-full select-none items-center gap-2"
+                >
+                  {collapsed ? (
+                    <ChevronRight className="size-[15px] shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="size-[15px] shrink-0 text-muted-foreground" />
+                  )}
+                  <span className={cn("size-2 rounded-full", roleDotClass(group.role))} />
+                  <span className="text-[12.5px] font-extrabold">{roleLabel(group.role)}</span>
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11.5px] font-bold text-muted-foreground">
+                    {group.members.length}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </button>
+                {!collapsed && (
+                  <ItemGroup>
+                    {group.members.map((user) => (
+                      <UserListItem
+                        key={user.id}
+                        user={user}
+                        onOpen={() => openEdit(user)}
+                        onImpersonate={() => handleImpersonate(user.id)}
+                      />
+                    ))}
+                  </ItemGroup>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
