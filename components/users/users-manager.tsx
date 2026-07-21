@@ -199,12 +199,14 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const [search, setSearch] = useState("")
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
-  const [viewMode, setViewMode] = useState<"grouped" | "flat">(() => {
-    const stored = window.localStorage.getItem("users-view-mode")
-    if (stored === "flat" || stored === "grouped") return stored
-    return "grouped"
-  })
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped")
   const [collapsedRoles, setCollapsedRoles] = useState<Set<UserRole>>(new Set())
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("users-view-mode")
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing initial state from a client-only store (localStorage) can't be done during render because `window` doesn't exist during SSR
+    if (stored === "flat" || stored === "grouped") setViewMode(stored)
+  }, [])
 
   useEffect(() => {
     window.localStorage.setItem("users-view-mode", viewMode)
