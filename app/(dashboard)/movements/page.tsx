@@ -52,7 +52,7 @@ export default async function MovementsPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
@@ -104,7 +104,8 @@ export default async function MovementsPage({ searchParams }: Props) {
           created_by: {
             full_name: (row.users as { full_name: string } | null)?.full_name ?? ""
           },
-          cancelled_by: row.cancelled_by as { full_name: string } | null
+          cancelled_by: row.cancelled_by as { full_name: string } | null,
+          cancelled_at: row.cancelled_at
         }))}
       />
 

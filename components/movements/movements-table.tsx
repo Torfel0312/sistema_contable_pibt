@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { cancelMovement } from "@/app/actions/movements"
 import { cn, formatDate, formatCLP } from "@/lib/utils"
-import { CancelButton } from "./cancel-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +25,7 @@ import {
   ItemHeader,
   ItemActions
 } from "@/components/ui/item"
-import { FileSearch, ArrowDownCircle, ArrowUpCircle } from "lucide-react"
+import { FileSearch, ArrowDownCircle, ArrowUpCircle, ArrowRight, Ban } from "lucide-react"
 
 function MovementTypeBadge({ type }: { type: string }) {
   const isIncome = type === "INCOME"
@@ -61,6 +63,7 @@ export type SerializedMovement = {
   status: string
   created_by: { full_name: string }
   cancelled_by?: { full_name: string } | null
+  cancelled_at?: string | null
 }
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -97,8 +100,37 @@ export function MovementsTable({
   title?: string
   viewAllHref?: string
 }) {
+  const router = useRouter()
   const [selected, setSelected] = useState<SerializedMovement | null>(null)
+  const [annulMode, setAnnulMode] = useState(false)
+  const [annulReason, setAnnulReason] = useState("")
+  const [isCancelling, setIsCancelling] = useState(false)
   const isFull = variant === "full"
+
+  const closeDialog = useCallback(() => {
+    setSelected(null)
+    setAnnulMode(false)
+    setAnnulReason("")
+  }, [])
+
+  const handleConfirmAnnul = useCallback(() => {
+    if (!selected || !annulReason.trim()) return
+
+    setIsCancelling(true)
+    const promise = cancelMovement(selected.id, { cancellation_reason: annulReason.trim() })
+
+    toast.promise(promise, {
+      loading: "Anulando movimiento...",
+      success: () => {
+        closeDialog()
+        router.refresh()
+        return "Movimiento anulado"
+      },
+      error: (e: Error) => e.message
+    })
+
+    void promise.finally(() => setIsCancelling(false))
+  }, [selected, annulReason, closeDialog, router])
 
   return (
     <>
@@ -273,7 +305,7 @@ export function MovementsTable({
       <Dialog
         open={!!selected}
         onOpenChange={(open) => {
-          if (!open) setSelected(null)
+          if (!open) closeDialog()
         }}
       >
         {selected && (
@@ -331,34 +363,91 @@ export function MovementsTable({
                 </div>
               )}
 
-              {selected.status === "CANCELLED" && selected.cancellation_reason && (
-                <div className="rounded-lg bg-destructive/5 px-5 py-4 flex flex-col gap-1">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-destructive">
-                    Motivo de Anulación
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {selected.cancellation_reason}
-                  </p>
+              {selected.status === "CANCELLED" && (
+                <div className="flex gap-3 rounded-xl bg-expense-surface px-4 py-3.5">
+                  <Ban className="size-4 shrink-0 mt-0.5 text-expense" />
+                  <div>
+                    <p className="text-[13px] font-extrabold text-expense mb-0.5">
+                      Movimiento anulado
+                    </p>
+                    <p className="text-[12.5px]">
+                      Anulado por <strong>{selected.cancelled_by?.full_name ?? "—"}</strong>
+                      {selected.cancelled_at && ` · ${formatDate(selected.cancelled_at)}`}
+                    </p>
+                    <p className="text-[12.5px] text-muted-foreground mt-0.5">
+                      Razón: {selected.cancellation_reason || "No especificado."}
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-3 pt-4 border-t border-border">
-                <Button
-                  variant="outline"
-                  className="h-10 px-5"
-                  render={<Link href={`/movements/${selected.id}`} />}
-                  nativeButton={false}
-                >
-                  Ver detalles
-                </Button>
-                {canWrite && selected.status !== "CANCELLED" && (
-                  <CancelButton
-                    movement={selected}
-                    onSuccess={() => setSelected(null)}
-                    className="h-10 px-5 bg-destructive/10 hover:bg-destructive/20 text-destructive border-none shadow-none"
+              {annulMode ? (
+                <div className="rounded-xl bg-expense-surface px-4 py-3.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Ban className="size-[15px] text-expense" />
+                    <span className="text-[13px] font-extrabold text-expense">
+                      Anular este movimiento
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground mb-2.5">
+                    No se elimina: queda marcado como anulado y deja de afectar los saldos. La
+                    razón es obligatoria y queda en auditoría.
+                  </p>
+                  <textarea
+                    autoFocus
+                    value={annulReason}
+                    onChange={(e) => setAnnulReason(e.target.value)}
+                    placeholder="Razón de la anulación — ej: movimiento duplicado, monto incorrecto…"
+                    className="h-16 w-full resize-none rounded-[10px] border border-expense bg-card px-3 py-2.5 text-[13px] outline-none focus-visible:ring-3 focus-visible:ring-expense/20"
                   />
-                )}
-              </div>
+                  <div className="flex justify-end gap-2 mt-2.5">
+                    <Button
+                      variant="outline"
+                      className="h-[38px] px-4 text-[13px]"
+                      disabled={isCancelling}
+                      onClick={() => {
+                        setAnnulMode(false)
+                        setAnnulReason("")
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="h-[38px] px-4 text-[13px]"
+                      disabled={isCancelling || !annulReason.trim()}
+                      onClick={handleConfirmAnnul}
+                    >
+                      <Ban data-icon="inline-start" className="size-[13px]" />
+                      {isCancelling ? "Anulando..." : "Anular movimiento"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+                  {canWrite && selected.status !== "CANCELLED" && (
+                    <Button
+                      variant="outline"
+                      className="mr-auto h-10 px-5 border-expense text-expense hover:bg-expense-surface"
+                      onClick={() => setAnnulMode(true)}
+                    >
+                      <Ban data-icon="inline-start" className="size-[13px]" />
+                      Anular
+                    </Button>
+                  )}
+                  <Button variant="outline" className="h-10 px-5" onClick={closeDialog}>
+                    Cerrar
+                  </Button>
+                  <Button
+                    className="h-10 px-5"
+                    render={<Link href={`/movements/${selected.id}`} />}
+                    nativeButton={false}
+                  >
+                    Ver detalle completo
+                    <ArrowRight data-icon="inline-end" className="size-3.5" />
+                  </Button>
+                </div>
+              )}
             </div>
           </DialogContent>
         )}
