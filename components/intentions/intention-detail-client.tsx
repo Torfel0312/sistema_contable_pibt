@@ -636,7 +636,7 @@ export function IntentionDetailClient({
       {/* Transfer section */}
       {intention.status === "APPROVED" && intention.funding_method === "TRANSFER" && (
         <Card className="px-6 py-6 rounded-2xl space-y-3.5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[15px] font-bold flex items-center gap-2">
               <Banknote className="size-4 text-primary" />
               Transferencia
@@ -783,7 +783,7 @@ export function IntentionDetailClient({
       {intention.status === "APPROVED" &&
         (intention.funding_method === "REIMBURSEMENT" || currentTransfer) && (
           <Card className="px-6 py-6 rounded-2xl space-y-3.5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-[15px] font-bold flex items-center gap-2">
                 <FileText className="size-4 text-primary" />
                 Rendición de gastos
