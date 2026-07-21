@@ -154,7 +154,10 @@ function UserListItem({
         </div>
       </ItemContent>
       <ItemActions>
-        <Badge variant={roleBadgeVariant(user.role)} className="hidden sm:inline-flex">
+        <Badge
+          variant={roleBadgeVariant(user.role)}
+          className="hidden sm:inline-flex uppercase tracking-wide"
+        >
           {roleLabel(user.role)}
         </Badge>
         {meta.variant && (
