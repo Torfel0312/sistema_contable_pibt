@@ -764,7 +764,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                 <button
                   type="button"
                   onClick={() => toggleRoleCollapsed(group.role)}
-                  className="mb-3.5 flex w-full select-none items-center gap-2"
+                  className="mb-2.5 flex w-full select-none items-center gap-[10px]"
                 >
                   {collapsed ? (
                     <ChevronRight className="size-[15px] shrink-0 text-muted-foreground" />
@@ -772,8 +772,8 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                     <ChevronDown className="size-[15px] shrink-0 text-muted-foreground" />
                   )}
                   <span className={cn("size-2 rounded-full", roleDotClass(group.role))} />
-                  <span className="text-[12.5px] font-extrabold">{roleLabel(group.role)}</span>
-                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11.5px] font-bold text-muted-foreground">
+                  <span className="text-[13px] font-extrabold">{roleLabel(group.role)}</span>
+                  <span className="rounded-full bg-muted px-[9px] py-0.5 text-[11.5px] font-bold text-muted-foreground">
                     {group.members.length}
                   </span>
                   <div className="h-px flex-1 bg-border" />
