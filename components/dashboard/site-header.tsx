@@ -27,6 +27,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/settings": "Administración",
   "/payroll": "Remuneraciones",
   "/profile": "Mi perfil",
+  "/notifications": "Notificaciones",
   "/voucher-book": "Talonario Unificado"
 }
 
