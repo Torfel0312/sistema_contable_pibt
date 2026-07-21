@@ -3,7 +3,7 @@ import { auditService } from "@/services/audit/audit.service"
 import { sendInviteEmail, sendResetEmail } from "@/services/email/resend.service"
 import { wrapAuthLink } from "@/services/auth/link-wrapper"
 import { getSiteUrl } from "@/lib/utils"
-import type { CreateUserInput, UpdateUserInput } from "@/lib/validators/user"
+import type { CreateUserInput, UpdateUserInput, UpdateOwnProfileInput } from "@/lib/validators/user"
 
 export const usersService = {
   async getById(userId: string) {
@@ -265,6 +265,40 @@ export const usersService = {
       previous_value: current,
       new_value: updated,
       note: "Información del usuario actualizada"
+    })
+
+    return updated
+  },
+
+  async updateOwnProfile(input: UpdateOwnProfileInput, userId: string) {
+    const admin = createSupabaseAdminClient()
+
+    const { data: current, error: fetchError } = await admin
+      .from("users")
+      .select("id, full_name")
+      .eq("id", userId)
+      .single()
+
+    if (fetchError || !current) throw new Error("Usuario no encontrado")
+
+    const full_name = input.full_name.trim()
+    const { data: updated, error } = await admin
+      .from("users")
+      .update({ full_name, updated_at: new Date().toISOString() })
+      .eq("id", userId)
+      .select("id, full_name")
+      .single()
+
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "users",
+      action: "Usuario actualizado",
+      entity_id: userId,
+      user_id: userId,
+      previous_value: current,
+      new_value: updated,
+      note: "Perfil propio actualizado"
     })
 
     return updated

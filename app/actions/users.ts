@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { PERMISSIONS, can, isImpersonating } from "@/lib/permissions/rbac"
 import { usersService } from "@/services/users/users.service"
-import type { CreateUserInput, UpdateUserInput } from "@/lib/validators/user"
+import type { CreateUserInput, UpdateUserInput, UpdateOwnProfileInput } from "@/lib/validators/user"
 
 function assertUserAccess(user: Awaited<ReturnType<typeof getCurrentUser>>) {
   if (!user || !can(user.permissions, PERMISSIONS.MANAGE_USERS) || isImpersonating(user)) {
@@ -41,4 +41,12 @@ export async function resendInvite(id: string) {
 export async function resetUser(id: string) {
   const user = assertUserAccess(await getCurrentUser())
   await usersService.resetAccount(id, user.id)
+}
+
+export async function updateOwnProfile(input: UpdateOwnProfileInput) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error("Sesión no encontrada")
+  const updated = await usersService.updateOwnProfile(input, user.id)
+  revalidatePath("/profile")
+  return updated
 }
