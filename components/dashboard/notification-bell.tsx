@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import {
   Bell,
+  BellOff,
   CheckCheck,
   CheckCircle2,
   Clock,
@@ -199,7 +200,15 @@ export function NotificationBell() {
           )}
         </div>
         {items.length === 0 ? (
-          <div className="px-3 py-4 text-center text-sm text-muted-foreground">Sin pendientes</div>
+          <div className="flex flex-col items-center px-7 pt-10 pb-[34px] text-center">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
+              <BellOff className="size-6 text-faint" />
+            </div>
+            <p className="mb-1 text-sm font-bold">Todo al día</p>
+            <p className="max-w-[240px] text-[12.5px] leading-[1.5] text-muted-foreground">
+              No tienes notificaciones nuevas por ahora. Te avisaremos apenas haya novedades.
+            </p>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {items.map((item, i) => {
