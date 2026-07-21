@@ -7,6 +7,7 @@ export function Toaster() {
   return (
     <SonnerToaster
       position="bottom-right"
+      closeButton
       icons={{
         success: <CheckCircle2 className="size-4" />,
         error: <OctagonAlert className="size-4" />,
@@ -15,16 +16,20 @@ export function Toaster() {
       }}
       toastOptions={{
         classNames: {
-          toast: "bg-surface border border-border text-on-surface shadow-lg rounded-[14px]",
+          toast:
+            "bg-surface border border-border text-on-surface shadow-[0_8px_24px_-12px_rgba(22,17,41,0.18)] rounded-[14px] gap-3 p-4",
           title: "font-bold text-[13.5px]",
-          description: "text-muted-foreground text-[12.5px]",
+          description: "text-muted-foreground text-[12.5px] leading-[1.45]",
+          icon:
+            "size-[30px] rounded-[9px] flex items-center justify-center shrink-0 m-0 [&_svg]:size-4",
+          closeButton:
+            "size-6 rounded-[7px] border-none bg-transparent text-faint hover:bg-muted",
           actionButton: "bg-primary text-primary-foreground",
           cancelButton: "bg-muted text-muted-foreground",
-          success: "!bg-income-surface !text-on-income !border-income-border [&_[data-icon]]:text-income",
-          error:
-            "!bg-expense-surface !text-on-expense !border-expense-border [&_[data-icon]]:text-expense",
-          warning: "!bg-warn-surface !text-on-warn !border-warn-border [&_[data-icon]]:text-warn",
-          info: "!bg-primary/10 !text-primary !border-primary/20 [&_[data-icon]]:text-primary"
+          success: "[&_[data-icon]]:bg-income-surface [&_[data-icon]]:text-income",
+          error: "[&_[data-icon]]:bg-expense-surface [&_[data-icon]]:text-expense",
+          warning: "[&_[data-icon]]:bg-warn-surface [&_[data-icon]]:text-warn",
+          info: "[&_[data-icon]]:bg-primary-soft [&_[data-icon]]:text-primary"
         }
       }}
     />

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { PanelLeft } from "lucide-react"
+import { ChevronRight, PanelLeft } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +12,6 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { NotificationBell } from "@/components/dashboard/notification-bell"
@@ -66,29 +65,27 @@ export function SiteHeader() {
   const { parent, current } = usePageLabel()
 
   return (
-    <header className="sticky top-0 z-50 flex w-full items-center border-b bg-background">
-      <div className="flex h-14 w-full items-center gap-2 px-4">
+    <header className="sticky top-0 z-50 flex h-14 w-full flex-none items-center justify-between border-b bg-background px-5">
+      <div className="flex items-center gap-3">
         <Button
-          className="size-8"
-          variant="ghost"
-          size="icon"
+          variant="outline"
+          size="icon-sm"
+          className="rounded-[8px] text-muted-foreground shadow-none hover:bg-muted"
           onClick={toggleSidebar}
           aria-label="Toggle sidebar"
         >
-          <PanelLeft />
+          <PanelLeft className="size-4" />
         </Button>
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-auto"
-        />
         <Breadcrumb className="hidden sm:block">
-          <BreadcrumbList>
+          <BreadcrumbList className="flex-nowrap gap-1.5 text-[13px] text-muted-foreground/70">
             <BreadcrumbItem>
               <BreadcrumbLink render={<Link href="/dashboard" />}>Sistema Contable</BreadcrumbLink>
             </BreadcrumbItem>
             {parent && (
               <>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>
+                  <ChevronRight className="size-[13px]" />
+                </BreadcrumbSeparator>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link href={parent.href} />}>
                     {parent.label}
@@ -96,24 +93,26 @@ export function SiteHeader() {
                 </BreadcrumbItem>
               </>
             )}
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>
+              <ChevronRight className="size-[13px]" />
+            </BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbPage>{current}</BreadcrumbPage>
+              <BreadcrumbPage className="font-semibold text-foreground">{current}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
-          <NotificationBell />
-          <a
-            href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-[10px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
-          >
-            Version: {process.env.NEXT_PUBLIC_COMMIT_SHA}
-          </a>
-        </div>
+      </div>
+      <div className="flex items-center gap-2.5">
+        <ThemeToggle />
+        <NotificationBell />
+        <a
+          href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-[10.5px] text-faint hover:text-muted-foreground transition-colors"
+        >
+          v: {process.env.NEXT_PUBLIC_COMMIT_SHA}
+        </a>
       </div>
     </header>
   )

@@ -112,7 +112,7 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
         >
           <DialogTrigger
             render={
-              <Button size="sm">
+              <Button>
                 <Plus className="size-4" />
                 Nuevo medio de pago
               </Button>
@@ -125,7 +125,11 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
             <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4 pt-2">
               <Field>
                 <FieldLabel htmlFor="name">Nombre *</FieldLabel>
-                <Input id="name" placeholder="Efectivo, Transferencia..." {...form.register("name")} />
+                <Input
+                  id="name"
+                  placeholder="Efectivo, Transferencia..."
+                  {...form.register("name")}
+                />
                 <FieldError errors={[form.formState.errors.name]} />
               </Field>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
@@ -165,18 +169,12 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
                 </div>
               </ItemContent>
               <ItemActions className="gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEdit(pm)}
-                  className="gap-1.5"
-                >
+                <Button variant="outline" onClick={() => openEdit(pm)} className="gap-1.5">
                   <Pencil className="size-3.5" />
                   Editar
                 </Button>
                 <Button
                   variant="outline"
-                  size="sm"
                   disabled={togglingId === pm.id}
                   onClick={() => handleToggle(pm)}
                   className="gap-1.5"

@@ -118,7 +118,9 @@ export function IntentionsClient({
         funding_method: "REIMBURSEMENT",
         isDraft: false
       })
-      toast.success(values.isDraft ? "Borrador guardado" : "Solicitud enviada al equipo de tesorería")
+      toast.success(
+        values.isDraft ? "Borrador guardado" : "Solicitud enviada al equipo de tesorería"
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar solicitud")
     }
@@ -153,7 +155,7 @@ export function IntentionsClient({
           >
             <DialogTrigger
               render={
-                <Button size="sm">
+                <Button>
                   <Plus className="size-4" />
                   Nueva solicitud
                 </Button>
@@ -174,7 +176,9 @@ export function IntentionsClient({
                         id="int-amount"
                         placeholder="100.000"
                         value={field.value}
-                        onChange={(value) => field.onChange(value === undefined ? "" : String(value))}
+                        onChange={(value) =>
+                          field.onChange(value === undefined ? "" : String(value))
+                        }
                         onBlur={field.onBlur}
                       />
                     )}
@@ -236,7 +240,9 @@ export function IntentionsClient({
                     variant="outline"
                     className="flex-1"
                     disabled={form.formState.isSubmitting}
-                    onClick={form.handleSubmit((values) => handleSubmit({ ...values, isDraft: true }))}
+                    onClick={form.handleSubmit((values) =>
+                      handleSubmit({ ...values, isDraft: true })
+                    )}
                   >
                     Guardar borrador
                   </Button>
@@ -244,7 +250,9 @@ export function IntentionsClient({
                     type="button"
                     className="flex-1"
                     disabled={form.formState.isSubmitting}
-                    onClick={form.handleSubmit((values) => handleSubmit({ ...values, isDraft: false }))}
+                    onClick={form.handleSubmit((values) =>
+                      handleSubmit({ ...values, isDraft: false })
+                    )}
                   >
                     {form.formState.isSubmitting ? "Enviando..." : "Enviar solicitud"}
                   </Button>
@@ -398,7 +406,9 @@ function IntentionCard({
           <span
             className={cn(
               "rounded-full px-[9px] py-[3px] text-[11px] font-bold",
-              closed ? "bg-muted text-muted-foreground" : FUNDING_METHOD_PILL[intention.funding_method]
+              closed
+                ? "bg-muted text-muted-foreground"
+                : FUNDING_METHOD_PILL[intention.funding_method]
             )}
           >
             {FUNDING_METHOD_LABELS[intention.funding_method]}
@@ -414,7 +424,12 @@ function IntentionCard({
       >
         {formatCLP(intention.amount)}
       </p>
-      <p className={cn("text-[13px] mb-3.5", closed ? "text-muted-foreground/70" : "text-muted-foreground")}>
+      <p
+        className={cn(
+          "text-[13px] mb-3.5",
+          closed ? "text-muted-foreground/70" : "text-muted-foreground"
+        )}
+      >
         {intention.purpose}
       </p>
       {isMinister && (
@@ -428,9 +443,7 @@ function IntentionCard({
           <StatusIcon className="size-3.5" />
           {STATUS_LABELS[intention.status]}
         </span>
-        <span className="text-[11.5px] text-faint">
-          {formatDate(intention.created_at)}
-        </span>
+        <span className="text-[11.5px] text-faint">{formatDate(intention.created_at)}</span>
       </div>
     </div>
   )

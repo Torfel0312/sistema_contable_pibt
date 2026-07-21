@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import {
   Bell,
+  BellOff,
   CheckCheck,
   CheckCircle2,
   Clock,
@@ -163,21 +164,24 @@ export function NotificationBell() {
       <PopoverTrigger
         render={
           <Button
-            variant="ghost"
-            size="icon"
-            className="relative size-8"
+            variant="outline"
+            size="icon-sm"
+            className="relative size-[34px] rounded-[9px] text-muted-foreground shadow-none hover:bg-muted"
             aria-label="Notificaciones"
           >
             <Bell className="size-4" />
             {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+              <span className="absolute -top-[3px] -right-[3px] flex size-[15px] items-center justify-center rounded-full bg-expense text-[9px] font-bold text-white">
                 {count > 9 ? "9+" : count}
               </span>
             )}
           </Button>
         }
       />
-      <PopoverContent align="end" className="w-[380px] p-0">
+      <PopoverContent
+        align="end"
+        className="w-[min(380px,calc(100vw-40px))] rounded-[16px] p-0 shadow-[0_20px_48px_-16px_rgba(22,17,41,0.3)]"
+      >
         <div className="flex items-center justify-between px-[18px] py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <p className="text-sm font-extrabold">Notificaciones</p>
@@ -199,7 +203,15 @@ export function NotificationBell() {
           )}
         </div>
         {items.length === 0 ? (
-          <div className="px-3 py-4 text-center text-sm text-muted-foreground">Sin pendientes</div>
+          <div className="flex flex-col items-center px-7 pt-10 pb-[34px] text-center">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
+              <BellOff className="size-6 text-faint" />
+            </div>
+            <p className="mb-1 text-sm font-bold">Todo al día</p>
+            <p className="max-w-[240px] text-[12.5px] leading-[1.5] text-muted-foreground">
+              No tienes notificaciones nuevas por ahora. Te avisaremos apenas haya novedades.
+            </p>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {items.map((item, i) => {

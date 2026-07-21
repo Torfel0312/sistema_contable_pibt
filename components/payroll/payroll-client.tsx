@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm, useFieldArray, useWatch, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -30,7 +31,9 @@ import type { severanceReserveService } from "@/services/payroll/severance-reser
 import { createPayroll, addSeveranceAdjustment } from "@/app/actions/payroll"
 
 type PayrollRecord = Awaited<ReturnType<typeof payrollService.list>>[number]
-type SeveranceAdjustment = Awaited<ReturnType<typeof severanceReserveService.listAdjustments>>[number]
+type SeveranceAdjustment = Awaited<
+  ReturnType<typeof severanceReserveService.listAdjustments>
+>[number]
 
 type PayrollFormValues = Omit<CreatePayrollInput, "lines" | "liquidacion"> & {
   lines: (Omit<CreatePayrollInput["lines"][number], "amount"> & { amount: string })[]
@@ -75,7 +78,10 @@ function PayrollPeriodFields({
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Field data-invalid={!!form.formState.errors.period || undefined} data-testid="period-date-trigger">
+      <Field
+        data-invalid={!!form.formState.errors.period || undefined}
+        data-testid="period-date-trigger"
+      >
         <FieldLabel className="flex items-center gap-1.5">
           <Calendar className="size-3.5" />
           Período (mes) *
@@ -123,7 +129,10 @@ function PayrollLineFields({
   const errors = form.formState.errors.lines?.[index]
 
   return (
-    <div className="rounded-lg border border-border p-4 space-y-4" data-testid={`payroll-line-${index}`}>
+    <div
+      className="rounded-lg border border-border p-4 space-y-4"
+      data-testid={`payroll-line-${index}`}
+    >
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Transferencia {index + 1}
@@ -136,12 +145,16 @@ function PayrollLineFields({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field data-invalid={!!errors?.title || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Título *</FieldLabel>
+          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+            Título *
+          </FieldLabel>
           <Input placeholder="Ej: Sueldo pastor" {...form.register(`lines.${index}.title`)} />
           <FieldError errors={[errors?.title]} />
         </Field>
         <Field data-invalid={!!errors?.amount || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Monto (CLP) *</FieldLabel>
+          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+            Monto (CLP) *
+          </FieldLabel>
           <Controller
             control={form.control}
             name={`lines.${index}.amount`}
@@ -156,7 +169,9 @@ function PayrollLineFields({
           <FieldError errors={[errors?.amount]} />
         </Field>
         <Field data-invalid={!!errors?.movement_date || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Fecha de la transferencia *</FieldLabel>
+          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+            Fecha de la transferencia *
+          </FieldLabel>
           <Controller
             control={form.control}
             name={`lines.${index}.movement_date`}
@@ -176,12 +191,16 @@ function PayrollLineFields({
           <FieldError errors={[errors?.movement_date]} />
         </Field>
         <Field>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Entregado a</FieldLabel>
+          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+            Entregado a
+          </FieldLabel>
           <Input placeholder="Opcional" {...form.register(`lines.${index}.delivered_by`)} />
         </Field>
       </div>
       <Field>
-        <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Notas</FieldLabel>
+        <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+          Notas
+        </FieldLabel>
         <Input placeholder="Observaciones opcionales" {...form.register(`lines.${index}.notes`)} />
       </Field>
     </div>
@@ -229,7 +248,9 @@ function PayrollLineAttachment({
 
   return (
     <Field>
-      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Comprobante — {title || `Transferencia ${index + 1}`}</FieldLabel>
+      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+        Comprobante — {title || `Transferencia ${index + 1}`}
+      </FieldLabel>
       <AttachmentInput
         items={attachmentUpload.items}
         isUploading={attachmentUpload.isUploading}
@@ -279,7 +300,9 @@ function LiquidacionAttachment({
 
   return (
     <Field data-invalid={!!form.formState.errors.liquidacion || undefined}>
-      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Liquidación *</FieldLabel>
+      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+        Liquidación *
+      </FieldLabel>
       <AttachmentInput
         items={attachmentUpload.items}
         isUploading={attachmentUpload.isUploading}
@@ -313,8 +336,6 @@ function emptyLine(title: string) {
 }
 
 function PayrollHistory({ records }: { records: PayrollRecord[] }) {
-  const [openId, setOpenId] = useState<string | null>(null)
-
   if (records.length === 0) {
     return <p className="text-sm text-muted-foreground">Sin remuneraciones registradas aún.</p>
   }
@@ -326,56 +347,26 @@ function PayrollHistory({ records }: { records: PayrollRecord[] }) {
           0
         )
         const lineCount = record.payroll_movements.length
-        const isOpen = openId === record.id
         return (
-          <div key={record.id} className="rounded-xl border border-border overflow-hidden">
-            <button
-              type="button"
-              className="w-full flex items-center gap-3.5 px-[18px] py-4 text-left hover:bg-muted transition-colors"
-              onClick={() => setOpenId(isOpen ? null : record.id)}
-            >
-              <div className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-primary-surface">
-                <Banknote className="size-4 text-primary" />
+          <Link
+            key={record.id}
+            href={`/payroll/${record.id}`}
+            className="rounded-xl border border-border overflow-hidden flex items-center gap-3.5 px-[18px] py-4 hover:bg-muted transition-colors"
+          >
+            <div className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-primary-surface">
+              <Banknote className="size-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold capitalize">{formatDate(record.period)}</div>
+              <div className="text-[11.5px] text-muted-foreground">
+                {lineCount} {lineCount === 1 ? "transferencia" : "transferencias"}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold capitalize">{formatDate(record.period)}</div>
-                <div className="text-[11.5px] text-muted-foreground">
-                  {lineCount} {lineCount === 1 ? "transferencia" : "transferencias"}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-[15px] font-extrabold">{formatCLP(total)}</div>
-              </div>
-              <ChevronRight
-                className={`size-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`}
-              />
-            </button>
-            {isOpen && (
-              <div className="border-t border-border p-4 pt-3 space-y-2 bg-muted/30">
-                {record.liquidacion_drive_view_link && (
-                  <a
-                    href={record.liquidacion_drive_view_link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    Ver liquidación
-                    {record.liquidacion_file_name ? ` (${record.liquidacion_file_name})` : ""} →
-                  </a>
-                )}
-                <div className="flex flex-col gap-1">
-                  {record.payroll_movements.map((pm) => (
-                    <div key={pm.id} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{pm.title}</span>
-                      <span className="font-medium">
-                        {formatCLP(Number(pm.movements?.amount ?? 0))}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[15px] font-extrabold">{formatCLP(total)}</div>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
         )
       })}
     </div>
@@ -469,7 +460,9 @@ export function PayrollClient({
           <Vault className="size-4 text-sidebar-foreground/70" />
         </div>
         <div>
-          <p className="text-[28px] font-extrabold leading-none mb-1">{formatCLP(severanceBalance)}</p>
+          <p className="text-[28px] font-extrabold leading-none mb-1">
+            {formatCLP(severanceBalance)}
+          </p>
           <p className="mt-2 text-[11.5px] leading-relaxed text-sidebar-foreground/65">
             Monto acumulado que se reserva mes a mes. No se paga ni se transfiere; se entrega al
             pastor cuando se retire.
@@ -494,7 +487,6 @@ export function PayrollClient({
             ))}
           </div>
         )}
-
       </div>
 
       <Card className="p-[22px] rounded-[18px] space-y-4">
@@ -509,7 +501,7 @@ export function PayrollClient({
           >
             <DialogTrigger
               render={
-                <Button size="sm">
+                <Button>
                   <Plus className="size-4" />
                   Registrar remuneración
                 </Button>
@@ -542,7 +534,9 @@ export function PayrollClient({
                   <CurrencyInput
                     data-testid="severance-reserve-input"
                     value={severanceAmount}
-                    onChange={(value) => setSeveranceAmount(value === undefined ? "" : String(value))}
+                    onChange={(value) =>
+                      setSeveranceAmount(value === undefined ? "" : String(value))
+                    }
                     className="bg-card"
                   />
                 </div>
@@ -601,7 +595,9 @@ export function PayrollClient({
                   type="submit"
                   className="w-full"
                   disabled={
-                    form.formState.isSubmitting || anyLineUploading || !(Number(severanceAmount) > 0)
+                    form.formState.isSubmitting ||
+                    anyLineUploading ||
+                    !(Number(severanceAmount) > 0)
                   }
                 >
                   <BadgeCheck className="size-4" />

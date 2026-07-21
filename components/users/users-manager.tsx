@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, type ComponentProps } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -40,10 +40,11 @@ import {
   ItemDescription,
   ItemActions
 } from "@/components/ui/item"
+import { Badge } from "@/components/ui/badge"
 import { createUserSchema, updateUserSchema } from "@/lib/validators/user"
 import type { CreateUserInput, UpdateUserInput } from "@/lib/validators/user"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { toast } from "sonner"
 import { inviteUser, updateUser, deleteUser, resendInvite, resetUser } from "@/app/actions/users"
 import { startImpersonation } from "@/app/actions/impersonation"
@@ -70,12 +71,14 @@ function isLinkExpired(user: UserRow): boolean {
   return Date.now() - lastAction > expiryMs
 }
 
-function roleBadgeClass(role: UserRole) {
-  if (role === "ADMIN") return "bg-primary/10 text-primary"
-  if (role === "BURSAR") return "bg-role-purple-surface text-role-purple"
-  if (role === "FINANCE") return "bg-income-surface text-on-income"
-  if (role === "MINISTER") return "bg-warn-surface text-on-warn"
-  return "bg-muted text-muted-foreground"
+type BadgeVariant = ComponentProps<typeof Badge>["variant"]
+
+function roleBadgeVariant(role: UserRole): BadgeVariant {
+  if (role === "ADMIN") return "primary"
+  if (role === "BURSAR") return "role"
+  if (role === "FINANCE") return "income"
+  if (role === "MINISTER") return "warn"
+  return "neutral"
 }
 
 function roleLabel(role: UserRole) {
@@ -88,32 +91,20 @@ function roleLabel(role: UserRole) {
 
 type StatusMeta = {
   label: string
-  badgeClass: string | null
+  variant: BadgeVariant | null
   rowOpacity: boolean
 }
 
 function statusMeta(status: UserStatus): StatusMeta {
   switch (status) {
     case "ACTIVE":
-      return { label: "Activo", badgeClass: null, rowOpacity: false }
+      return { label: "Activo", variant: null, rowOpacity: false }
     case "INACTIVE":
-      return {
-        label: "Inactivo",
-        badgeClass: "bg-muted text-muted-foreground border border-border",
-        rowOpacity: true
-      }
+      return { label: "Inactivo", variant: "neutral", rowOpacity: true }
     case "PENDING_ACTIVATION":
-      return {
-        label: "Sin activar",
-        badgeClass: "bg-warn-surface text-on-warn border border-warn-border",
-        rowOpacity: false
-      }
+      return { label: "Sin activar", variant: "warn", rowOpacity: false }
     case "PENDING_RESET":
-      return {
-        label: "Reset pendiente",
-        badgeClass: "bg-expense-surface text-on-expense border border-expense-border",
-        rowOpacity: false
-      }
+      return { label: "Reset pendiente", variant: "expense", rowOpacity: false }
   }
 }
 
@@ -279,150 +270,114 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           />
         </div>
 
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog
+          open={createOpen}
+          onOpenChange={(o) => {
+            setCreateOpen(o)
+            if (!o) createForm.reset()
+          }}
+        >
           <DialogTrigger
             render={
-              <Button className="h-11 px-5 shrink-0">
-                <UserRoundPlus data-icon="inline-start" />
-                Invitar
+              <Button className="h-11 px-5 shrink-0 rounded-full">
+                <UserRoundPlus className="size-4" />
+                Crear usuario
               </Button>
             }
           />
-          <DialogContent className="w-[95vw] sm:max-w-xl bg-card p-0 overflow-y-auto max-h-[90vh]">
-            <div className="p-6 sm:p-10 flex flex-col gap-8">
-              <DialogHeader>
-                <DialogTitle className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
-                  Invitar Usuario
-                </DialogTitle>
-                <DialogDescription className="text-muted-foreground text-base mt-2">
-                  Se enviará un correo de activación. El usuario establecerá su propia contraseña.
-                </DialogDescription>
-              </DialogHeader>
+          <DialogContent className="sm:max-w-[460px]">
+            <DialogHeader>
+              <DialogTitle className="text-[17px] font-extrabold">Crear usuario</DialogTitle>
+              <DialogDescription className="text-[12.5px]">
+                Se enviará un correo de activación. El usuario establecerá su propia contraseña.
+              </DialogDescription>
+            </DialogHeader>
 
-              <form
-                onSubmit={createForm.handleSubmit(handleCreate)}
-                className="flex flex-col gap-6"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-px flex-1 bg-border" />
-                  <h3 className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
-                    Datos del Colaborador
-                  </h3>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
+            <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-3 pt-2">
+              <Field data-invalid={!!createForm.formState.errors.full_name || undefined}>
+                <FieldLabel htmlFor="new-full_name">Nombre completo</FieldLabel>
+                <Input
+                  id="new-full_name"
+                  placeholder="Ej: Juan Pérez"
+                  aria-invalid={!!createForm.formState.errors.full_name}
+                  {...createForm.register("full_name")}
+                />
+                <FieldError errors={[createForm.formState.errors.full_name]} />
+              </Field>
 
-                <FieldGroup>
-                  <Field data-invalid={!!createForm.formState.errors.full_name || undefined}>
-                    <FieldLabel
-                      htmlFor="new-full_name"
-                      className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                    >
-                      Nombre Completo
-                    </FieldLabel>
-                    <Input
-                      id="new-full_name"
-                      placeholder="Ej: Juan Pérez"
-                      aria-invalid={!!createForm.formState.errors.full_name}
-                      className="h-12 bg-muted border-none shadow-none rounded-xl px-5 text-base font-medium"
-                      {...createForm.register("full_name")}
-                    />
-                    <FieldError errors={[createForm.formState.errors.full_name]} />
-                  </Field>
+              <Field data-invalid={!!createForm.formState.errors.email || undefined}>
+                <FieldLabel htmlFor="new-email">Correo electrónico</FieldLabel>
+                <Input
+                  id="new-email"
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  aria-invalid={!!createForm.formState.errors.email}
+                  {...createForm.register("email")}
+                />
+                <FieldError errors={[createForm.formState.errors.email]} />
+              </Field>
 
-                  <Field data-invalid={!!createForm.formState.errors.email || undefined}>
-                    <FieldLabel
-                      htmlFor="new-email"
-                      className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                    >
-                      Correo Electrónico
-                    </FieldLabel>
-                    <Input
-                      id="new-email"
-                      type="email"
-                      placeholder="usuario@ejemplo.com"
-                      aria-invalid={!!createForm.formState.errors.email}
-                      className="h-12 bg-muted border-none shadow-none rounded-xl px-5 text-base font-medium"
-                      {...createForm.register("email")}
-                    />
-                    <FieldError errors={[createForm.formState.errors.email]} />
-                  </Field>
+              <Field>
+                <FieldLabel htmlFor="new-role">Nivel de acceso</FieldLabel>
+                <NativeSelect id="new-role" className="w-full" {...createForm.register("role")}>
+                  <option value="ADMIN">Administrador — Acceso total</option>
+                  <option value="FINANCE">Finanzas — Gestión contable</option>
+                  <option value="BURSAR">Tesorero — Ingreso y aprobación</option>
+                  <option value="MINISTER">Ministro — Solicitudes de fondos</option>
+                </NativeSelect>
+              </Field>
 
-                  <Field>
-                    <FieldLabel
-                      htmlFor="new-role"
-                      className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                    >
-                      Nivel de Acceso
-                    </FieldLabel>
-                    <NativeSelect id="new-role" className="w-full" {...createForm.register("role")}>
-                      <option value="ADMIN">Administrador — Control del Sistema</option>
-                      <option value="BURSAR">Tesorero — Ingreso y Aprobación</option>
-                      <option value="FINANCE">Finanzas — Monitoreo de Registros</option>
-                      <option value="MINISTER">Ministro — Solicitudes de Fondos</option>
-                    </NativeSelect>
-                  </Field>
-                </FieldGroup>
+              {selectedRole === "ADMIN" && (
+                <Alert variant="info">
+                  <AlertTitle>Acceso total al sistema</AlertTitle>
+                  <AlertDescription>
+                    Puede invitar y eliminar usuarios, ver todos los movimientos, crear y anular
+                    registros contables, y acceder a los reportes. Asigna este rol solo a personas
+                    de plena confianza.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {selectedRole === "BURSAR" && (
+                <Alert variant="info">
+                  <AlertTitle>Tesorero — Ingreso y aprobación</AlertTitle>
+                  <AlertDescription>
+                    Puede crear, editar y anular movimientos contables, y aprobar o rechazar
+                    solicitudes de fondos de ministros. No puede gestionar usuarios ni configurar el
+                    sistema.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {selectedRole === "FINANCE" && (
+                <Alert variant="info">
+                  <AlertTitle>Finanzas — Monitoreo de registros</AlertTitle>
+                  <AlertDescription>
+                    Puede consultar movimientos y el flujo de solicitudes, pero no puede crear,
+                    editar ni aprobar ningún registro. Rol de supervisión financiera.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {selectedRole === "MINISTER" && (
+                <Alert variant="info">
+                  <AlertTitle>Solicitudes de fondos</AlertTitle>
+                  <AlertDescription>
+                    Puede enviar solicitudes de fondos para su ministerio y rendir los gastos
+                    correspondientes. No tiene acceso a movimientos contables ni configuración.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-                {selectedRole === "ADMIN" && (
-                  <Alert variant="warning">
-                    <AlertTitle>Acceso total al sistema</AlertTitle>
-                    <AlertDescription>
-                      Puede invitar y eliminar usuarios, ver todos los movimientos, crear y anular
-                      registros contables, y acceder a los reportes. Asigna este rol solo a personas
-                      de plena confianza.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {selectedRole === "BURSAR" && (
-                  <Alert variant="info">
-                    <AlertTitle>Tesorero — Ingreso y aprobación</AlertTitle>
-                    <AlertDescription>
-                      Puede crear, editar y anular movimientos contables, y aprobar o rechazar
-                      solicitudes de fondos de ministros. No puede gestionar usuarios ni configurar
-                      el sistema.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {selectedRole === "FINANCE" && (
-                  <Alert variant="info">
-                    <AlertTitle>Finanzas — Monitoreo de registros</AlertTitle>
-                    <AlertDescription>
-                      Puede consultar movimientos y el flujo de solicitudes, pero no puede crear,
-                      editar ni aprobar ningún registro. Rol de supervisión financiera.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {selectedRole === "MINISTER" && (
-                  <Alert variant="info">
-                    <AlertTitle>Solicitudes de fondos</AlertTitle>
-                    <AlertDescription>
-                      Puede enviar solicitudes de fondos para su ministerio y rendir los gastos
-                      correspondientes. No tiene acceso a movimientos contables ni configuración.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  <Button
-                    type="submit"
-                    disabled={createForm.formState.isSubmitting}
-                    className="h-11 text-sm"
-                  >
-                    {createForm.formState.isSubmitting
-                      ? "Enviando invitación..."
-                      : "Enviar Invitación"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={() => setCreateOpen(false)}
-                    className="h-11"
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            </div>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+                <Button variant="outline" type="button" onClick={() => setCreateOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createForm.formState.isSubmitting}>
+                  <Send className="size-3.5" />
+                  {createForm.formState.isSubmitting
+                    ? "Enviando invitación..."
+                    : "Enviar invitación"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -440,137 +395,114 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           if (!o) setEditingUser(null)
         }}
       >
-        <DialogContent className="w-[95vw] sm:max-w-lg bg-card p-0">
-          <div className="p-6 sm:p-10 flex flex-col gap-8">
-            <DialogHeader>
-              <DialogTitle className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
-                Editar Usuario
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground text-base mt-1">
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="text-[17px] font-extrabold">Editar usuario</DialogTitle>
+            <DialogDescription className="text-[12.5px]">
+              Modifica los datos del usuario o realiza acciones sobre su cuenta.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field data-invalid={!!editForm.formState.errors.full_name || undefined}>
+                <FieldLabel htmlFor="edit-full_name">Nombre</FieldLabel>
+                <Input
+                  id="edit-full_name"
+                  aria-invalid={!!editForm.formState.errors.full_name}
+                  {...editForm.register("full_name")}
+                />
+                <FieldError errors={[editForm.formState.errors.full_name]} />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="edit-role">Rol</FieldLabel>
+                <NativeSelect id="edit-role" className="w-full" {...editForm.register("role")}>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="BURSAR">Tesorero</option>
+                  <option value="FINANCE">Finanzas</option>
+                  <option value="MINISTER">Ministro</option>
+                </NativeSelect>
+              </Field>
+            </div>
+
+            <Field>
+              <FieldLabel htmlFor="edit-email">Correo</FieldLabel>
+              <div
+                id="edit-email"
+                className="flex h-9 items-center rounded-md border border-transparent bg-muted px-2.5 text-sm text-muted-foreground"
+              >
                 {editingUser?.email}
-              </DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={editForm.handleSubmit(handleUpdate)} className="flex flex-col gap-5">
-              <FieldGroup>
-                <Field data-invalid={!!editForm.formState.errors.full_name || undefined}>
-                  <FieldLabel
-                    htmlFor="edit-full_name"
-                    className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                  >
-                    Nombre Completo
-                  </FieldLabel>
-                  <Input
-                    id="edit-full_name"
-                    aria-invalid={!!editForm.formState.errors.full_name}
-                    className="h-12 bg-muted border-none rounded-xl px-5 text-base font-medium"
-                    {...editForm.register("full_name")}
-                  />
-                  <FieldError errors={[editForm.formState.errors.full_name]} />
-                </Field>
-
-                <Field>
-                  <FieldLabel
-                    htmlFor="edit-role"
-                    className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                  >
-                    Nivel de Acceso
-                  </FieldLabel>
-                  <NativeSelect id="edit-role" className="w-full" {...editForm.register("role")}>
-                    <option value="ADMIN">Administrador — Control del Sistema</option>
-                    <option value="BURSAR">Tesorero — Ingreso y Aprobación</option>
-                    <option value="FINANCE">Finanzas — Monitoreo de Registros</option>
-                    <option value="MINISTER">Ministro — Solicitudes de Fondos</option>
-                  </NativeSelect>
-                </Field>
-
-                <Field>
-                  <FieldLabel
-                    htmlFor="edit-status"
-                    className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
-                  >
-                    Estado de Cuenta
-                  </FieldLabel>
-                  <NativeSelect
-                    id="edit-status"
-                    className="w-full"
-                    {...editForm.register("status")}
-                  >
-                    <option value="ACTIVE">Activo</option>
-                    <option value="INACTIVE">Inactivo</option>
-                  </NativeSelect>
-                </Field>
-              </FieldGroup>
-
-              {editingUser && (
-                <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                    Acciones de cuenta
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {editingUser.role !== "ADMIN" && editingUser.status === "ACTIVE" && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleImpersonate(editingUser.id)}
-                      >
-                        <VenetianMask className="size-3.5" />
-                        Impersonar
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void handleReset(editingUser.id)}
-                    >
-                      <RotateCcw className="size-3.5" />
-                      Resetear contraseña
-                    </Button>
-                    {editingUser.status === "PENDING_ACTIVATION" && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void handleResendInvite(editingUser.id)}
-                      >
-                        <Send className="size-3.5" />
-                        Reenviar invitación
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => {
-                        setDeletingUser(editingUser)
-                        setEditingUser(null)
-                      }}
-                    >
-                      <Trash2 className="size-3.5" />
-                      Eliminar usuario
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                <Button type="submit" disabled={editForm.formState.isSubmitting} className="h-11">
-                  {editForm.formState.isSubmitting ? "Guardando..." : "Guardar Cambios"}
-                </Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => setEditingUser(null)}
-                  className="h-11"
-                >
-                  Cancelar
-                </Button>
               </div>
-            </form>
-          </div>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="edit-status">Estado de cuenta</FieldLabel>
+              <NativeSelect id="edit-status" className="w-full" {...editForm.register("status")}>
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+              </NativeSelect>
+            </Field>
+
+            {editingUser && (
+              <div className="border-t border-border pt-4 space-y-2.5">
+                <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Acciones de cuenta
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {editingUser.role !== "ADMIN" && editingUser.status === "ACTIVE" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleImpersonate(editingUser.id)}
+                    >
+                      <VenetianMask className="size-3.5" />
+                      Impersonar
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void handleReset(editingUser.id)}
+                  >
+                    <RotateCcw className="size-3.5" />
+                    Resetear contraseña
+                  </Button>
+                  {editingUser.status === "PENDING_ACTIVATION" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handleResendInvite(editingUser.id)}
+                    >
+                      <Send className="size-3.5" />
+                      Reenviar invitación
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => {
+                      setDeletingUser(editingUser)
+                      setEditingUser(null)
+                    }}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Eliminar usuario
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+              <Button variant="outline" type="button" onClick={() => setEditingUser(null)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -581,25 +513,21 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           if (!o) setDeletingUser(null)
         }}
       >
-        <DialogContent className="w-[95vw] sm:max-w-sm bg-card p-0">
-          <div className="p-6 sm:p-8 flex flex-col gap-5">
-            <DialogHeader>
-              <DialogTitle className="font-heading text-xl font-bold text-foreground">
-                Eliminar usuario
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground text-sm mt-1">
-                ¿Eliminar a <strong>{deletingUser?.full_name}</strong> ({deletingUser?.email})? Esta
-                acción no se puede deshacer. Se cancelará cualquier invitación pendiente.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-2 pt-2 border-t border-border">
-              <Button variant="destructive" className="h-10" onClick={() => void handleDelete()}>
-                Sí, eliminar
-              </Button>
-              <Button variant="outline" className="h-10" onClick={() => setDeletingUser(null)}>
-                Cancelar
-              </Button>
-            </div>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[17px] font-extrabold">Eliminar usuario</DialogTitle>
+            <DialogDescription className="text-[12.5px]">
+              ¿Eliminar a <strong>{deletingUser?.full_name}</strong> ({deletingUser?.email})? Esta
+              acción no se puede deshacer. Se cancelará cualquier invitación pendiente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setDeletingUser(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={() => void handleDelete()}>
+              Sí, eliminar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -611,50 +539,45 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
           if (!o) setInviteLink(null)
         }}
       >
-        <DialogContent className="w-[95vw] sm:max-w-lg bg-card p-0">
-          <div className="p-6 sm:p-8 flex flex-col gap-5">
-            <DialogHeader>
-              <DialogTitle className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
-                <Link className="size-5 text-primary shrink-0" />
-                Enlace de invitación
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground text-sm mt-1">
-                Comparte este enlace con el usuario para que active su cuenta. Expira en{" "}
-                <strong>24 horas</strong>.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex gap-2 items-center">
-              <Input
-                readOnly
-                value={inviteLink ?? ""}
-                className="h-11 bg-muted border-none rounded-xl px-4 text-sm font-mono truncate"
-                onFocus={(e) => e.target.select()}
-              />
-              <Button
-                size="sm"
-                variant={linkCopied ? "outline" : "default"}
-                onClick={copyInviteLink}
-                className="h-11 px-4 shrink-0 gap-1.5"
-              >
-                {linkCopied ? (
-                  <>
-                    <Check className="size-4" />
-                    Copiado
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-4" />
-                    Copiar
-                  </>
-                )}
-              </Button>
-            </div>
-            <div className="pt-2 border-t border-border">
-              <Button variant="outline" className="h-10 w-full" onClick={() => setInviteLink(null)}>
-                Cerrar
-              </Button>
-            </div>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[17px] font-extrabold">
+              <Link className="size-4 text-primary shrink-0" />
+              Enlace de invitación
+            </DialogTitle>
+            <DialogDescription className="text-[12.5px]">
+              Comparte este enlace con el usuario para que active su cuenta. Expira en{" "}
+              <strong>24 horas</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 items-center pt-2">
+            <Input
+              readOnly
+              value={inviteLink ?? ""}
+              className="h-11 bg-muted border-none rounded-xl px-4 text-sm font-mono truncate"
+              onFocus={(e) => e.target.select()}
+            />
+            <Button
+              variant={linkCopied ? "outline" : "default"}
+              onClick={copyInviteLink}
+              className="h-11 px-4 shrink-0 gap-1.5"
+            >
+              {linkCopied ? (
+                <>
+                  <Check className="size-4" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="size-4" />
+                  Copiar
+                </>
+              )}
+            </Button>
           </div>
+          <Button variant="outline" className="w-full" onClick={() => setInviteLink(null)}>
+            Cerrar
+          </Button>
         </DialogContent>
       </Dialog>
 
@@ -705,49 +628,39 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   {initialsFor(user.full_name || "?")}
                 </div>
                 <ItemContent>
-                  <ItemTitle>{user.full_name}</ItemTitle>
-                  <ItemDescription>{user.email}</ItemDescription>
+                  <ItemTitle className="font-bold">{user.full_name}</ItemTitle>
+                  <ItemDescription className="text-[12.5px]">{user.email}</ItemDescription>
                   <div className="sm:hidden mt-0.5 flex flex-wrap gap-1">
-                    {meta.badgeClass && (
-                      <span
-                        className={cn(
-                          "w-fit rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                          meta.badgeClass
-                        )}
-                      >
-                        {meta.label}
-                      </span>
-                    )}
-                    {linkExpired && (
-                      <span className="w-fit rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
-                        Enlace expirado
-                      </span>
-                    )}
+                    {meta.variant && <Badge variant={meta.variant}>{meta.label}</Badge>}
+                    {linkExpired && <Badge variant="expense">Enlace expirado</Badge>}
                   </div>
                 </ItemContent>
                 <ItemActions>
-                  <span
-                    className={cn(
-                      "hidden sm:inline-flex rounded-full px-2.5 py-1 text-[10.5px] font-extrabold tracking-[0.05em] uppercase",
-                      roleBadgeClass(user.role)
-                    )}
-                  >
+                  <Badge variant={roleBadgeVariant(user.role)} className="hidden sm:inline-flex">
                     {roleLabel(user.role)}
-                  </span>
-                  {meta.badgeClass && (
-                    <span
-                      className={cn(
-                        "hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                        meta.badgeClass
-                      )}
-                    >
+                  </Badge>
+                  {meta.variant && (
+                    <Badge variant={meta.variant} className="hidden sm:inline-flex">
                       {meta.label}
-                    </span>
+                    </Badge>
                   )}
                   {linkExpired && (
-                    <span className="hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
+                    <Badge variant="expense" className="hidden sm:inline-flex">
                       Enlace expirado
-                    </span>
+                    </Badge>
+                  )}
+                  {user.role !== "ADMIN" && user.status === "ACTIVE" && (
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleImpersonate(user.id)
+                      }}
+                      title="Impersonar"
+                    >
+                      <VenetianMask className="size-3.5" />
+                    </Button>
                   )}
                   <Button
                     size="icon-sm"

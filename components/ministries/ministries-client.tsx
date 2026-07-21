@@ -128,7 +128,7 @@ export function MinistriesClient({
         >
           <DialogTrigger
             render={
-              <Button size="sm">
+              <Button>
                 <Plus className="size-4" />
                 Nuevo ministerio
               </Button>

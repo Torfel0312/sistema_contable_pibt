@@ -52,7 +52,7 @@ export default async function MovementsPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
@@ -97,15 +97,15 @@ export default async function MovementsPage({ searchParams }: Props) {
           subcategory_name: (row.movement_subcategories as { name: string } | null)?.name ?? null,
           delivered_by: row.delivered_by,
           receipt_email: row.receipt_email,
-          payment_method_name:
-            (row.payment_methods as { name: string } | null)?.name ?? null,
+          payment_method_name: (row.payment_methods as { name: string } | null)?.name ?? null,
           notes: row.notes,
           cancellation_reason: row.cancellation_reason,
           status: row.status,
           created_by: {
             full_name: (row.users as { full_name: string } | null)?.full_name ?? ""
           },
-          cancelled_by: row.cancelled_by as { full_name: string } | null
+          cancelled_by: row.cancelled_by as { full_name: string } | null,
+          cancelled_at: row.cancelled_at
         }))}
       />
 
@@ -117,7 +117,6 @@ export default async function MovementsPage({ searchParams }: Props) {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               render={page > 1 ? <Link href={buildUrl(page - 1)} /> : undefined}
               disabled={page <= 1}
               className="gap-1"
@@ -127,7 +126,6 @@ export default async function MovementsPage({ searchParams }: Props) {
             </Button>
             <Button
               variant="outline"
-              size="sm"
               render={page < totalPages ? <Link href={buildUrl(page + 1)} /> : undefined}
               disabled={page >= totalPages}
               className="gap-1"

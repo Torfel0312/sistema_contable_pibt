@@ -17,15 +17,14 @@ export default async function LoginPage() {
 
   return (
     <AuthShell
-      churchName="Primera Iglesia Bautista de Talcahuano"
       bottom={
         <blockquote className="flex flex-col gap-3.5">
-          <p className="text-[19px] leading-[1.5] font-medium text-primary-foreground/90">
+          <p className="text-[19px] leading-[1.5] font-medium text-primary-foreground">
             &ldquo;Evitamos que alguien nos censure en cuanto a esta ofrenda generosa,
             procurando hacer lo que es honesto, no sólo delante del Señor, sino también
             delante de los hombres.&rdquo;
           </p>
-          <cite className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary-foreground/60 not-italic">
+          <cite className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/60 not-italic">
             2 Corintios 8:20&ndash;21
           </cite>
         </blockquote>

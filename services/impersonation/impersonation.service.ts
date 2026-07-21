@@ -1,5 +1,4 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { auditService } from "@/services/audit/audit.service"
 
 const SESSION_TTL_MS = 30 * 60 * 1000
 
@@ -61,33 +60,18 @@ export const impersonationService = {
 
     if (error || !session) throw error ?? new Error("No se pudo iniciar la suplantación")
 
-    await auditService.logSystem({
-      entity: "users",
-      action: "IMPERSONATION_STARTED",
-      entity_id: targetUserId,
-      user_id: impersonatorId,
-      impersonator_id: null,
-      new_value: {
-        target_user_id: target.id,
-        target_email: target.email,
-        target_role: target.role
-      },
-      note: `Suplantación de ${target.full_name} iniciada`
-    })
-
     return session
   },
 
   async stop(
     sessionId: string,
-    endedBy: string,
     reason: "manual" | "expired" | "target_inactive" | "forced" = "manual"
   ): Promise<void> {
     const admin = createSupabaseAdminClient()
 
     const { data: session } = await admin
       .from("impersonation_sessions")
-      .select("id, target_user_id")
+      .select("id")
       .eq("id", sessionId)
       .is("ended_at", null)
       .maybeSingle()
@@ -98,14 +82,5 @@ export const impersonationService = {
       .from("impersonation_sessions")
       .update({ ended_at: new Date().toISOString(), ended_reason: reason })
       .eq("id", sessionId)
-
-    await auditService.logSystem({
-      entity: "users",
-      action: "IMPERSONATION_ENDED",
-      entity_id: session.target_user_id,
-      user_id: endedBy,
-      impersonator_id: null,
-      note: `Suplantación finalizada (${reason})`
-    })
   }
 }

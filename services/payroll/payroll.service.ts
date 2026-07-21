@@ -111,7 +111,7 @@ export const payrollService = {
     const { data, error } = await db
       .from("payroll_records")
       .select(
-        "*, payroll_movements(id, title, movements(id, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
+        "*, created_by_user:users!payroll_records_created_by_id_fkey(full_name), payroll_movements(id, title, movements(id, amount, movement_date, delivered_by, notes, movement_attachments(*)))"
       )
       .eq("id", id)
       .single()

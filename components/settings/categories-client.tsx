@@ -218,7 +218,10 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
   }
 
   function openEditSubcategory(subcategory: Subcategory) {
-    editSubcategoryForm.reset({ name: subcategory.name, description: subcategory.description ?? "" })
+    editSubcategoryForm.reset({
+      name: subcategory.name,
+      description: subcategory.description ?? ""
+    })
     setEditingSubcategory(subcategory)
   }
 
@@ -278,7 +281,6 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
             })}
           </TabsList>
           <Button
-            size="sm"
             onClick={() => {
               categoryForm.reset({ movement_type: activeTab, name: "", description: "" })
               setCategoryDialogType(activeTab)
@@ -308,139 +310,86 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
               ) : (
                 <ItemGroup>
                   {sectionCategories.map((category) => {
-                  const categorySubcategories = subcategoriesByCategory.get(category.id) ?? []
-                  const hasSubcategories = categorySubcategories.length > 0
-                  const isExpanded = expandedCategoryIds.has(category.id)
-                  return (
-                  <Collapsible
-                    key={category.id}
-                    open={isExpanded}
-                    onOpenChange={() => toggleExpanded(category.id)}
-                    className="flex flex-col gap-2"
-                  >
-                    <Item variant="outline">
-                      <ItemContent>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {hasSubcategories ? (
-                            <CollapsibleTrigger
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                              aria-label={
-                                isExpanded ? "Contraer subcategorías" : "Expandir subcategorías"
-                              }
-                            >
-                              <ChevronRight
-                                className={cn(
-                                  "size-4 transition-transform",
-                                  isExpanded && "rotate-90"
-                                )}
-                              />
-                            </CollapsibleTrigger>
-                          ) : (
-                            <span className="size-4" />
-                          )}
-                          <ItemTitle>{category.name}</ItemTitle>
-                          {hasSubcategories && (
-                            <span className="text-xs text-muted-foreground">
-                              {categorySubcategories.length} subcategoría
-                              {categorySubcategories.length === 1 ? "" : "s"}
-                            </span>
-                          )}
-                          {category.is_system && (
-                            <Badge variant="role">
-                              <Lock className="size-3" />
-                              Sistema
-                            </Badge>
-                          )}
-                          <Badge variant={category.is_active ? "income" : "neutral"} dot>
-                            {category.is_active ? "Activo" : "Archivado"}
-                          </Badge>
-                        </div>
-                      </ItemContent>
-                      <ItemActions>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5"
-                          onClick={() => setSubcategoryDialogFor(category)}
-                        >
-                          <Plus className="size-3.5" />
-                          Subcategoría
-                        </Button>
-                        {!category.is_system && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="outline"
-                                  size="icon-sm"
-                                  aria-label="Más acciones de la categoría"
-                                />
-                              }
-                            >
-                              <MoreVertical className="size-3.5" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditCategory(category)}>
-                                <Pencil className="size-3.5" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={togglingId === category.id}
-                                onClick={() => handleToggleCategory(category)}
-                              >
-                                {category.is_active ? (
-                                  <>
-                                    <Archive className="size-3.5" />
-                                    Archivar
-                                  </>
-                                ) : (
-                                  <>
-                                    <ArchiveRestore className="size-3.5" />
-                                    Reactivar
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </ItemActions>
-                    </Item>
-
-                    {hasSubcategories && (
-                      <CollapsibleContent className="ml-6 pl-4 border-l border-border flex flex-col gap-2">
-                        {categorySubcategories.map((subcategory) => (
-                          <Item key={subcategory.id} variant="muted" size="sm">
-                            <ItemContent>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <ItemTitle className="text-sm">{subcategory.name}</ItemTitle>
-                                <Badge variant={subcategory.is_active ? "income" : "neutral"} dot>
-                                  {subcategory.is_active ? "Activo" : "Archivado"}
+                    const categorySubcategories = subcategoriesByCategory.get(category.id) ?? []
+                    const hasSubcategories = categorySubcategories.length > 0
+                    const isExpanded = expandedCategoryIds.has(category.id)
+                    return (
+                      <Collapsible
+                        key={category.id}
+                        open={isExpanded}
+                        onOpenChange={() => toggleExpanded(category.id)}
+                        className="flex flex-col gap-2"
+                      >
+                        <Item variant="outline">
+                          <ItemContent>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {hasSubcategories ? (
+                                <CollapsibleTrigger
+                                  className="text-muted-foreground hover:text-foreground transition-colors"
+                                  aria-label={
+                                    isExpanded ? "Contraer subcategorías" : "Expandir subcategorías"
+                                  }
+                                >
+                                  <ChevronRight
+                                    className={cn(
+                                      "size-4 transition-transform",
+                                      isExpanded && "rotate-90"
+                                    )}
+                                  />
+                                </CollapsibleTrigger>
+                              ) : (
+                                <span className="size-4" />
+                              )}
+                              <ItemTitle>{category.name}</ItemTitle>
+                              {hasSubcategories && (
+                                <span className="text-xs text-muted-foreground">
+                                  {categorySubcategories.length} subcategoría
+                                  {categorySubcategories.length === 1 ? "" : "s"}
+                                </span>
+                              )}
+                              {category.is_system && (
+                                <Badge variant="role">
+                                  <Lock className="size-3" />
+                                  Sistema
                                 </Badge>
-                              </div>
-                            </ItemContent>
-                            <ItemActions>
+                              )}
+                              <Badge variant={category.is_active ? "income" : "neutral"} dot>
+                                {category.is_active ? "Activo" : "Archivado"}
+                              </Badge>
+                            </div>
+                          </ItemContent>
+                          <ItemActions>
+                            <Button
+                              variant="outline"
+                              className="gap-1.5"
+                              onClick={() => setSubcategoryDialogFor(category)}
+                            >
+                              <Plus className="size-3.5" />
+                              Subcategoría
+                            </Button>
+                            {!category.is_system && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger
                                   render={
                                     <Button
                                       variant="outline"
                                       size="icon-sm"
-                                      aria-label="Más acciones de la subcategoría"
+                                      aria-label="Más acciones de la categoría"
                                     />
                                   }
                                 >
                                   <MoreVertical className="size-3.5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openEditSubcategory(subcategory)}>
+                                  <DropdownMenuItem onClick={() => openEditCategory(category)}>
                                     <Pencil className="size-3.5" />
                                     Editar
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    disabled={togglingId === subcategory.id}
-                                    onClick={() => handleToggleSubcategory(subcategory)}
+                                    disabled={togglingId === category.id}
+                                    onClick={() => handleToggleCategory(category)}
                                   >
-                                    {subcategory.is_active ? (
+                                    {category.is_active ? (
                                       <>
                                         <Archive className="size-3.5" />
                                         Archivar
@@ -454,16 +403,73 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
-                            </ItemActions>
-                          </Item>
-                        ))}
-                      </CollapsibleContent>
-                    )}
-                  </Collapsible>
-                  )
-                })}
-              </ItemGroup>
-            )}
+                            )}
+                          </ItemActions>
+                        </Item>
+
+                        {hasSubcategories && (
+                          <CollapsibleContent className="ml-6 pl-4 border-l border-border flex flex-col gap-2">
+                            {categorySubcategories.map((subcategory) => (
+                              <Item key={subcategory.id} variant="muted" size="sm">
+                                <ItemContent>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <ItemTitle className="text-sm">{subcategory.name}</ItemTitle>
+                                    <Badge
+                                      variant={subcategory.is_active ? "income" : "neutral"}
+                                      dot
+                                    >
+                                      {subcategory.is_active ? "Activo" : "Archivado"}
+                                    </Badge>
+                                  </div>
+                                </ItemContent>
+                                <ItemActions>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                      render={
+                                        <Button
+                                          variant="outline"
+                                          size="icon-sm"
+                                          aria-label="Más acciones de la subcategoría"
+                                        />
+                                      }
+                                    >
+                                      <MoreVertical className="size-3.5" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => openEditSubcategory(subcategory)}
+                                      >
+                                        <Pencil className="size-3.5" />
+                                        Editar
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        disabled={togglingId === subcategory.id}
+                                        onClick={() => handleToggleSubcategory(subcategory)}
+                                      >
+                                        {subcategory.is_active ? (
+                                          <>
+                                            <Archive className="size-3.5" />
+                                            Archivar
+                                          </>
+                                        ) : (
+                                          <>
+                                            <ArchiveRestore className="size-3.5" />
+                                            Reactivar
+                                          </>
+                                        )}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </ItemActions>
+                              </Item>
+                            ))}
+                          </CollapsibleContent>
+                        )}
+                      </Collapsible>
+                    )
+                  })}
+                </ItemGroup>
+              )}
             </TabsContent>
           )
         })}
@@ -481,7 +487,9 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nueva categoría</DialogTitle>
-            <DialogDescription>Las categorías organizan los movimientos de la iglesia.</DialogDescription>
+            <DialogDescription>
+              Las categorías organizan los movimientos de la iglesia.
+            </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={categoryForm.handleSubmit(handleCreateCategory)}
@@ -575,7 +583,9 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
                     </p>
                   </div>
                 </div>
-                <Badge variant={subcategoryDialogFor.movement_type === "INCOME" ? "income" : "expense"}>
+                <Badge
+                  variant={subcategoryDialogFor.movement_type === "INCOME" ? "income" : "expense"}
+                >
                   {subcategoryDialogFor.movement_type === "INCOME" ? "Ingreso" : "Egreso"}
                 </Badge>
               </div>
@@ -635,7 +645,9 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
               <Field>
                 <FieldLabel>Tipo</FieldLabel>
                 <div className="flex items-center gap-2">
-                  <Badge variant={editingCategory.movement_type === "INCOME" ? "income" : "expense"}>
+                  <Badge
+                    variant={editingCategory.movement_type === "INCOME" ? "income" : "expense"}
+                  >
                     {editingCategory.movement_type === "INCOME" ? "Ingreso" : "Egreso"}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
@@ -704,7 +716,9 @@ export function CategoriesClient({ initialCategories, initialSubcategories }: Pr
                   </div>
                 </div>
                 <Badge
-                  variant={editingSubcategoryParent.movement_type === "INCOME" ? "income" : "expense"}
+                  variant={
+                    editingSubcategoryParent.movement_type === "INCOME" ? "income" : "expense"
+                  }
                 >
                   {editingSubcategoryParent.movement_type === "INCOME" ? "Ingreso" : "Egreso"}
                 </Badge>

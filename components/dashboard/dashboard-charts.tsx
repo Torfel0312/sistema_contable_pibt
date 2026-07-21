@@ -2,13 +2,12 @@
 
 import { memo, useMemo } from "react"
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   XAxis,
   YAxis
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/chart"
 import { formatCLP } from "@/lib/utils"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
-import { BarChart2, PieChart as PieChartIcon } from "lucide-react"
+import { BarChart2, PieChart as PieChartIcon, TrendingUp as TrendUpIcon } from "lucide-react"
 
 type SeriesItem = { name: string; income: number; expense: number }
 type CategoryItem = { category: string; total: number }
@@ -38,11 +37,11 @@ const COLORS = [
 const incomeExpenseConfig = {
   income: {
     label: "Ingresos",
-    color: "var(--color-primary)"
+    color: "var(--income)"
   },
   expense: {
     label: "Egresos",
-    color: "var(--color-destructive)"
+    color: "var(--expense)"
   }
 } satisfies ChartConfig
 
@@ -53,7 +52,7 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
 }) {
   if (!data.length) {
     return (
-      <Empty className="border-dashed h-[300px] sm:h-72">
+      <Empty className="border-dashed h-[170px]">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <BarChart2 />
@@ -66,10 +65,116 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
   }
 
   return (
-    <div className="h-[300px] sm:h-72 w-full">
+    <div className="h-[170px] w-full">
       <ChartContainer config={incomeExpenseConfig} className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }} barGap={5}>
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              axisLine={{ stroke: "var(--color-border)" }}
+              tickMargin={6}
+              fontSize={10.5}
+              fontWeight={700}
+              stroke="var(--color-faint)"
+            />
+            <YAxis hide />
+            <ChartTooltip
+              cursor={{ fill: "hsl(var(--on-surface-variant) / 0.05)" }}
+              content={<ChartTooltipContent indicator="dashed" />}
+            />
+            <Legend
+              verticalAlign="top"
+              align="right"
+              iconType="square"
+              content={({ payload }) => (
+                <div className="flex justify-end gap-3.5 mb-2">
+                  {[...(payload ?? [])]
+                    .sort((a, b) => (a.dataKey === "income" ? -1 : b.dataKey === "income" ? 1 : 0))
+                    .map((entry, index) => {
+                    const key = entry.dataKey as keyof typeof incomeExpenseConfig
+                    const label = incomeExpenseConfig[key]?.label ?? entry.value
+                    return (
+                      <div key={index} className="flex items-center gap-1.5">
+                        <div
+                          className="size-[9px] rounded-[3px]"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-[11.5px] font-semibold text-muted-foreground">
+                          {label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            />
+            <Bar
+              dataKey="income"
+              name="Ingresos"
+              fill="var(--color-income)"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
+            />
+            <Bar
+              dataKey="expense"
+              name="Egresos"
+              fill="var(--color-expense)"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </div>
+  )
+})
+
+const balanceConfig = {
+  balance: {
+    label: "Saldo",
+    color: "var(--color-primary)"
+  }
+} satisfies ChartConfig
+
+export const BalanceHistoryChart = memo(function BalanceHistoryChart({
+  data
+}: {
+  data: SeriesItem[]
+}) {
+  const balanceSeries = useMemo(() => {
+    let running = 0
+    return data.map((item) => {
+      running += item.income - item.expense
+      return { name: item.name, balance: running }
+    })
+  }, [data])
+
+  if (!balanceSeries.length) {
+    return (
+      <Empty className="border-dashed h-[150px]">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <TrendUpIcon />
+          </EmptyMedia>
+          <EmptyTitle>Sin datos</EmptyTitle>
+          <EmptyDescription>No hay movimientos en el período seleccionado.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
+
+  return (
+    <div className="h-[150px] w-full">
+      <ChartContainer config={balanceConfig} className="h-full w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={balanceSeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="balanceFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
@@ -79,73 +184,33 @@ export const IncomeExpenseChart = memo(function IncomeExpenseChart({
               dataKey="name"
               tickLine={false}
               axisLine={false}
-              tickMargin={10}
-              fontSize={11}
-              stroke="var(--color-muted-foreground)"
+              tickMargin={6}
+              fontSize={10.5}
+              fontWeight={700}
+              stroke="var(--color-faint)"
             />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={5}
-              fontSize={11}
-              width={40}
-              stroke="var(--color-muted-foreground)"
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-            />
+            <YAxis hide domain={["dataMin", "dataMax"]} />
             <ChartTooltip
-              cursor={{ fill: "hsl(var(--on-surface-variant) / 0.05)" }}
-              content={<ChartTooltipContent indicator="dashed" />}
+              cursor={{ stroke: "var(--color-primary)", strokeDasharray: "3 3" }}
+              content={<ChartTooltipContent indicator="line" />}
             />
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="circle"
-              content={({ payload }) => (
-                <div className="flex justify-end gap-4 sm:gap-6 mb-6">
-                  {payload?.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div
-                        className="size-2.5 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        {entry.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <Area
+              type="monotone"
+              dataKey="balance"
+              name="Saldo"
+              stroke="var(--color-primary)"
+              fill="url(#balanceFill)"
+              strokeWidth={2}
             />
-            <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} barSize={20} />
-            <Bar dataKey="expense" fill="var(--color-expense)" radius={[4, 4, 0, 0]} barSize={20} />
-          </BarChart>
+          </AreaChart>
         </ResponsiveContainer>
       </ChartContainer>
     </div>
   )
 })
 
-const getCategoryConfig = (data: CategoryItem[]) => {
-  const config: ChartConfig = {
-    total: {
-      label: "Total Registrado"
-    }
-  }
-  data.forEach((item, index) => {
-    config[item.category] = {
-      label: item.category,
-      color: COLORS[index % COLORS.length]
-    }
-  })
-  return config
-}
-
 export const CategoryChart = memo(function CategoryChart({ data }: { data: CategoryItem[] }) {
-  const finalData = useMemo(
-    () => data.map((item, index) => ({ ...item, fill: COLORS[index % COLORS.length] })),
-    [data]
-  )
-  const config = useMemo(() => getCategoryConfig(data), [data])
+  const grandTotal = useMemo(() => data.reduce((sum, item) => sum + item.total, 0), [data])
 
   if (!data.length) {
     return (
@@ -163,50 +228,28 @@ export const CategoryChart = memo(function CategoryChart({ data }: { data: Categ
 
   return (
     <div className="flex flex-col gap-4 w-full min-w-0">
-      {/* Fixed-height pie — never shrinks based on legend */}
-      <div className="h-[200px] w-full">
-        <ChartContainer config={config} className="h-full w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-              <Pie
-                data={finalData}
-                dataKey="total"
-                nameKey="category"
-                innerRadius={60}
-                outerRadius={85}
-                paddingAngle={4}
-                stroke="none"
-                cx="50%"
-                cy="50%"
-              >
-                {finalData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                    className="hover:opacity-80 transition-opacity outline-none"
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </div>
-
-      {/* Legend outside Recharts — always 2 columns, never affects chart size */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full">
-        {finalData.map((entry, index) => (
-          <div key={index} className="flex items-center gap-2 min-w-0">
-            <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: entry.fill }} />
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
-              {entry.category}
-            </span>
-            <span className="text-xs font-black text-foreground ml-auto shrink-0">
-              {formatCLP(entry.total)}
-            </span>
+      {data.map((item, index) => {
+        const pct = grandTotal > 0 ? (item.total / grandTotal) * 100 : 0
+        return (
+          <div key={item.category}>
+            <div className="flex items-baseline justify-between gap-2.5 mb-1">
+              <span className="text-xs font-semibold text-foreground min-w-0 truncate">
+                {item.category}
+              </span>
+              <span className="text-[11.5px] font-bold text-muted-foreground whitespace-nowrap">
+                {formatCLP(item.total)}{" "}
+                <span className="text-faint font-semibold">· {pct.toFixed(0)}%</span>
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${pct}%`, backgroundColor: COLORS[index % COLORS.length] }}
+              />
+            </div>
           </div>
-        ))}
-      </div>
+        )
+      })}
     </div>
   )
 })

@@ -2,13 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import {
   ArrowLeft,
   ArrowLeftRight,
   BadgeCheck,
+  CheckCircle2,
   ClipboardList,
   Pencil,
   TrendingDown,
@@ -65,7 +66,9 @@ type Assignment = {
 }
 
 type MinistryIntention = Awaited<ReturnType<typeof intentionsService.list>>[number]
-type AssociatedMovement = Awaited<ReturnType<typeof ministriesService.getAssociatedMovements>>[number]
+type AssociatedMovement = Awaited<
+  ReturnType<typeof ministriesService.getAssociatedMovements>
+>[number]
 
 type Props = {
   ministry: Ministry
@@ -100,7 +103,7 @@ export function MinistryDetailClient({
   const [editOpen, setEditOpen] = useState(false)
   const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
   const [unassigning, setUnassigning] = useState(false)
-  const [changingMinister, setChangingMinister] = useState(false)
+  const [changeMinisterOpen, setChangeMinisterOpen] = useState(false)
 
   const ministers = users.filter((u) => u.role === "MINISTER")
   const availableMinsters = ministers.filter((u) => u.id !== current?.user_id)
@@ -156,7 +159,7 @@ export function MinistryDetailClient({
         ...(current ? [{ ...current, unassigned_at: new Date().toISOString() }] : [])
       ])
       assignForm.reset()
-      setChangingMinister(false)
+      setChangeMinisterOpen(false)
       toast.success("Ministro asignado")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al asignar")
@@ -196,13 +199,121 @@ export function MinistryDetailClient({
     }
   }
 
+  const pickedUserId = useWatch({ control: assignForm.control, name: "user_id" })
+
+  const changeMinisterDialog = (
+    <Dialog
+      open={changeMinisterOpen}
+      onOpenChange={(o) => {
+        setChangeMinisterOpen(o)
+        if (!o) assignForm.reset({ user_id: "", notes: "" })
+      }}
+    >
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Cambiar ministro</DialogTitle>
+          <DialogDescription>
+            El ministro actual quedará desasignado y el cambio se registrará en el historial.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={assignForm.handleSubmit(handleAssign)} className="flex flex-col gap-4 pt-2">
+          {current?.users && (
+            <div className="flex flex-col gap-2">
+              <FieldLabel>Ministro actual</FieldLabel>
+              <div className="flex items-center gap-3 rounded-[11px] border border-border bg-muted px-3 py-2.5">
+                <div
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                  style={{ background: avatarColorFor(current.users.full_name) }}
+                >
+                  {initialsFor(current.users.full_name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold truncate">{current.users.full_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{current.users.email}</p>
+                </div>
+                <Badge variant="warn" className="shrink-0">
+                  Se desasignará
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <FieldLabel>Nuevo ministro *</FieldLabel>
+            {availableMinsters.length === 0 ? (
+              <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                <span>No hay ministros disponibles</span>
+                <Button
+                  variant="ghost"
+                  render={<Link href="/users?invite=MINISTER" />}
+                  nativeButton={false}
+                >
+                  <UserPlus className="size-4" />
+                  Crear ministro
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {availableMinsters.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => assignForm.setValue("user_id", u.id, { shouldValidate: true })}
+                    className={`flex items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left transition-colors ${
+                      pickedUserId === u.id
+                        ? "border-primary bg-primary-soft"
+                        : "border-border bg-card hover:bg-muted"
+                    }`}
+                  >
+                    <div
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                      style={{ background: avatarColorFor(u.full_name) }}
+                    >
+                      {initialsFor(u.full_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate">{u.full_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    </div>
+                    {pickedUserId === u.id && (
+                      <CheckCircle2 className="size-4 text-primary shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            <FieldError errors={[assignForm.formState.errors.user_id]} />
+          </div>
+
+          <Field>
+            <FieldLabel htmlFor="change-minister-notes">Notas</FieldLabel>
+            <Input
+              id="change-minister-notes"
+              placeholder="Motivo del cambio (opcional)"
+              {...assignForm.register("notes")}
+            />
+          </Field>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setChangeMinisterOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={!pickedUserId || assignForm.formState.isSubmitting}>
+              <UserPlus className="size-4" />
+              Asignar ministro
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+
   const assignMinisterForm = (
     <form onSubmit={assignForm.handleSubmit(handleAssign)} className="flex flex-col gap-2">
       {availableMinsters.length === 0 ? (
         <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
           <span>No hay ministros disponibles</span>
           <Button
-            size="sm"
             variant="ghost"
             render={<Link href="/users?invite=MINISTER" />}
             nativeButton={false}
@@ -223,7 +334,7 @@ export function MinistryDetailClient({
           </NativeSelect>
           <FieldError errors={[assignForm.formState.errors.user_id]} />
           <Input placeholder="Notas opcionales" {...assignForm.register("notes")} />
-          <Button size="sm" type="submit" disabled={assignForm.formState.isSubmitting}>
+          <Button type="submit" disabled={assignForm.formState.isSubmitting}>
             <UserPlus className="size-4" />
             Asignar
           </Button>
@@ -236,7 +347,6 @@ export function MinistryDetailClient({
     <div className="max-w-6xl space-y-6">
       <Button
         variant="ghost"
-        size="sm"
         className="-ml-2"
         render={<Link href="/ministries" />}
         nativeButton={false}
@@ -283,7 +393,7 @@ export function MinistryDetailClient({
           >
             <DialogTrigger
               render={
-                <Button variant="outline" size="sm">
+                <Button variant="outline">
                   <Pencil className="size-4" />
                   Editar
                 </Button>
@@ -316,7 +426,7 @@ export function MinistryDetailClient({
               </form>
             </DialogContent>
           </Dialog>
-          <Button size="sm" render={<Link href="/movements/new" />} nativeButton={false}>
+          <Button render={<Link href="/movements/new" />} nativeButton={false}>
             <ArrowLeftRight className="size-4" />
             Transferir fondos
           </Button>
@@ -369,7 +479,8 @@ export function MinistryDetailClient({
             <p className="text-2xl font-extrabold tabular-nums">{intentions.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {pendingCount} pendiente{pendingCount === 1 ? "" : "s"} · {approvedCount} aprobada
-              {approvedCount === 1 ? "" : "s"} · {rejectedCount} rechazada{rejectedCount === 1 ? "" : "s"}
+              {approvedCount === 1 ? "" : "s"} · {rejectedCount} rechazada
+              {rejectedCount === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -402,7 +513,6 @@ export function MinistryDetailClient({
             {current && (
               <Button
                 variant="destructive"
-                size="sm"
                 onClick={() => setUnassignConfirmOpen(true)}
                 className="w-fit"
               >
@@ -411,12 +521,50 @@ export function MinistryDetailClient({
               </Button>
             )}
 
-            {changingMinister || !current ? (
-              assignMinisterForm
+            {current ? (
+              <>
+                <Button variant="outline" onClick={() => setChangeMinisterOpen(true)}>
+                  Cambiar ministro
+                </Button>
+                {changeMinisterDialog}
+              </>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => setChangingMinister(true)}>
-                Cambiar ministro
-              </Button>
+              assignMinisterForm
+            )}
+          </div>
+
+          <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4">
+            <h2 className="text-[13px] font-bold text-foreground">Historial de asignaciones</h2>
+            {assignments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin asignaciones registradas.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {assignments.map((a) => (
+                  <div key={a.id} className="flex items-center gap-2.5">
+                    <div
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                      style={{ background: avatarColorFor(a.users?.full_name ?? a.user_id) }}
+                    >
+                      {initialsFor(a.users?.full_name ?? "?")}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12.5px] font-bold truncate">
+                        {a.users?.full_name ?? "—"}
+                      </p>
+                      <p className="text-[11.5px] text-faint">
+                        {a.unassigned_at
+                          ? `${formatDate(a.assigned_at)} — ${formatDate(a.unassigned_at)}`
+                          : `Desde ${formatDate(a.assigned_at)}`}
+                      </p>
+                    </div>
+                    {!a.unassigned_at && (
+                      <Badge variant="income" className="shrink-0">
+                        Activo
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
@@ -458,7 +606,9 @@ export function MinistryDetailClient({
               </Link>
             </div>
             {intentions.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-5 py-4">Sin solicitudes registradas.</p>
+              <p className="text-sm text-muted-foreground px-5 py-4">
+                Sin solicitudes registradas.
+              </p>
             ) : (
               <div className="flex flex-col">
                 {intentions.slice(0, 4).map((intention) => {
@@ -532,51 +682,6 @@ export function MinistryDetailClient({
       <Separator />
 
       <section className="space-y-4">
-        <h2 className="text-base font-medium">Historial de asignaciones</h2>
-
-        {assignments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin asignaciones registradas.</p>
-        ) : (
-          <div className="rounded-lg border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wide">
-                <tr>
-                  <th className="px-4 py-2 text-left font-medium">Ministro</th>
-                  <th className="px-4 py-2 text-left font-medium">Desde</th>
-                  <th className="px-4 py-2 text-left font-medium">Hasta</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {assignments.map((a) => (
-                  <tr key={a.id} className="bg-card">
-                    <td className="px-4 py-3">
-                      <p className="font-medium">{a.users?.full_name ?? a.user_id}</p>
-                      {a.users?.email && (
-                        <p className="text-xs text-muted-foreground">{a.users.email}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(a.assigned_at)}</td>
-                    <td className="px-4 py-3">
-                      {a.unassigned_at ? (
-                        <span className="text-muted-foreground">{formatDate(a.unassigned_at)}</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-income">
-                          <span className="size-1.5 rounded-full bg-income inline-block" />
-                          Activo
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <h2 className="text-base font-medium">Remanente</h2>
           <p className="text-xs text-muted-foreground">
@@ -623,7 +728,10 @@ export function MinistryDetailClient({
         )}
       </section>
 
-      <Dialog open={unassignConfirmOpen} onOpenChange={(o) => !unassigning && setUnassignConfirmOpen(o)}>
+      <Dialog
+        open={unassignConfirmOpen}
+        onOpenChange={(o) => !unassigning && setUnassignConfirmOpen(o)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Desasignar ministro</DialogTitle>
@@ -640,7 +748,11 @@ export function MinistryDetailClient({
             </Marker>
           )}
           <div className="flex flex-col gap-2 pt-2 border-t border-border">
-            <Button variant="destructive" disabled={unassigning} onClick={() => void handleUnassign()}>
+            <Button
+              variant="destructive"
+              disabled={unassigning}
+              onClick={() => void handleUnassign()}
+            >
               Sí, desasignar
             </Button>
             <Button

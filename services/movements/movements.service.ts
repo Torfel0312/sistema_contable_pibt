@@ -77,7 +77,7 @@ export const movementsService = {
     let query = db
       .from("movements")
       .select(
-        "id, movement_date, movement_type, amount, category_id, subcategory_id, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, status, created_by_id, created_at, users!created_by_id(id, full_name, email), cancelled_by:users!cancelled_by_id(id, full_name, email), payment_methods:payment_method_id(name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)",
+        "id, movement_date, movement_type, amount, category_id, subcategory_id, delivered_by, receipt_email, payment_method_id, notes, cancellation_reason, cancelled_at, status, created_by_id, created_at, users!created_by_id(id, full_name, email), cancelled_by:users!cancelled_by_id(id, full_name, email), payment_methods:payment_method_id(name), movement_categories:category_id(name), movement_subcategories:subcategory_id(name)",
         { count: "exact" }
       )
       .order("movement_date", { ascending: false })
