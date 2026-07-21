@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Bell, Info, Send, ShieldCheck, AlarmClock, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
@@ -17,13 +17,19 @@ import { updateSettings } from "@/app/actions/settings"
 
 const DOMAIN = "pibtalcahuano.com"
 
-function SectionDivider({ label }: { label: string }) {
+function SectionHeading({
+  icon: Icon,
+  label
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+}) {
   return (
-    <div className="flex items-center gap-4">
-      <h2 className="shrink-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="flex items-center gap-2">
+      <Icon className="size-[15px] text-primary" />
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[0.07em] text-primary">
         {label}
       </h2>
-      <div className="h-px flex-1 bg-border" />
     </div>
   )
 }
@@ -68,30 +74,36 @@ export function SettingsClient({
   const voucherOptions = groupOptions(mailboxGroups, initialSettings.voucher_email)
 
   return (
-    <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col gap-8">
-      <div className="flex flex-col gap-5">
-        <SectionDivider label="Notificaciones" />
-        <p className="text-xs text-muted-foreground">
-          Un <strong className="font-medium text-foreground">grupo</strong> es un buzón compartido
-          (<code className="text-[11px]">nombre@{DOMAIN}</code>) configurado en Correo entrante que
-          reenvía a una o más personas. Úsalo aquí en vez de escribir un email individual.
-        </p>
+    <form
+      onSubmit={form.handleSubmit(handleSave)}
+      className="rounded-2xl bg-card border border-border p-[26px] flex flex-col gap-8"
+    >
+      <div className="flex flex-col gap-4">
+        <SectionHeading icon={Bell} label="Notificaciones" />
 
-        {mailboxGroups.length === 0 ? (
-          <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-4 text-sm">
-            <p className="text-muted-foreground">
-              Todavía no hay grupos de correo entrante configurados. Crea uno para poder asignarlo
-              aquí.
-            </p>
-            <Link
-              href="/settings/inbound-email"
-              className="inline-flex w-fit items-center gap-1 font-medium text-primary hover:underline"
-            >
-              Crear grupo en Correo entrante
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-        ) : (
+        <div className="flex gap-2.5 rounded-[10px] bg-muted px-3.5 py-3">
+          <Info className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs leading-relaxed text-foreground">
+            Un <strong className="font-semibold">grupo</strong> es un buzón compartido (
+            <code className="text-[11px]">nombre@{DOMAIN}</code>) configurado en Correo entrante que
+            reenvía a una o más personas. Úsalo aquí en vez de escribir un email individual.
+            {mailboxGroups.length === 0 && (
+              <>
+                {" "}
+                Aún no hay grupos —{" "}
+                <Link
+                  href="/settings/inbound-email"
+                  className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+                >
+                  crear grupo en Correo entrante
+                  <ArrowRight className="size-3" />
+                </Link>
+              </>
+            )}
+          </p>
+        </div>
+
+        {mailboxGroups.length > 0 && (
           <div className="grid gap-5 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="tesoreria-email">Grupo — Tesorería</FieldLabel>
@@ -138,7 +150,8 @@ export function SettingsClient({
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="notifications-from-email">
+            <FieldLabel htmlFor="notifications-from-email" className="flex items-center gap-1.5">
+              <Send className="size-3.5" />
               Correo remitente de notificaciones
             </FieldLabel>
             <Input
@@ -156,7 +169,8 @@ export function SettingsClient({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="notifications-bcc-email">
+            <FieldLabel htmlFor="notifications-bcc-email" className="flex items-center gap-1.5">
+              <ShieldCheck className="size-3.5" />
               Correo de respaldo (auditoría, BCC)
             </FieldLabel>
             <Input
@@ -173,9 +187,9 @@ export function SettingsClient({
         </div>
       </div>
 
-      <div className="flex flex-col gap-5">
-        <SectionDivider label="Recordatorios" />
-        <div className="grid gap-5 sm:grid-cols-2">
+      <div className="flex flex-col gap-4 border-t border-border pt-6">
+        <SectionHeading icon={AlarmClock} label="Recordatorios" />
+        <div className="max-w-[340px]">
           <Field>
             <FieldLabel htmlFor="reminder-days">Intervalo de recordatorios (días)</FieldLabel>
             <Input
@@ -195,6 +209,7 @@ export function SettingsClient({
 
       <div className="flex justify-end border-t border-border pt-6">
         <Button type="submit" disabled={form.formState.isSubmitting} className="px-8">
+          <Save className="size-4" />
           {form.formState.isSubmitting ? "Guardando..." : "Guardar configuración"}
         </Button>
       </div>
