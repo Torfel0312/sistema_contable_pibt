@@ -229,52 +229,54 @@
 }
 
 [data-theme="dark"] {
-  /* Dark mode — desaturated indigo/violet, same hue family as light */
-  --background: #14101f;
-  --foreground: #ece9fa;
-  --card: #1c1730;
-  --card-foreground: #ece9fa;
-  --popover: #1c1730;
-  --popover-foreground: #ece9fa;
-  --primary: #7a6cff;
-  --primary-dark: #5b4df2;
-  --primary-2: #a877ff;
-  --primary-soft: #2b2452;
+  /* Dark mode — literal values from the Claude Design source
+     (Holly Money Redesign.dc.html themeVars, isDark branch) */
+  --background: #232037;
+  --foreground: #f1effb;
+  --card: #2c2946;
+  --card-foreground: #f1effb;
+  --popover: #2c2946;
+  --popover-foreground: #f1effb;
+  --primary: #8b7dff;
+  --primary-dark: #6c5eff;
+  --primary-2: #b28aff;
+  --primary-soft: #413a70;
   --primary-foreground: #ffffff;
-  --secondary: #241d3d;
-  --secondary-foreground: #ece9fa;
-  --muted: #241d3d;
-  --muted-foreground: #9089b8;
-  --faint: #6f6994;
-  --accent: #241d3d;
-  --accent-foreground: #ece9fa;
-  --destructive: #ff5d55;
-  --border: #2f2650;
-  --input: #3d3268;
-  --ring: #7c6ef5;
-  --chart-1: #7c6ef5;
-  --chart-2: #b57bff;
-  --chart-3: #ff5d55;
-  --chart-4: #ffb020;
-  --chart-5: #0dbd8b;
+  --secondary: #363255;
+  --secondary-foreground: #f1effb;
+  --muted: #363255;
+  --muted-foreground: #b6b1d4;
+  --faint: #8b85ad;
+  --accent: #363255;
+  --accent-foreground: #f1effb;
+  --destructive: #ff837c;
+  --border: #403c61;
+  --input: #524d78;
+  --ring: #8b7dff;
+  --chart-1: #8b7dff;
+  --chart-2: #b28aff;
+  --chart-3: #ff837c;
+  --chart-4: #ffbb42;
+  --chart-5: #31dcab;
 
-  /* Sidebar — darkens further in dark mode */
-  --sidebar: #221c46;
-  --sidebar-hover: #2f2760;
-  --sidebar-primary: #7a6cff;
+  /* Sidebar */
+  --sidebar: #332d5e;
+  --sidebar-hover: #413a78;
+  --sidebar-primary: #8b7dff;
   --sidebar-accent: var(--sidebar-hover);
 
-  /* Semantic income/expense/warn — dark mode (brighter hues for contrast) */
-  --income: #26d3a2;
-  --income-surface: #12362d;
-  --income-border: #1d5443;
-  --on-income: #8ff0cf;
-  --expense: #ff6f68;
-  --expense-surface: #3a1f1e;
-  --expense-border: #5c2e2b;
-  --on-expense: #ffb3ae;
-  --warn-surface: #3a2c14;
-  --warn-border: #5c451f;
-  --on-warn: #ffd98a;
-  --role-purple-surface: #2e2050;
+  /* Semantic income/expense/warn */
+  --income: #31dcab;
+  --income-surface: #1f4a3d;
+  --income-border: #2f6b56;
+  --on-income: #9ff2d9;
+  --expense: #ff837c;
+  --expense-surface: #513035;
+  --expense-border: #6b3f3f;
+  --on-expense: #ffc4bf;
+  --warn: #ffbb42;
+  --warn-surface: #4a3a1c;
+  --warn-border: #6b5427;
+  --on-warn: #ffdf9e;
+  --role-purple-surface: #3a3266;
 }

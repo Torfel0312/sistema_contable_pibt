@@ -46,7 +46,7 @@ export function MovementForm(props: UseMovementFormProps) {
         </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-6 border-t border-border">
         {isSaveDisabled && (
           <span className="text-xs text-muted-foreground sm:order-first">
             Ingresa un monto para guardar
@@ -55,7 +55,7 @@ export function MovementForm(props: UseMovementFormProps) {
         <Button
           type="submit"
           disabled={form.formState.isSubmitting || attachmentUpload.isUploading || isSaveDisabled}
-          className="h-10 sm:h-11 px-6 sm:px-8 text-sm sm:text-base flex-1 sm:flex-none"
+          className="h-10 sm:h-11 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto"
         >
           {form.formState.isSubmitting ? (
             "Procesando..."
@@ -71,7 +71,7 @@ export function MovementForm(props: UseMovementFormProps) {
             type="button"
             variant="outline"
             onClick={() => onSuccess?.()}
-            className="h-10 sm:h-11 flex-1 sm:flex-none"
+            className="h-10 sm:h-11 w-full sm:w-auto"
           >
             Cancelar
           </Button>

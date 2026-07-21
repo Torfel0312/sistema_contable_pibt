@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   AUDIT_ENTITY_LABEL,
   auditActionLabel,
+  auditActionShortLabel,
   auditActionVariant,
   auditEntityLabel
 } from "@/lib/constants/audit"
@@ -19,14 +20,6 @@ import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
-import {
-  Item,
-  ItemGroup,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemHeader
-} from "@/components/ui/item"
 import { ClipboardList } from "lucide-react"
 
 export type SerializedAuditEvent = {
@@ -99,8 +92,11 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 {auditEntityLabel(event.entity)}
               </span>
               <span role="cell">
-                <Badge variant={auditActionVariant(event.action)}>
-                  {auditActionLabel(event.action)}
+                <Badge
+                  variant={auditActionVariant(event.action)}
+                  className="uppercase tracking-wide text-[11px] font-bold"
+                >
+                  {auditActionShortLabel(event.action)}
                 </Badge>
               </span>
               <span role="cell" className="text-muted-foreground">
@@ -119,42 +115,39 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
         </div>
       </div>
 
-      <div className="sm:hidden px-4 pb-4">
-        <ItemGroup>
-          {rows.map((event) => (
-            <Item
-              key={event.id}
-              variant="muted"
-              size="sm"
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelected(event)}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(event)}
-              className="cursor-pointer"
-            >
-              <ItemContent>
-                <ItemHeader>
-                  <span className="text-[11px] text-muted-foreground tabular-nums">
-                    {event.event_date_display}
-                  </span>
-                </ItemHeader>
-                <ItemTitle className="flex items-center gap-2">
-                  <Badge variant={auditActionVariant(event.action)}>
-                    {auditActionLabel(event.action)}
-                  </Badge>
-                  <span className="text-muted-foreground font-normal">
-                    {auditEntityLabel(event.entity)}
-                  </span>
-                </ItemTitle>
-                <ItemDescription>
-                  {event.user_name ?? "—"}
-                  {event.impersonator_name && ` (suplantado por ${event.impersonator_name})`}
-                  {event.note && <span className="italic"> · {event.note}</span>}
-                </ItemDescription>
-              </ItemContent>
-            </Item>
-          ))}
-        </ItemGroup>
+      <div className="sm:hidden flex flex-col gap-2.5 px-4 pb-4">
+        {rows.map((event) => (
+          <div
+            key={event.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelected(event)}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(event)}
+            className="cursor-pointer rounded-[14px] border border-border bg-card px-4 py-3.5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Badge
+                variant={auditActionVariant(event.action)}
+                className="uppercase tracking-wide text-[11px] font-bold"
+              >
+                {auditActionShortLabel(event.action)}
+              </Badge>
+              <span className="text-[11.5px] font-semibold text-faint tabular-nums">
+                {event.event_date_display}
+              </span>
+            </div>
+            <div className="text-sm font-bold mb-1">{auditEntityLabel(event.entity)}</div>
+            {event.note && (
+              <p className="mb-2 text-[12.5px] leading-relaxed text-muted-foreground">
+                {event.note}
+              </p>
+            )}
+            <div className="border-t border-border pt-2 text-[11.5px] font-semibold text-faint">
+              Por {event.user_name ?? "—"}
+              {event.impersonator_name && ` (suplantado por ${event.impersonator_name})`}
+            </div>
+          </div>
+        ))}
       </div>
 
       {!rows.length && (

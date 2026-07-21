@@ -197,6 +197,14 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
+        <a
+          href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-2 pb-1 font-mono text-[10.5px] text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors"
+        >
+          v: {process.env.NEXT_PUBLIC_COMMIT_SHA}
+        </a>
       </SidebarFooter>
     </Sidebar>
   )

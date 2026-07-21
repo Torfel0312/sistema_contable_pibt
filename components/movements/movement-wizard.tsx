@@ -90,8 +90,7 @@ export function MovementWizard(props: UseMovementFormProps) {
       </div>
 
       <div className="rounded-2xl bg-card border border-border p-7 flex flex-col gap-6 min-h-[320px]">
-        <Alert variant="info">
-          <StepIcon className="size-4" />
+        <Alert variant="info" icon={StepIcon}>
           <AlertDescription>{STEPS[step].hint}</AlertDescription>
         </Alert>
 

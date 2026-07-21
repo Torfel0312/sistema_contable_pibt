@@ -4,7 +4,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, CreditCard, Archive, ArchiveRestore, Pencil } from "lucide-react"
+import { Plus, CreditCard, Settings2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -15,7 +16,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
-import { Item, ItemGroup, ItemContent, ItemTitle, ItemActions } from "@/components/ui/item"
+import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle, ItemActions } from "@/components/ui/item"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   createPaymentMethodSchema,
@@ -37,8 +38,8 @@ type Props = {
 export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(initialPaymentMethods)
   const [open, setOpen] = useState(false)
-  const [togglingId, setTogglingId] = useState<string | null>(null)
   const [editing, setEditing] = useState<PaymentMethod | null>(null)
+  const [pendingActive, setPendingActive] = useState(true)
 
   const form = useForm<CreatePaymentMethodInput>({
     resolver: zodResolver(createPaymentMethodSchema),
@@ -64,41 +65,28 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
 
   function openEdit(pm: PaymentMethod) {
     editForm.reset({ name: pm.name })
+    setPendingActive(pm.is_active)
     setEditing(pm)
   }
 
-  async function handleRename(values: CreatePaymentMethodInput) {
+  async function handleSaveEdit(values: CreatePaymentMethodInput) {
     if (!editing) return
     try {
-      await updatePaymentMethod(editing.id, { name: values.name.trim() })
+      const name = values.name.trim()
+      await updatePaymentMethod(editing.id, { name, is_active: pendingActive })
       setPaymentMethods((prev) =>
-        prev.map((p) => (p.id === editing.id ? { ...p, name: values.name.trim() } : p))
+        prev.map((p) => (p.id === editing.id ? { ...p, name, is_active: pendingActive } : p))
       )
       toast.success("Medio de pago actualizado")
       setEditing(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al renombrar medio de pago")
-    }
-  }
-
-  async function handleToggle(pm: PaymentMethod) {
-    setTogglingId(pm.id)
-    try {
-      await updatePaymentMethod(pm.id, { is_active: !pm.is_active })
-      setPaymentMethods((prev) =>
-        prev.map((p) => (p.id === pm.id ? { ...p, is_active: !p.is_active } : p))
-      )
-      toast.success(pm.is_active ? "Medio de pago archivado" : "Medio de pago reactivado")
-    } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar medio de pago")
-    } finally {
-      setTogglingId(null)
     }
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
           {paymentMethods.length} medio{paymentMethods.length === 1 ? "" : "s"} de pago registrado
           {paymentMethods.length === 1 ? "" : "s"}
@@ -151,45 +139,46 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup>
+        <ItemGroup className="gap-2">
           {paymentMethods.map((pm) => (
-            <Item key={pm.id} variant="outline">
+            <Item
+              key={pm.id}
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => openEdit(pm)}
+            >
+              <ItemMedia className="flex size-[34px] items-center justify-center rounded-[10px] bg-primary/10">
+                <CreditCard className="size-4 text-primary" />
+              </ItemMedia>
               <ItemContent>
-                <div className="flex items-center gap-2">
-                  <ItemTitle>{pm.name}</ItemTitle>
-                  <span
-                    className={
-                      pm.is_active
-                        ? "text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium"
-                        : "text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
-                    }
-                  >
-                    {pm.is_active ? "Activo" : "Archivado"}
-                  </span>
-                </div>
+                <ItemTitle>{pm.name}</ItemTitle>
               </ItemContent>
-              <ItemActions className="gap-2">
-                <Button variant="outline" onClick={() => openEdit(pm)} className="gap-1.5">
-                  <Pencil className="size-3.5" />
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={togglingId === pm.id}
-                  onClick={() => handleToggle(pm)}
-                  className="gap-1.5"
-                >
-                  {pm.is_active ? (
-                    <>
-                      <Archive className="size-3.5" />
-                      Archivar
-                    </>
-                  ) : (
-                    <>
-                      <ArchiveRestore className="size-3.5" />
-                      Reactivar
-                    </>
+              <span
+                className={cn(
+                  "flex items-center gap-1.5 text-[11px] font-bold",
+                  pm.is_active ? "text-income" : "text-muted-foreground"
+                )}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    pm.is_active ? "bg-income" : "bg-muted-foreground"
                   )}
+                />
+                {pm.is_active ? "Activo" : "Archivado"}
+              </span>
+              <ItemActions>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEdit(pm)
+                  }}
+                  aria-label={`Configurar ${pm.name}`}
+                >
+                  <Settings2 className="size-3.5" />
                 </Button>
               </ItemActions>
             </Item>
@@ -208,17 +197,57 @@ export function PaymentMethodsClient({ initialPaymentMethods }: Props) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Renombrar medio de pago</DialogTitle>
+            <DialogTitle>Editar medio de pago</DialogTitle>
           </DialogHeader>
-          <form onSubmit={editForm.handleSubmit(handleRename)} className="space-y-4 pt-2">
+          <p className="text-xs text-muted-foreground -mt-2">
+            Modifica el nombre o cambia el estado del medio de pago.
+          </p>
+          <form onSubmit={editForm.handleSubmit(handleSaveEdit)} className="space-y-4 pt-2">
             <Field>
-              <FieldLabel htmlFor="edit-name">Nombre *</FieldLabel>
+              <FieldLabel htmlFor="edit-name">Nombre</FieldLabel>
               <Input id="edit-name" {...editForm.register("name")} />
               <FieldError errors={[editForm.formState.errors.name]} />
             </Field>
-            <Button type="submit" className="w-full" disabled={editForm.formState.isSubmitting}>
-              {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
-            </Button>
+
+            <div className="flex items-center justify-between gap-3 rounded-[10px] border border-border px-3.5 py-3">
+              <div>
+                <p className="text-sm font-bold">Estado</p>
+                <p className="text-xs text-muted-foreground">
+                  Los medios inactivos no aparecen al registrar movimientos.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "shrink-0 gap-1.5",
+                  pendingActive ? "text-income border-income/40" : "text-muted-foreground"
+                )}
+                onClick={() => setPendingActive((v) => !v)}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    pendingActive ? "bg-income" : "bg-muted-foreground"
+                  )}
+                />
+                {pendingActive ? "Activo" : "Archivado"}
+              </Button>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(null)}
+                disabled={editForm.formState.isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

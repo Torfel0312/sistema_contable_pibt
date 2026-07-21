@@ -33,7 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           <SidebarInset>
             <SiteHeader />
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 min-h-0 overflow-x-hidden">{children}</main>
+            <div className="flex-1 p-4 sm:p-6 lg:p-8 min-h-0 overflow-x-hidden">{children}</div>
           </SidebarInset>
         </SidebarProvider>
       </div>

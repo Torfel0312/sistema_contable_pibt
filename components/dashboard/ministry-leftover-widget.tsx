@@ -1,5 +1,7 @@
 import Link from "next/link"
+import { HandCoins } from "lucide-react"
 import { cn, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 
 type MinistryLeftoverTotal = {
   ministry_id: string
@@ -34,9 +36,17 @@ export function MinistryLeftoverWidget({ totals }: { totals: MinistryLeftoverTot
       </div>
 
       {totals.length === 0 ? (
-        <p className="text-sm text-muted-foreground px-5 py-6">
-          Sin solicitudes con transferencia anticipada.
-        </p>
+        <Empty className="border-dashed">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <HandCoins />
+            </EmptyMedia>
+            <EmptyTitle>Sin remanentes</EmptyTitle>
+            <EmptyDescription>
+              No hay fondos transferidos a ministerios pendientes de rendir.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_90px_90px_100px] gap-3 px-5 py-3.5 text-[10.5px] font-extrabold uppercase tracking-[0.06em] text-faint">

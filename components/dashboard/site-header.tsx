@@ -27,6 +27,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/settings": "Administración",
   "/payroll": "Remuneraciones",
   "/profile": "Mi perfil",
+  "/notifications": "Notificaciones",
   "/voucher-book": "Talonario Unificado"
 }
 
@@ -105,14 +106,6 @@ export function SiteHeader() {
       <div className="flex items-center gap-2.5">
         <ThemeToggle />
         <NotificationBell />
-        <a
-          href={`https://github.com/pib-talcahuano/holly-money/commit/${process.env.NEXT_PUBLIC_COMMIT_SHA_FULL}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-mono text-[10.5px] text-faint hover:text-muted-foreground transition-colors"
-        >
-          v: {process.env.NEXT_PUBLIC_COMMIT_SHA}
-        </a>
       </div>
     </header>
   )

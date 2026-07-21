@@ -13,5 +13,10 @@ export const updateUserSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE", "PENDING_ACTIVATION", "PENDING_RESET"])
 })
 
+export const updateOwnProfileSchema = z.object({
+  full_name: z.string().min(3, "Nombre requerido")
+})
+
 export type CreateUserInput = z.infer<typeof createUserSchema>
 export type UpdateUserInput = z.infer<typeof updateUserSchema>
+export type UpdateOwnProfileInput = z.infer<typeof updateOwnProfileSchema>
