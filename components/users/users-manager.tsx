@@ -77,30 +77,27 @@ function isLinkExpired(user: UserRow): boolean {
 
 type BadgeVariant = ComponentProps<typeof Badge>["variant"]
 
-function roleBadgeVariant(role: UserRole): BadgeVariant {
-  if (role === "ADMIN") return "primary"
-  if (role === "BURSAR") return "role"
-  if (role === "FINANCE") return "income"
-  if (role === "MINISTER") return "warn"
-  return "neutral"
-}
-
-function roleLabel(role: UserRole) {
-  if (role === "ADMIN") return "Administrador"
-  if (role === "BURSAR") return "Tesorero"
-  if (role === "FINANCE") return "Finanzas"
-  if (role === "MINISTER") return "Ministro"
-  return role
-}
-
 const ROLE_ORDER: UserRole[] = ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
 
-function roleDotClass(role: UserRole) {
-  if (role === "ADMIN") return "bg-primary"
-  if (role === "BURSAR") return "bg-role-purple"
-  if (role === "FINANCE") return "bg-income"
-  if (role === "MINISTER") return "bg-warn"
-  return "bg-muted-foreground"
+const ROLE_BADGE_VARIANT: Record<UserRole, BadgeVariant> = {
+  ADMIN: "primary",
+  BURSAR: "role",
+  FINANCE: "income",
+  MINISTER: "warn"
+}
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  ADMIN: "Administrador",
+  BURSAR: "Tesorero",
+  FINANCE: "Finanzas",
+  MINISTER: "Ministro"
+}
+
+const ROLE_DOT_CLASS: Record<UserRole, string> = {
+  ADMIN: "bg-primary",
+  BURSAR: "bg-role-purple",
+  FINANCE: "bg-income",
+  MINISTER: "bg-warn"
 }
 
 type StatusMeta = {
@@ -155,10 +152,10 @@ function UserListItem({
       </ItemContent>
       <ItemActions>
         <Badge
-          variant={roleBadgeVariant(user.role)}
+          variant={ROLE_BADGE_VARIANT[user.role]}
           className="hidden sm:inline-flex uppercase tracking-wide"
         >
-          {roleLabel(user.role)}
+          {ROLE_LABEL[user.role]}
         </Badge>
         {meta.variant && (
           <Badge variant={meta.variant} className="hidden sm:inline-flex">
@@ -774,8 +771,8 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   ) : (
                     <ChevronDown className="size-[15px] shrink-0 text-muted-foreground" />
                   )}
-                  <span className={cn("size-2 rounded-full", roleDotClass(group.role))} />
-                  <span className="text-[13px] font-extrabold">{roleLabel(group.role)}</span>
+                  <span className={cn("size-2 rounded-full", ROLE_DOT_CLASS[group.role])} />
+                  <span className="text-[13px] font-extrabold">{ROLE_LABEL[group.role]}</span>
                   <span className="rounded-full bg-muted px-[9px] py-0.5 text-[11.5px] font-bold text-muted-foreground">
                     {group.members.length}
                   </span>
