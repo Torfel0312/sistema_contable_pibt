@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useForm, useWatch } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { X, Plus, Mail, Pencil, Trash2, Check, Info } from "lucide-react"
+import { X, Plus, Mail, Pencil, Trash2, Check, Info, CheckCircle2 } from "lucide-react"
+import { cn, avatarColorFor, initialsFor } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import { Item, ItemGroup, ItemContent, ItemTitle } from "@/components/ui/item"
@@ -19,7 +18,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { createInboundEmailRouteSchema } from "@/lib/validators/inbound-email-route"
 import type { CreateInboundEmailRouteInput } from "@/lib/validators/inbound-email-route"
 import type { InboundEmailRoute } from "@/services/email/inbound-routes.service"
 import {
@@ -56,11 +54,14 @@ export function InboundEmailRoutesSection({
   const [deletingGroup, setDeletingGroup] = useState<string | null>(null)
   const [inlineUser, setInlineUser] = useState<Record<string, string>>({})
   const [createOpen, setCreateOpen] = useState(false)
+  const [ngName, setNgName] = useState("")
+  const [ngPicked, setNgPicked] = useState<string[]>([])
+  const [ngSubmitting, setNgSubmitting] = useState(false)
 
-  const form = useForm<CreateInboundEmailRouteInput>({
-    resolver: zodResolver(createInboundEmailRouteSchema),
-    defaultValues: { local_part: "", user_id: "" }
-  })
+  function resetNewGroupForm() {
+    setNgName("")
+    setNgPicked([])
+  }
 
   const groups = new Map<string, InboundEmailRoute[]>()
   for (const route of routes) {
@@ -90,14 +91,25 @@ export function InboundEmailRoutesSection({
     ])
   }
 
-  async function handleAdd(values: CreateInboundEmailRouteInput) {
+  function toggleNgPicked(userId: string) {
+    setNgPicked((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    )
+  }
+
+  async function handleCreateGroup() {
+    const localPart = ngName.trim().toLowerCase()
+    if (!localPart || ngPicked.length === 0) return
+    setNgSubmitting(true)
     try {
-      await addRoute(values)
-      form.reset({ local_part: "", user_id: "" })
+      await Promise.all(ngPicked.map((user_id) => addRoute({ local_part: localPart, user_id })))
+      resetNewGroupForm()
       setCreateOpen(false)
       toast.success("Grupo creado")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear grupo")
+    } finally {
+      setNgSubmitting(false)
     }
   }
 
@@ -163,12 +175,6 @@ export function InboundEmailRoutesSection({
     }
   }
 
-  const selectedLocalPart = useWatch({ control: form.control, name: "local_part" })
-  const alreadyAssignedIds = new Set(
-    (groups.get(selectedLocalPart.toLowerCase()) ?? []).map((r) => r.user_id)
-  )
-  const availableUsers = users.filter((u) => !alreadyAssignedIds.has(u.id))
-
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-start justify-between gap-4">
@@ -184,7 +190,7 @@ export function InboundEmailRoutesSection({
           open={createOpen}
           onOpenChange={(o) => {
             setCreateOpen(o)
-            if (!o) form.reset({ local_part: "", user_id: "" })
+            if (!o) resetNewGroupForm()
           }}
         >
           <DialogTrigger
@@ -199,28 +205,69 @@ export function InboundEmailRoutesSection({
             <DialogHeader>
               <DialogTitle>Nuevo grupo</DialogTitle>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(handleAdd)} className="flex flex-col gap-4 pt-2">
+            <p className="-mt-2 text-[12.5px] leading-relaxed text-muted-foreground">
+              Crea un buzón compartido. Los correos enviados a esta dirección se reenviarán a los
+              usuarios que asignes.
+            </p>
+            <div className="flex flex-col gap-4 pt-2">
               <Field>
-                <FieldLabel htmlFor="local-part">Nombre del grupo</FieldLabel>
-                <Input id="local-part" placeholder="tesoreria" {...form.register("local_part")} />
-                <FieldError errors={[form.formState.errors.local_part]} />
+                <FieldLabel htmlFor="local-part">Nombre del grupo *</FieldLabel>
+                <div className="flex items-center overflow-hidden rounded-[9px] border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+                  <input
+                    id="local-part"
+                    value={ngName}
+                    onChange={(e) =>
+                      setNgName(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ""))
+                    }
+                    placeholder="tesoreria"
+                    className="h-10 min-w-0 flex-1 bg-transparent px-3 text-[13.5px] outline-none"
+                  />
+                  <span className="flex h-10 items-center whitespace-nowrap bg-muted px-3 text-[12.5px] font-semibold text-faint">
+                    @{DOMAIN}
+                  </span>
+                </div>
               </Field>
-              <Field>
-                <FieldLabel htmlFor="route-user">Usuario</FieldLabel>
-                <NativeSelect id="route-user" {...form.register("user_id")} defaultValue="">
-                  <NativeSelectOption value="">Seleccionar usuario…</NativeSelectOption>
-                  {availableUsers.map((u) => (
-                    <NativeSelectOption key={u.id} value={u.id}>
-                      {u.full_name} — {u.email}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-                <FieldError errors={[form.formState.errors.user_id]} />
-              </Field>
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Creando..." : "Crear grupo"}
+
+              <div>
+                <FieldLabel className="mb-2 block">Reenviar a *</FieldLabel>
+                <div className="flex max-h-[220px] flex-col gap-2 overflow-y-auto">
+                  {users.map((u) => {
+                    const selected = ngPicked.includes(u.id)
+                    return (
+                      <div
+                        key={u.id}
+                        onClick={() => toggleNgPicked(u.id)}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2.5 rounded-[11px] border px-3 py-2.5 transition-colors",
+                          selected ? "border-primary bg-primary/10" : "border-border bg-card"
+                        )}
+                      >
+                        <div
+                          className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                          style={{ background: avatarColorFor(u.full_name) }}
+                        >
+                          {initialsFor(u.full_name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-bold">{u.full_name}</p>
+                          <p className="truncate text-[11.5px] text-muted-foreground">{u.email}</p>
+                        </div>
+                        {selected && <CheckCircle2 className="size-4 shrink-0 text-primary" />}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!ngName.trim() || ngPicked.length === 0 || ngSubmitting}
+                onClick={() => void handleCreateGroup()}
+              >
+                {ngSubmitting ? "Creando..." : "Crear grupo"}
               </Button>
-            </form>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
