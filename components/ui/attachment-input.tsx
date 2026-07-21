@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, FileText, Loader2, Paperclip, X } from "lucide-react"
+import { FileText, Loader2, Paperclip, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { PendingAttachment } from "@/hooks/use-attachment-upload"
@@ -32,49 +32,26 @@ export function AttachmentInput({
 }: AttachmentInputProps) {
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <label
-          className={cn(
-            "flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted",
-            disabled && "pointer-events-none cursor-not-allowed opacity-50"
-          )}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            disabled={disabled}
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) onAddFiles([file])
-              e.target.value = ""
-            }}
-            className="sr-only"
-          />
-          <Camera className="size-4" />
-          Tomar foto
-        </label>
-        <label
-          className={cn(
-            "flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted",
-            disabled && "pointer-events-none cursor-not-allowed opacity-50"
-          )}
-        >
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            multiple
-            disabled={disabled}
-            onChange={(e) => {
-              if (e.target.files?.length) onAddFiles(e.target.files)
-              e.target.value = ""
-            }}
-            className="sr-only"
-          />
-          <Paperclip className="size-4" />
-          Elegir archivos
-        </label>
-      </div>
+      <label
+        className={cn(
+          "flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/50 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors hover:border-primary/40 hover:bg-muted",
+          disabled && "pointer-events-none cursor-not-allowed opacity-50"
+        )}
+      >
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          multiple
+          disabled={disabled}
+          onChange={(e) => {
+            if (e.target.files?.length) onAddFiles(e.target.files)
+            e.target.value = ""
+          }}
+          className="sr-only"
+        />
+        <Paperclip className="size-4" />
+        Elegir archivos
+      </label>
 
       {disabled && maxReachedMessage && (
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">

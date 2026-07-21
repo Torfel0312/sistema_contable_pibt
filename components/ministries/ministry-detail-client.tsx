@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   CheckCircle2,
   ClipboardList,
+  HandCoins,
   Pencil,
   TrendingDown,
   UserPlus,
@@ -28,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -536,7 +538,15 @@ export function MinistryDetailClient({
           <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4">
             <h2 className="text-[13px] font-bold text-foreground">Historial de asignaciones</h2>
             {assignments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin asignaciones registradas.</p>
+              <Empty className="border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <UserRound />
+                  </EmptyMedia>
+                  <EmptyTitle>Sin asignaciones</EmptyTitle>
+                  <EmptyDescription>Aún no hay asignaciones registradas.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="flex flex-col gap-3">
                 {assignments.map((a) => (
@@ -606,9 +616,15 @@ export function MinistryDetailClient({
               </Link>
             </div>
             {intentions.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-5 py-4">
-                Sin solicitudes registradas.
-              </p>
+              <Empty className="border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ClipboardList />
+                  </EmptyMedia>
+                  <EmptyTitle>Sin solicitudes</EmptyTitle>
+                  <EmptyDescription>Este ministerio aún no registra solicitudes.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="flex flex-col">
                 {intentions.slice(0, 4).map((intention) => {
@@ -647,7 +663,17 @@ export function MinistryDetailClient({
               <h2 className="text-sm font-bold text-foreground">Movimientos asociados</h2>
             </div>
             {associatedMovements.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-5 py-4">Sin movimientos asociados.</p>
+              <Empty className="border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ArrowLeftRight />
+                  </EmptyMedia>
+                  <EmptyTitle>Sin movimientos</EmptyTitle>
+                  <EmptyDescription>
+                    Aún no hay movimientos asociados a este ministerio.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="flex flex-col">
                 {associatedMovements.map((movement) => (
@@ -681,52 +707,61 @@ export function MinistryDetailClient({
 
       <Separator />
 
-      <section className="space-y-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-medium">Remanente</h2>
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <div className="flex flex-wrap items-baseline justify-between gap-1 px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-bold text-foreground">Remanente por solicitud</h2>
           <p className="text-xs text-muted-foreground">
             Transferido menos rendido (aprobado), a la fecha
           </p>
         </div>
 
         {leftover.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Sin solicitudes con transferencia anticipada.
-          </p>
+          <Empty className="border-none">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <HandCoins />
+              </EmptyMedia>
+              <EmptyTitle>Sin remanentes</EmptyTitle>
+              <EmptyDescription>
+                Sin solicitudes con transferencia anticipada aún sin rendir.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <>
-            <div className="rounded-lg border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wide">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium">Solicitud</th>
-                    <th className="px-4 py-2 text-right font-medium">Transferido</th>
-                    <th className="px-4 py-2 text-right font-medium">Rendido</th>
-                    <th className="px-4 py-2 text-right font-medium">Remanente</th>
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wide">
+                <tr>
+                  <th className="px-5 py-2.5 text-left font-medium">Solicitud</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Transferido</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Rendido</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Remanente</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {leftover.map((row) => (
+                  <tr key={row.intention_id}>
+                    <td className="px-5 py-3">{row.purpose}</td>
+                    <td className="px-5 py-3 text-right">{formatCLP(row.transferred_amount)}</td>
+                    <td className="px-5 py-3 text-right">{formatCLP(row.settled_amount)}</td>
+                    <td
+                      className={`px-5 py-3 text-right font-medium ${row.leftover > 0 ? "text-warn" : row.leftover < 0 ? "text-destructive" : ""}`}
+                    >
+                      {formatCLP(row.leftover)}
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {leftover.map((row) => (
-                    <tr key={row.intention_id} className="bg-card">
-                      <td className="px-4 py-3">{row.purpose}</td>
-                      <td className="px-4 py-3 text-right">{formatCLP(row.transferred_amount)}</td>
-                      <td className="px-4 py-3 text-right">{formatCLP(row.settled_amount)}</td>
-                      <td
-                        className={`px-4 py-3 text-right font-medium ${row.leftover > 0 ? "text-warn" : row.leftover < 0 ? "text-destructive" : ""}`}
-                      >
-                        {formatCLP(row.leftover)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center px-5 py-3.5 border-t border-border bg-muted/40 text-sm">
+              <span className="font-extrabold">Total</span>
+              <span className="font-extrabold">
+                {formatCLP(leftover.reduce((sum, row) => sum + row.leftover, 0))}
+              </span>
             </div>
-            <p className="text-sm font-medium text-right">
-              Total: {formatCLP(leftover.reduce((sum, row) => sum + row.leftover, 0))}
-            </p>
           </>
         )}
-      </section>
+      </div>
 
       <Dialog
         open={unassignConfirmOpen}

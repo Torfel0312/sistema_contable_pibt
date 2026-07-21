@@ -23,6 +23,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { AttachmentInput } from "@/components/ui/attachment-input"
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
 import { cn, formatDate, formatCLP } from "@/lib/utils"
 import { createPayrollSchema, type CreatePayrollInput } from "@/lib/validators/payroll"
@@ -331,7 +332,17 @@ function emptyLine(title: string) {
 
 function PayrollHistory({ records }: { records: PayrollRecord[] }) {
   if (records.length === 0) {
-    return <p className="text-sm text-muted-foreground">Sin remuneraciones registradas aún.</p>
+    return (
+      <Empty className="border-dashed">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Banknote />
+          </EmptyMedia>
+          <EmptyTitle>Sin remuneraciones</EmptyTitle>
+          <EmptyDescription>Aún no hay remuneraciones registradas.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
   }
   return (
     <div className="flex flex-col gap-3">
@@ -484,7 +495,7 @@ export function PayrollClient({
       </div>
 
       <Card className="p-[22px] rounded-[18px] space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-[15px] font-bold">Remuneraciones registradas</h2>
           <Dialog
             open={payrollOpen}
