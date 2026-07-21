@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { es } from "date-fns/locale/es"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { CalendarRange as CalendarIcon } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 
 import { cn, formatDate, toDateInput } from "@/lib/utils"
@@ -48,14 +48,14 @@ export function DateRangePicker({
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start gap-2 text-left font-normal border-border bg-background hover:bg-muted overflow-hidden",
+              "w-full justify-start gap-2 text-left text-[13.5px] font-bold border-border bg-background hover:bg-muted overflow-hidden",
               !range?.from && "text-muted-foreground",
               className
             )}
           />
         }
       >
-        <CalendarIcon className="size-4 shrink-0" />
+        <CalendarIcon className="size-3.5 shrink-0 text-muted-foreground" />
         {range?.from ? (
           range.to ? (
             <span className="truncate">
