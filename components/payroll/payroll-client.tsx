@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
-import { formatDate, formatCLP } from "@/lib/utils"
+import { cn, formatDate, formatCLP } from "@/lib/utils"
 import { createPayrollSchema, type CreatePayrollInput } from "@/lib/validators/payroll"
 import type { payrollService } from "@/services/payroll/payroll.service"
 import type { severanceReserveService } from "@/services/payroll/severance-reserve.service"
@@ -55,6 +55,8 @@ const MONTHS = [
   "Diciembre"
 ]
 
+const FIELD_LABEL_CLASS = "text-[11.5px] font-semibold normal-case tracking-normal text-muted-foreground"
+
 function buildPeriod(month: number, year: number) {
   return `${year}-${String(month).padStart(2, "0")}-01`
 }
@@ -77,12 +79,12 @@ function PayrollPeriodFields({
   const years = [currentYear - 1, currentYear, currentYear + 1]
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-[2fr_1fr] gap-3">
       <Field
         data-invalid={!!form.formState.errors.period || undefined}
         data-testid="period-date-trigger"
       >
-        <FieldLabel className="flex items-center gap-1.5">
+        <FieldLabel className={cn(FIELD_LABEL_CLASS, "flex items-center gap-1.5")}>
           <Calendar className="size-3.5" />
           Período (mes) *
         </FieldLabel>
@@ -99,7 +101,7 @@ function PayrollPeriodFields({
         <FieldError errors={[form.formState.errors.period]} />
       </Field>
       <Field>
-        <FieldLabel>Año *</FieldLabel>
+        <FieldLabel className={FIELD_LABEL_CLASS}>Año *</FieldLabel>
         <NativeSelect
           value={year}
           onChange={(e) => form.setValue("period", buildPeriod(month, Number(e.target.value)))}
@@ -134,7 +136,7 @@ function PayrollLineFields({
       data-testid={`payroll-line-${index}`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
           Transferencia {index + 1}
         </span>
         {removable && (
@@ -143,18 +145,17 @@ function PayrollLineFields({
           </Button>
         )}
       </div>
+      <Field data-invalid={!!errors?.title || undefined}>
+        <FieldLabel className={FIELD_LABEL_CLASS}>Título *</FieldLabel>
+        <Input
+          placeholder="Ej: Sueldo pastor, Imposiciones"
+          {...form.register(`lines.${index}.title`)}
+        />
+        <FieldError errors={[errors?.title]} />
+      </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field data-invalid={!!errors?.title || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-            Título *
-          </FieldLabel>
-          <Input placeholder="Ej: Sueldo pastor" {...form.register(`lines.${index}.title`)} />
-          <FieldError errors={[errors?.title]} />
-        </Field>
         <Field data-invalid={!!errors?.amount || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-            Monto (CLP) *
-          </FieldLabel>
+          <FieldLabel className={FIELD_LABEL_CLASS}>Monto (CLP) *</FieldLabel>
           <Controller
             control={form.control}
             name={`lines.${index}.amount`}
@@ -169,14 +170,13 @@ function PayrollLineFields({
           <FieldError errors={[errors?.amount]} />
         </Field>
         <Field data-invalid={!!errors?.movement_date || undefined}>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-            Fecha de la transferencia *
-          </FieldLabel>
+          <FieldLabel className={FIELD_LABEL_CLASS}>Fecha de la transferencia *</FieldLabel>
           <Controller
             control={form.control}
             name={`lines.${index}.movement_date`}
             render={({ field }) => (
               <DatePicker
+                className="h-9 rounded-md px-2.5 text-sm font-normal shadow-xs"
                 value={field.value ? new Date(field.value + "T00:00:00") : undefined}
                 onChange={(date) =>
                   field.onChange(
@@ -190,17 +190,13 @@ function PayrollLineFields({
           />
           <FieldError errors={[errors?.movement_date]} />
         </Field>
-        <Field>
-          <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-            Entregado a
-          </FieldLabel>
-          <Input placeholder="Opcional" {...form.register(`lines.${index}.delivered_by`)} />
-        </Field>
       </div>
       <Field>
-        <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-          Notas
-        </FieldLabel>
+        <FieldLabel className={FIELD_LABEL_CLASS}>Entregado a</FieldLabel>
+        <Input placeholder="Opcional" {...form.register(`lines.${index}.delivered_by`)} />
+      </Field>
+      <Field>
+        <FieldLabel className={FIELD_LABEL_CLASS}>Notas</FieldLabel>
         <Input placeholder="Observaciones opcionales" {...form.register(`lines.${index}.notes`)} />
       </Field>
     </div>
@@ -248,7 +244,7 @@ function PayrollLineAttachment({
 
   return (
     <Field>
-      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+      <FieldLabel className={FIELD_LABEL_CLASS}>
         Comprobante — {title || `Transferencia ${index + 1}`}
       </FieldLabel>
       <AttachmentInput
@@ -300,9 +296,7 @@ function LiquidacionAttachment({
 
   return (
     <Field data-invalid={!!form.formState.errors.liquidacion || undefined}>
-      <FieldLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
-        Liquidación *
-      </FieldLabel>
+      <FieldLabel className={FIELD_LABEL_CLASS}>Liquidación *</FieldLabel>
       <AttachmentInput
         items={attachmentUpload.items}
         isUploading={attachmentUpload.isUploading}
@@ -512,8 +506,7 @@ export function PayrollClient({
                 <DialogTitle>Registrar remuneración</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(handleCreatePayroll)} className="space-y-5 pt-2">
-                <Alert variant="info">
-                  <Banknote className="size-4" />
+                <Alert variant="info" icon={Banknote}>
                   <AlertDescription>
                     Registra las transferencias del mes. Cada línea genera un egreso con categoría
                     Remuneraciones.
@@ -523,7 +516,7 @@ export function PayrollClient({
                 <PayrollPeriodFields form={form} />
 
                 <div className="rounded-xl border border-border bg-primary/5 p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-primary">
                     <Vault className="size-4" />
                     Reserva de indemnización del mes *
                   </div>
@@ -564,7 +557,7 @@ export function PayrollClient({
                 </Button>
 
                 <div className="space-y-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1 flex items-center gap-1.5">
+                  <span className={cn(FIELD_LABEL_CLASS, "flex items-center gap-1.5")}>
                     Archivos adjuntos *
                   </span>
                   <LiquidacionAttachment
