@@ -3,7 +3,7 @@ import { KeyRound } from "lucide-react"
 
 export default function ProfilePage() {
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Mi perfil

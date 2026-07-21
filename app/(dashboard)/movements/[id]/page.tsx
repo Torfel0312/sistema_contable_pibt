@@ -89,7 +89,7 @@ export default async function MovementDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-[720px] mx-auto">
+    <div>
       <div className="flex items-center justify-between mb-[18px]">
         <Link
           href="/movements"
@@ -134,7 +134,9 @@ export default async function MovementDetailPage({ params }: Props) {
             <div className="text-[30px] font-extrabold tracking-tight mt-2">
               {formatCLP(Number(row.amount))}
             </div>
-            <div className="text-[12.5px] text-muted-foreground mt-0.5">{category?.name ?? "—"}</div>
+            <div className="text-[12.5px] text-muted-foreground mt-0.5">
+              {category?.name ?? "—"}
+            </div>
           </div>
           <div className="flex flex-col items-end gap-2.5">
             <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground">
@@ -259,7 +261,9 @@ export default async function MovementDetailPage({ params }: Props) {
                 <Button
                   variant="outline"
                   className="h-8 rounded-full px-3.5 text-xs shrink-0"
-                  render={<Link href={att.drive_view_link} target="_blank" rel="noopener noreferrer" />}
+                  render={
+                    <Link href={att.drive_view_link} target="_blank" rel="noopener noreferrer" />
+                  }
                   nativeButton={false}
                 >
                   <Download className="size-3.5" data-icon="inline-start" />
@@ -333,7 +337,9 @@ function TimelineEvent({
   return (
     <div className="flex gap-3">
       <div className="flex flex-col items-center flex-none">
-        <div className={cn("flex size-[26px] items-center justify-center rounded-full", colorClass)}>
+        <div
+          className={cn("flex size-[26px] items-center justify-center rounded-full", colorClass)}
+        >
           {icon}
         </div>
         {!isLast && <div className="w-0.5 flex-1 bg-border" />}

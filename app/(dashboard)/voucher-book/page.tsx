@@ -19,7 +19,7 @@ export default async function VoucherBookPage() {
   ])
 
   return (
-    <section className="mx-auto max-w-5xl flex flex-col gap-8">
+    <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-0.5">
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Talonario Unificado

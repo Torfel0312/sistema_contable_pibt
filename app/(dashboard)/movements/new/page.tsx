@@ -36,7 +36,7 @@ export default async function NewMovementPage({ searchParams }: Props) {
     : undefined
 
   return (
-    <div className="flex flex-col max-w-5xl mx-auto">
+    <div className="flex flex-col">
       <div className="mb-6">
         <Link
           href="/movements"
@@ -66,7 +66,7 @@ export default async function NewMovementPage({ searchParams }: Props) {
           />
         </div>
       ) : (
-        <div className="max-w-2xl w-full mx-auto">
+        <div className="w-full">
           <MovementWizard
             mode="create"
             paymentMethods={paymentMethods}

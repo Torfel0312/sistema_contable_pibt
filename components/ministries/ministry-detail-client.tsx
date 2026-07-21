@@ -344,7 +344,7 @@ export function MinistryDetailClient({
   )
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="space-y-6">
       <Button
         variant="ghost"
         className="-ml-2"

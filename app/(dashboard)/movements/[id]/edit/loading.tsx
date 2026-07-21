@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MovementEditLoading() {
   return (
-    <section className="mx-auto max-w-5xl flex flex-col gap-8">
+    <section className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
         <Skeleton className="h-9 w-9 rounded-lg" />
         <div className="flex flex-col gap-1.5">
