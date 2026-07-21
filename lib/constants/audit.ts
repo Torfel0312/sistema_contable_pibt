@@ -92,6 +92,78 @@ export function auditActionLabel(action: string): string {
   return AUDIT_ACTION_LABEL[action] ?? action
 }
 
+// Short verb-only labels for the audit table's action badge (design spec shows
+// a compact pill — CREAR / APROBAR / EDITAR / ANULAR — not the full descriptive
+// sentence; the entity column next to it already carries the "what"). Keyed by
+// both the enum-style action values above and the literal Spanish sentences a
+// few services write directly as `action` (movements/users services — see the
+// file header comment), since both end up in the same audit log column.
+const AUDIT_ACTION_SHORT_LABEL: Record<string, string> = {
+  MINISTRY_CREATED: "Crear",
+  MINISTRY_UPDATED: "Editar",
+  MINISTER_ASSIGNED: "Asignar",
+  MINISTER_UNASSIGNED: "Desasignar",
+
+  INTENTION_CREATED: "Crear",
+  INTENTION_SUBMITTED: "Enviar",
+  INTENTION_CANCELLED: "Cancelar",
+  INTENTION_APPROVED: "Aprobar",
+  INTENTION_REJECTED: "Rechazar",
+  INTENTION_SETTLEMENT_CLOSED: "Cerrar",
+  TRANSFER_REGISTERED: "Registrar",
+
+  SETTLEMENT_CREATED: "Crear",
+  SETTLEMENT_SUBMITTED: "Enviar",
+  SETTLEMENT_IN_REVIEW: "Revisar",
+  SETTLEMENT_CANCELLED: "Cancelar",
+  SETTLEMENT_RETURNED_FOR_CORRECTION: "Devolver",
+  SETTLEMENT_APPROVED: "Aprobar",
+  SETTLEMENT_REJECTED: "Rechazar",
+  SETTLEMENT_ATTACHMENT_REMOVED: "Eliminar",
+
+  PAYMENT_METHOD_CREATED: "Crear",
+  PAYMENT_METHOD_UPDATED: "Editar",
+
+  MOVEMENT_CATEGORY_CREATED: "Crear",
+  MOVEMENT_CATEGORY_UPDATED: "Editar",
+  MOVEMENT_SUBCATEGORY_CREATED: "Crear",
+  MOVEMENT_SUBCATEGORY_UPDATED: "Editar",
+
+  SEVERANCE_RESERVE_ADJUSTED: "Ajustar",
+
+  ROUTE_CREATED: "Crear",
+  ROUTE_DELETED: "Eliminar",
+  MAILBOX_GROUP_RENAMED: "Renombrar",
+  MAILBOX_GROUP_DELETED: "Eliminar",
+
+  SETTINGS_UPDATED: "Editar",
+
+  PAYROLL_REGISTERED: "Registrar",
+
+  MOVEMENT_CREATED_FROM_TRANSFER: "Crear",
+  MOVEMENT_CREATED_FROM_SETTLEMENT: "Crear",
+  MOVEMENT_CREATED_FROM_PAYROLL: "Crear",
+
+  IMPERSONATION_STARTED: "Iniciar",
+  IMPERSONATION_ENDED: "Finalizar",
+
+  // Literal sentence actions (movements/users services write these directly)
+  "Movimiento creado": "Crear",
+  "Movimiento editado": "Editar",
+  "Movimiento anulado": "Anular",
+  "Adjunto agregado": "Agregar",
+  "Adjunto eliminado": "Eliminar",
+  "Usuario invitado": "Invitar",
+  "Cuenta reseteada": "Resetear",
+  "Usuario eliminado": "Eliminar",
+  "Invitación reenviada": "Reenviar",
+  "Usuario actualizado": "Editar"
+}
+
+export function auditActionShortLabel(action: string): string {
+  return AUDIT_ACTION_SHORT_LABEL[action] ?? auditActionLabel(action)
+}
+
 // Color-codes the (much richer) action vocabulary above onto the design spec's
 // four action colors: crear=income, aprobar/cerrar=primary, editar/ajustar=warn,
 // anular/rechazar/eliminar=expense. Checked in this order since a few actions

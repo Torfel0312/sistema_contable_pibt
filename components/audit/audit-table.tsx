@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   AUDIT_ENTITY_LABEL,
   auditActionLabel,
+  auditActionShortLabel,
   auditActionVariant,
   auditEntityLabel
 } from "@/lib/constants/audit"
@@ -99,8 +100,11 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                 {auditEntityLabel(event.entity)}
               </span>
               <span role="cell">
-                <Badge variant={auditActionVariant(event.action)}>
-                  {auditActionLabel(event.action)}
+                <Badge
+                  variant={auditActionVariant(event.action)}
+                  className="uppercase tracking-wide text-[11px] font-bold"
+                >
+                  {auditActionShortLabel(event.action)}
                 </Badge>
               </span>
               <span role="cell" className="text-muted-foreground">
@@ -139,8 +143,11 @@ export function AuditTable({ rows }: { rows: SerializedAuditEvent[] }) {
                   </span>
                 </ItemHeader>
                 <ItemTitle className="flex items-center gap-2">
-                  <Badge variant={auditActionVariant(event.action)}>
-                    {auditActionLabel(event.action)}
+                  <Badge
+                    variant={auditActionVariant(event.action)}
+                    className="uppercase tracking-wide text-[11px] font-bold"
+                  >
+                    {auditActionShortLabel(event.action)}
                   </Badge>
                   <span className="text-muted-foreground font-normal">
                     {auditEntityLabel(event.entity)}
