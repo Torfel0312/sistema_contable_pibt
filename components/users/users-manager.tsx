@@ -108,6 +108,72 @@ function statusMeta(status: UserStatus): StatusMeta {
   }
 }
 
+function UserListItem({
+  user,
+  onOpen,
+  onImpersonate
+}: {
+  user: UserRow
+  onOpen: () => void
+  onImpersonate: () => void
+}) {
+  const meta = statusMeta(user.status)
+  const linkExpired = isLinkExpired(user)
+  return (
+    <Item
+      variant="outline"
+      onClick={onOpen}
+      className={cn("cursor-pointer rounded-[14px] px-[18px]", meta.rowOpacity && "opacity-55")}
+    >
+      <div
+        className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] text-[13px] font-extrabold text-white"
+        style={{ background: avatarColorFor(user.full_name || user.email) }}
+      >
+        {initialsFor(user.full_name || "?")}
+      </div>
+      <ItemContent>
+        <ItemTitle className="font-bold">{user.full_name}</ItemTitle>
+        <ItemDescription className="text-[12.5px]">{user.email}</ItemDescription>
+        <div className="sm:hidden mt-0.5 flex flex-wrap gap-1">
+          {meta.variant && <Badge variant={meta.variant}>{meta.label}</Badge>}
+          {linkExpired && <Badge variant="expense">Enlace expirado</Badge>}
+        </div>
+      </ItemContent>
+      <ItemActions>
+        <Badge variant={roleBadgeVariant(user.role)} className="hidden sm:inline-flex">
+          {roleLabel(user.role)}
+        </Badge>
+        {meta.variant && (
+          <Badge variant={meta.variant} className="hidden sm:inline-flex">
+            {meta.label}
+          </Badge>
+        )}
+        {linkExpired && (
+          <Badge variant="expense" className="hidden sm:inline-flex">
+            Enlace expirado
+          </Badge>
+        )}
+        {user.role !== "ADMIN" && user.status === "ACTIVE" && (
+          <Button
+            size="icon-sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              onImpersonate()
+            }}
+            title="Impersonar"
+          >
+            <VenetianMask className="size-3.5" />
+          </Button>
+        )}
+        <Button size="icon-sm" variant="outline" onClick={onOpen} title="Editar usuario">
+          <Settings2 className="size-3.5" />
+        </Button>
+      </ItemActions>
+    </Item>
+  )
+}
+
 export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -608,72 +674,14 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
         </Empty>
       ) : (
         <ItemGroup>
-          {filtered.map((user) => {
-            const meta = statusMeta(user.status)
-            const linkExpired = isLinkExpired(user)
-            return (
-              <Item
-                key={user.id}
-                variant="outline"
-                onClick={() => openEdit(user)}
-                className={cn(
-                  "cursor-pointer rounded-[14px] px-[18px]",
-                  meta.rowOpacity && "opacity-55"
-                )}
-              >
-                <div
-                  className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] text-[13px] font-extrabold text-white"
-                  style={{ background: avatarColorFor(user.full_name || user.email) }}
-                >
-                  {initialsFor(user.full_name || "?")}
-                </div>
-                <ItemContent>
-                  <ItemTitle className="font-bold">{user.full_name}</ItemTitle>
-                  <ItemDescription className="text-[12.5px]">{user.email}</ItemDescription>
-                  <div className="sm:hidden mt-0.5 flex flex-wrap gap-1">
-                    {meta.variant && <Badge variant={meta.variant}>{meta.label}</Badge>}
-                    {linkExpired && <Badge variant="expense">Enlace expirado</Badge>}
-                  </div>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant={roleBadgeVariant(user.role)} className="hidden sm:inline-flex">
-                    {roleLabel(user.role)}
-                  </Badge>
-                  {meta.variant && (
-                    <Badge variant={meta.variant} className="hidden sm:inline-flex">
-                      {meta.label}
-                    </Badge>
-                  )}
-                  {linkExpired && (
-                    <Badge variant="expense" className="hidden sm:inline-flex">
-                      Enlace expirado
-                    </Badge>
-                  )}
-                  {user.role !== "ADMIN" && user.status === "ACTIVE" && (
-                    <Button
-                      size="icon-sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleImpersonate(user.id)
-                      }}
-                      title="Impersonar"
-                    >
-                      <VenetianMask className="size-3.5" />
-                    </Button>
-                  )}
-                  <Button
-                    size="icon-sm"
-                    variant="outline"
-                    onClick={() => openEdit(user)}
-                    title="Editar usuario"
-                  >
-                    <Settings2 className="size-3.5" />
-                  </Button>
-                </ItemActions>
-              </Item>
-            )
-          })}
+          {filtered.map((user) => (
+            <UserListItem
+              key={user.id}
+              user={user}
+              onOpen={() => openEdit(user)}
+              onImpersonate={() => handleImpersonate(user.id)}
+            />
+          ))}
         </ItemGroup>
       )}
     </div>
