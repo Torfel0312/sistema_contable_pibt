@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { X, Plus, Mail, Pencil, Trash2, Check } from "lucide-react"
+import { X, Plus, Mail, Pencil, Trash2, Check, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
@@ -225,10 +225,13 @@ export function InboundEmailRoutesSection({
         </Dialog>
       </div>
 
-      <p className="-mt-4 text-xs text-muted-foreground">
-        Correos externos enviados a un grupo @{DOMAIN} se reenvían automáticamente a los usuarios
-        asignados.
-      </p>
+      <div className="-mt-4 flex gap-2.5 rounded-[10px] bg-primary/10 px-3.5 py-3">
+        <Info className="size-4 shrink-0 mt-0.5 text-primary" />
+        <p className="text-xs leading-relaxed text-foreground">
+          Correos externos enviados a un grupo @{DOMAIN} se reenvían automáticamente a los usuarios
+          asignados.
+        </p>
+      </div>
 
       {localParts.length === 0 ? (
         <Empty className="border border-dashed py-10">
