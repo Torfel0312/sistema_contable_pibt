@@ -20,7 +20,7 @@ export default async function InboundEmailSettingsPage() {
     .map((u) => ({ id: u.id, full_name: u.full_name, email: u.email }))
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-8">
       <InboundEmailRoutesSection initialRoutes={routes} users={activeUsers} />
     </div>
   )

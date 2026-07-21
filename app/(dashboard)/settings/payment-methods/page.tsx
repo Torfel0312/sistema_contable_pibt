@@ -12,7 +12,7 @@ export default async function PaymentMethodsSettingsPage() {
   const paymentMethods = await paymentMethodsService.list(db)
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Medios de Pago

@@ -19,7 +19,7 @@ export default async function PayrollPage() {
   ])
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
           Remuneraciones

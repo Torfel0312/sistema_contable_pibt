@@ -438,7 +438,7 @@ export function IntentionDetailClient({
   const reviewBanner = REVIEW_BANNER_CLASS[intention.status as "APPROVED" | "REJECTED"]
 
   return (
-    <div className="max-w-[720px] mx-auto space-y-4">
+    <div className="space-y-4">
       <Button
         variant="ghost"
         className="-ml-2 text-[12.5px] font-bold"

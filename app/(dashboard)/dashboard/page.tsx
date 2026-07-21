@@ -37,7 +37,7 @@ export default async function DashboardPage({
   )
 
   return (
-    <div className="flex flex-col max-w-6xl mx-auto">
+    <div className="flex flex-col">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-[22px]">
         <div>
           <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground mb-1">
@@ -64,7 +64,9 @@ export default async function DashboardPage({
 
           <div className="px-5 py-[18px]">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">Ingresos</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
+                Ingresos
+              </p>
               <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-income-surface">
                 <TrendingUp className="size-3.5 text-income" />
               </div>
@@ -79,7 +81,9 @@ export default async function DashboardPage({
 
           <div className="px-5 py-[18px] border-l border-border">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">Egresos</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint">
+                Egresos
+              </p>
               <div className="flex size-[26px] items-center justify-center rounded-[8px] bg-expense-surface">
                 <TrendingDown className="size-3.5 text-expense" />
               </div>
@@ -102,7 +106,9 @@ export default async function DashboardPage({
         <h2 className="font-heading text-[14px] font-bold tracking-tight text-foreground mb-0.5">
           Historial de saldo
         </h2>
-        <p className="text-xs text-muted-foreground mb-3.5">Saldo acumulado al cierre de cada mes</p>
+        <p className="text-xs text-muted-foreground mb-3.5">
+          Saldo acumulado al cierre de cada mes
+        </p>
         <BalanceHistoryChart data={data.incomeExpenseSeries} />
       </div>
 
@@ -141,8 +147,7 @@ export default async function DashboardPage({
           movement_type: row.movement_type,
           amount: String(row.amount),
           category_name: (row.movement_categories as { name: string } | null)?.name ?? "—",
-          subcategory_name:
-            (row.movement_subcategories as { name: string } | null)?.name ?? null,
+          subcategory_name: (row.movement_subcategories as { name: string } | null)?.name ?? null,
           delivered_by: null,
           receipt_email: null,
           payment_method_name: null,

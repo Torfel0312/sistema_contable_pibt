@@ -20,7 +20,7 @@ export default async function PermissionsSettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Permisos

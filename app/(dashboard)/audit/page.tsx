@@ -66,7 +66,7 @@ export default async function AuditPage() {
   }))
 
   return (
-    <section className="mx-auto max-w-6xl flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
           Auditoría
