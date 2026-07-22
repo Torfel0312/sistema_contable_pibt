@@ -1,18 +1,22 @@
-# File uploading (attachments)
+# Carga de archivos (adjuntos)
+
+Subida desde un formulario (movimiento o rendición) hasta Supabase Storage, y su
+recuperación posterior mediante una URL firmada a través de
+`/api/attachments/[bucket]/[...path]`.
 
 ```mermaid
 flowchart TD
-    A([User picks file<br/>movement/settlement form]) --> B[Browser uploads directly to<br/>Supabase Storage bucket<br/>movement-attachments]
-    B --> C[Storage returns path;<br/>stored as attachment_url on the record]
-    C --> D[Server action inserts/updates record<br/>movements / expense_settlements<br/>with attachment_url]
-    D --> E[Later: user clicks<br/>attachment link in UI]
+    A(["Usuario selecciona un archivo<br/>formulario de movimiento/rendición"]) --> B[El navegador sube directamente a<br/>Supabase Storage, bucket<br/>movement-attachments]
+    B --> C[Storage devuelve la ruta;<br/>se guarda como attachment_url en el registro]
+    C --> D[Un server action inserta/actualiza el registro<br/>movements / expense_settlements<br/>con attachment_url]
+    D --> E[Más tarde: el usuario hace clic<br/>en el enlace del adjunto en la UI]
     E --> F["GET /api/attachments/[bucket]/[...path]"]
-    F --> G{getCurrentUser<br/>authenticated?}
-    G -->|No| H[401 Unauthorized]
-    G -->|Yes| I{isAttachmentBucket<br/>valid bucket & no ../ traversal?}
-    I -->|No| J[400 Bad Request]
-    I -->|Yes| K[Admin client creates signed URL<br/>1h TTL via createSignedUrl]
-    K --> L{File exists in bucket?}
-    L -->|No| M[404 Not Found]
-    L -->|Yes| N([302 redirect to signed URL])
+    F --> G{"¿getCurrentUser<br/>autenticado?"}
+    G -->|No| H[401 No autorizado]
+    G -->|Sí| I{"¿isAttachmentBucket<br/>bucket válido y sin ../ traversal?"}
+    I -->|No| J[400 Solicitud inválida]
+    I -->|Sí| K[El cliente admin crea una URL firmada<br/>TTL de 1h vía createSignedUrl]
+    K --> L{"¿El archivo existe en el bucket?"}
+    L -->|No| M[404 No encontrado]
+    L -->|Sí| N(["Redirección 302 a la URL firmada"])
 ```
