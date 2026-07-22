@@ -31,15 +31,16 @@ Accounting and fund management system for **Primera Iglesia Bautista de Talcahua
 
 ## Roles
 
-Four roles, permission-based (not hardcoded) via the `role_permissions` table — see
-`lib/permissions/rbac.ts` for the full permission list.
+Four roles, permission-based (not hardcoded) — permissions live in the `role_permissions`
+table and are configurable by an ADMIN at runtime from Settings → Permisos. See
+[docs/roles.md](docs/roles.md) for the full permission catalog.
 
-| Role       | Description                                                |
-| ---------- | ----------------------------------------------------------- |
-| `ADMIN`    | Full access, user and configuration management              |
-| `BURSAR`   | Tesorero — reviews/approves requests, registers movements   |
-| `FINANCE`  | Comisión de finanzas — same workflow access as BURSAR       |
-| `MINISTER` | Submit fund requests and settlements for their ministry      |
+| Role       | Description                                                                          |
+| ---------- | -------------------------------------------------------------------------------------- |
+| `ADMIN`    | Full access, user and configuration management                                       |
+| `BURSAR`   | Tesorero — registers/edits/cancels movements; reviews and approves fund requests      |
+| `FINANCE`  | Finanzas — read-only financial oversight; cannot create or approve anything           |
+| `MINISTER` | Submits fund requests for their ministry and settles expenses with proof              |
 
 ## Local setup
 
