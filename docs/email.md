@@ -1,17 +1,19 @@
 # Email Integration (Resend)
 
 Transactional email is sent via **[Resend](https://resend.com)**.
-No Gmail, SMTP, or Google Apps Script credentials are required for email.
+No Gmail or SMTP credentials are required for email.
 
 ## Configuration
 
 ```env
 RESEND_API_KEY="re_..."                                  # From resend.com dashboard
-RESEND_FROM_EMAIL="Sistema contable PIBT <hola@pibtalcahuano.com>"
 NOTIFICATION_EMAIL="tesoreria@example.com"               # Movement notification recipient
 ```
 
-`RESEND_FROM_EMAIL` must use a domain verified in your Resend account.
+The sender address is not an env var — it's read from `app_settings.notifications_from_email`
+(configurable in `/settings`), falling back to `DEFAULT_FROM_EMAIL` in
+`services/email/resend.service.ts` when unset. Whichever address is used must be on a domain
+verified in your Resend account.
 
 ## Service files
 
@@ -75,7 +77,8 @@ export async function sendMyEmail(opts: { to: string; ... }): Promise<void> {
 1. Create an account at [resend.com](https://resend.com).
 2. Add and verify your sending domain (DNS records).
 3. Create an API key under **API Keys**.
-4. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in your environment.
+4. Set `RESEND_API_KEY` in your environment, then set the sender address in `/settings`
+   (or leave it unset to use the built-in default).
 
 For local development, email sending is skipped when `RESEND_API_KEY` is not set
 or when `NOTIFICATION_EMAIL` is empty.

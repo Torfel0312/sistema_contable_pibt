@@ -48,7 +48,6 @@ For email (optional locally):
 
 ```env
 RESEND_API_KEY="re_..."
-RESEND_FROM_EMAIL="Sistema contable PIBT <hola@pibtalcahuano.com>"
 NOTIFICATION_EMAIL="your@email.com"
 ```
 
@@ -120,9 +119,8 @@ pnpm types:generate
 
 `types/database.types.ts` is auto-generated — never edit it manually.
 
-## Google Apps Script (optional)
+## Google Drive attachments (optional)
 
-PDF generation, Google Drive storage, and Google Sheets sync are handled by an external
-Google Apps Script webhook. These integrations are optional for local development.
-
-See [apps-script-integration.md](apps-script-integration.md) for setup details.
+File attachments (movements, requests, settlements, payroll) upload to Google Drive via the
+Drive API v3 using a service account. Set `GOOGLE_DRIVE_FOLDER_ID`, `GOOGLE_DRIVE_CLIENT_EMAIL`,
+and `GOOGLE_DRIVE_PRIVATE_KEY` to enable it locally — optional for local development.
