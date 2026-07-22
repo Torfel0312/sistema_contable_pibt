@@ -5,7 +5,19 @@ import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Plus, Clock, CheckCircle2, XCircle, FileText, Ban } from "lucide-react"
+import {
+  Plus,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  Ban,
+  Target,
+  Calendar,
+  Wallet,
+  DollarSign,
+  Send
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -166,8 +179,71 @@ export function IntentionsClient({
                 <DialogTitle>Solicitud de dinero</DialogTitle>
               </DialogHeader>
               <form className="space-y-4">
+                <Alert variant="info">
+                  <AlertDescription>
+                    Pide fondos para un ministerio antes de gastar. Tesorería revisa y aprueba;
+                    luego rindes con comprobantes.
+                  </AlertDescription>
+                </Alert>
                 <Field>
-                  <FieldLabel htmlFor="int-amount">Monto solicitado (CLP) *</FieldLabel>
+                  <FieldLabel htmlFor="int-purpose" className="flex items-center gap-1.5">
+                    <Target className="size-3.5" />
+                    Propósito *
+                  </FieldLabel>
+                  <Input
+                    id="int-purpose"
+                    placeholder="Ej: Materiales para campamento de jóvenes"
+                    {...form.register("purpose")}
+                  />
+                  <FieldError errors={[form.formState.errors.purpose]} />
+                </Field>
+                <Field>
+                  <FieldLabel className="flex items-center gap-1.5">
+                    <Calendar className="size-3.5" />
+                    Fecha en que se necesita
+                  </FieldLabel>
+                  <Controller
+                    control={form.control}
+                    name="date_needed"
+                    render={({ field }) => (
+                      <DatePicker
+                        value={field.value ? new Date(field.value + "T00:00:00") : undefined}
+                        onChange={(date) =>
+                          field.onChange(
+                            date
+                              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+                              : ""
+                          )
+                        }
+                      />
+                    )}
+                  />
+                  <FieldError errors={[form.formState.errors.date_needed]} />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="int-funding-method" className="flex items-center gap-1.5">
+                    <Wallet className="size-3.5" />
+                    Método de financiamiento *
+                  </FieldLabel>
+                  <NativeSelect
+                    id="int-funding-method"
+                    className="w-full"
+                    {...form.register("funding_method")}
+                  >
+                    <NativeSelectOption value="REIMBURSEMENT">
+                      Reembolso (gasto primero, rindo después)
+                    </NativeSelectOption>
+                    <NativeSelectOption value="TRANSFER">
+                      Transferencia anticipada (la iglesia transfiere primero)
+                    </NativeSelectOption>
+                  </NativeSelect>
+                  <FieldError errors={[form.formState.errors.funding_method]} />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="int-amount" className="flex items-center gap-1.5">
+                    <DollarSign className="size-3.5" />
+                    Monto solicitado (CLP) *
+                  </FieldLabel>
                   <Controller
                     control={form.control}
                     name="amount"
@@ -189,51 +265,6 @@ export function IntentionsClient({
                   </p>
                   <FieldError errors={[form.formState.errors.amount]} />
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="int-purpose">Propósito *</FieldLabel>
-                  <Input
-                    id="int-purpose"
-                    placeholder="Ej: Materiales para campamento de jóvenes"
-                    {...form.register("purpose")}
-                  />
-                  <FieldError errors={[form.formState.errors.purpose]} />
-                </Field>
-                <Field>
-                  <FieldLabel>Fecha en que se necesita</FieldLabel>
-                  <Controller
-                    control={form.control}
-                    name="date_needed"
-                    render={({ field }) => (
-                      <DatePicker
-                        value={field.value ? new Date(field.value + "T00:00:00") : undefined}
-                        onChange={(date) =>
-                          field.onChange(
-                            date
-                              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-                              : ""
-                          )
-                        }
-                      />
-                    )}
-                  />
-                  <FieldError errors={[form.formState.errors.date_needed]} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="int-funding-method">Método de financiamiento *</FieldLabel>
-                  <NativeSelect
-                    id="int-funding-method"
-                    className="w-full"
-                    {...form.register("funding_method")}
-                  >
-                    <NativeSelectOption value="REIMBURSEMENT">
-                      Reembolso (gasto primero, rindo después)
-                    </NativeSelectOption>
-                    <NativeSelectOption value="TRANSFER">
-                      Transferencia anticipada (la iglesia transfiere primero)
-                    </NativeSelectOption>
-                  </NativeSelect>
-                  <FieldError errors={[form.formState.errors.funding_method]} />
-                </Field>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -254,6 +285,7 @@ export function IntentionsClient({
                       handleSubmit({ ...values, isDraft: false })
                     )}
                   >
+                    <Send className="size-3.5" />
                     {form.formState.isSubmitting ? "Enviando..." : "Enviar solicitud"}
                   </Button>
                 </div>
