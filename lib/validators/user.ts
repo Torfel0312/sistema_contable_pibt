@@ -1,15 +1,19 @@
 import { z } from "zod"
+import { ROLE_ORDER } from "@/lib/constants/roles"
+import type { UserRole } from "@/types/auth"
+
+const userRoleEnum = ROLE_ORDER as [UserRole, ...UserRole[]]
 
 export const createUserSchema = z.object({
   full_name: z.string().min(3, "Nombre requerido"),
   email: z.email("Email inválido"),
-  role: z.enum(["ADMIN", "BURSAR", "FINANCE", "MINISTER"])
+  role: z.enum(userRoleEnum)
 })
 
 export const updateUserSchema = z.object({
   id: z.string().min(1),
   full_name: z.string().min(3, "Nombre requerido"),
-  role: z.enum(["ADMIN", "BURSAR", "FINANCE", "MINISTER"]),
+  role: z.enum(userRoleEnum),
   status: z.enum(["ACTIVE", "INACTIVE", "PENDING_ACTIVATION", "PENDING_RESET"])
 })
 

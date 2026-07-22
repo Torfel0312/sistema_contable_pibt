@@ -4,6 +4,7 @@ import { PERMISSIONS, can } from "@/lib/permissions/rbac"
 import { ministriesService } from "@/services/ministries/ministries.service"
 import { usersService } from "@/services/users/users.service"
 import { MinistriesClient } from "@/components/ministries/ministries-client"
+import { USER_ROLES } from "@/lib/constants/roles"
 
 export default async function MinistriesPage() {
   const user = await getCurrentUser()
@@ -16,7 +17,7 @@ export default async function MinistriesPage() {
     usersService.list()
   ])
 
-  const ministers = users.filter((u) => u.role === "MINISTER")
+  const ministers = users.filter((u) => u.role === USER_ROLES.MINISTER)
 
   return (
     <MinistriesClient
