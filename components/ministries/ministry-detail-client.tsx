@@ -39,6 +39,7 @@ import { formatDate, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
 import { updateMinistrySchema, assignMinisterSchema } from "@/lib/validators/ministry"
 import type { UpdateMinistryInput, AssignMinisterInput } from "@/lib/validators/ministry"
 import { assignMinister, unassignMinister, updateMinistry } from "@/app/actions/ministries"
+import { USER_ROLES } from "@/lib/constants/roles"
 import type { MinistryLeftoverRow } from "@/services/ministries/ministry-leftover.service"
 import type { intentionsService } from "@/services/intentions/intentions.service"
 import type { ministriesService } from "@/services/ministries/ministries.service"
@@ -107,7 +108,7 @@ export function MinistryDetailClient({
   const [unassigning, setUnassigning] = useState(false)
   const [changeMinisterOpen, setChangeMinisterOpen] = useState(false)
 
-  const ministers = users.filter((u) => u.role === "MINISTER")
+  const ministers = users.filter((u) => u.role === USER_ROLES.MINISTER)
   const availableMinsters = ministers.filter((u) => u.id !== current?.user_id)
 
   const totalTransferred = leftover.reduce((sum, row) => sum + row.transferred_amount, 0)

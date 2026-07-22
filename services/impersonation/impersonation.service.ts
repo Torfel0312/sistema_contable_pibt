@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { USER_ROLES } from "@/lib/constants/roles"
 
 const SESSION_TTL_MS = 30 * 60 * 1000
 
@@ -28,7 +29,7 @@ export const impersonationService = {
     if (target.status !== "ACTIVE") {
       throw new Error("Solo se puede suplantar a un usuario activo")
     }
-    if (target.role === "ADMIN") {
+    if (target.role === USER_ROLES.ADMIN) {
       throw new Error("No se puede suplantar a otro administrador")
     }
 

@@ -6,6 +6,13 @@ import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn, avatarColorFor, initialsFor } from "@/lib/utils"
 import type { UserRole } from "@/types/auth"
+import {
+  USER_ROLES,
+  ROLE_ORDER,
+  ROLE_LABEL,
+  ROLE_BADGE_VARIANT,
+  ROLE_DOT_CLASS
+} from "@/lib/constants/roles"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,29 +84,6 @@ function isLinkExpired(user: UserRow): boolean {
 
 type BadgeVariant = ComponentProps<typeof Badge>["variant"]
 
-const ROLE_ORDER: UserRole[] = ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
-
-const ROLE_BADGE_VARIANT: Record<UserRole, BadgeVariant> = {
-  ADMIN: "primary",
-  BURSAR: "role",
-  FINANCE: "income",
-  MINISTER: "warn"
-}
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  ADMIN: "Administrador",
-  BURSAR: "Tesorero",
-  FINANCE: "Finanzas",
-  MINISTER: "Ministro"
-}
-
-const ROLE_DOT_CLASS: Record<UserRole, string> = {
-  ADMIN: "bg-primary",
-  BURSAR: "bg-role-purple",
-  FINANCE: "bg-income",
-  MINISTER: "bg-warn"
-}
-
 type StatusMeta = {
   label: string
   variant: BadgeVariant | null
@@ -167,7 +151,7 @@ function UserListItem({
             Enlace expirado
           </Badge>
         )}
-        {user.role !== "ADMIN" && user.status === "ACTIVE" && (
+        {user.role !== USER_ROLES.ADMIN && user.status === "ACTIVE" && (
           <Button
             size="icon-sm"
             variant="outline"
@@ -191,7 +175,7 @@ function UserListItem({
 export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const inviteMinister = searchParams.get("invite") === "MINISTER"
+  const inviteMinister = searchParams.get("invite") === USER_ROLES.MINISTER
   const [users, setUsers] = useState<UserRow[]>(initialUsers)
   const [createOpen, setCreateOpen] = useState(inviteMinister)
   const [editingUser, setEditingUser] = useState<UserRow | null>(null)
@@ -246,7 +230,11 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
 
   const createForm = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { full_name: "", email: "", role: inviteMinister ? "MINISTER" : "BURSAR" }
+    defaultValues: {
+      full_name: "",
+      email: "",
+      role: inviteMinister ? USER_ROLES.MINISTER : USER_ROLES.BURSAR
+    }
   })
 
   const selectedRole = useWatch({ control: createForm.control, name: "role" })
@@ -428,14 +416,14 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
               <Field>
                 <FieldLabel htmlFor="new-role">Nivel de acceso</FieldLabel>
                 <NativeSelect id="new-role" className="w-full" {...createForm.register("role")}>
-                  <option value="ADMIN">Administrador — Acceso total</option>
-                  <option value="FINANCE">Finanzas — Gestión contable</option>
-                  <option value="BURSAR">Tesorero — Ingreso y aprobación</option>
-                  <option value="MINISTER">Ministro — Solicitudes de fondos</option>
+                  <option value={USER_ROLES.ADMIN}>Administrador — Acceso total</option>
+                  <option value={USER_ROLES.FINANCE}>Finanzas — Gestión contable</option>
+                  <option value={USER_ROLES.BURSAR}>Tesorero — Ingreso y aprobación</option>
+                  <option value={USER_ROLES.MINISTER}>Ministro — Solicitudes de fondos</option>
                 </NativeSelect>
               </Field>
 
-              {selectedRole === "ADMIN" && (
+              {selectedRole === USER_ROLES.ADMIN && (
                 <Alert variant="info">
                   <AlertTitle>Acceso total al sistema</AlertTitle>
                   <AlertDescription>
@@ -445,7 +433,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   </AlertDescription>
                 </Alert>
               )}
-              {selectedRole === "BURSAR" && (
+              {selectedRole === USER_ROLES.BURSAR && (
                 <Alert variant="info">
                   <AlertTitle>Tesorero — Ingreso y aprobación</AlertTitle>
                   <AlertDescription>
@@ -455,7 +443,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   </AlertDescription>
                 </Alert>
               )}
-              {selectedRole === "FINANCE" && (
+              {selectedRole === USER_ROLES.FINANCE && (
                 <Alert variant="info">
                   <AlertTitle>Finanzas — Monitoreo de registros</AlertTitle>
                   <AlertDescription>
@@ -464,7 +452,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   </AlertDescription>
                 </Alert>
               )}
-              {selectedRole === "MINISTER" && (
+              {selectedRole === USER_ROLES.MINISTER && (
                 <Alert variant="info">
                   <AlertTitle>Solicitudes de fondos</AlertTitle>
                   <AlertDescription>
@@ -556,10 +544,11 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
               <Field>
                 <FieldLabel htmlFor="edit-role">Rol</FieldLabel>
                 <NativeSelect id="edit-role" className="w-full" {...editForm.register("role")}>
-                  <option value="ADMIN">Administrador</option>
-                  <option value="BURSAR">Tesorero</option>
-                  <option value="FINANCE">Finanzas</option>
-                  <option value="MINISTER">Ministro</option>
+                  {ROLE_ORDER.map((role) => (
+                    <option key={role} value={role}>
+                      {ROLE_LABEL[role]}
+                    </option>
+                  ))}
                 </NativeSelect>
               </Field>
             </div>
@@ -588,7 +577,7 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
                   Acciones de cuenta
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {editingUser.role !== "ADMIN" && editingUser.status === "ACTIVE" && (
+                  {editingUser.role !== USER_ROLES.ADMIN && editingUser.status === "ACTIVE" && (
                     <Button
                       type="button"
                       variant="outline"
