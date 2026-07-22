@@ -1,5 +1,9 @@
 # Business Flow Diagrams
 
+Diagram labels below are in Spanish (matching the app's UI language); surrounding prose is
+English, per the rest of this documentation. See also [`docs/diagrams/`](diagrams/README.md) for
+diagrams focused on auth, roles/permissions, and file uploads.
+
 ## Fund Request Flow (Solicitud de Fondos)
 
 A ministry submits a fund request (intention). Treasury reviews it, registers the transfer,
@@ -7,31 +11,31 @@ and the ministry must later submit a settlement with receipts.
 
 ```mermaid
 sequenceDiagram
-    actor Minister as Ministry (MINISTER)
-    actor Treasury as Treasury (BURSAR/FINANCE)
-    participant System as System
+    actor Ministro as Ministerio (MINISTER)
+    actor Tesoreria as Tesorería (BURSAR/FINANCE)
+    participant Sistema as Sistema
     participant Email as Resend (Email)
 
-    Minister->>System: Submit fund request (amount + description)
-    System->>System: Insert budget_intentions (status: PENDING)
-    System->>Email: Notify treasury (new request)
-    Email-->>Treasury: Email — new request
+    Ministro->>Sistema: Enviar solicitud de fondos (monto + descripción)
+    Sistema->>Sistema: Insertar budget_intentions (estado: PENDING)
+    Sistema->>Email: Notificar a tesorería (nueva solicitud)
+    Email-->>Tesoreria: Correo — nueva solicitud
 
-    Treasury->>System: Review request → Approve or Reject
-    Note over System: Already-reviewed requests are rejected with 409 (no double review)
+    Tesoreria->>Sistema: Revisar solicitud → Aprobar o Rechazar
+    Note over Sistema: Una solicitud ya revisada se rechaza con 409 (no se permite doble revisión)
 
-    alt Approved
-        System->>Email: Notify ministry (approved)
-        Email-->>Minister: Email — request approved
-        Treasury->>System: Register transfer (intention_transfers row)
-        System->>Email: Notify ministry (transfer registered)
-        Email-->>Minister: Email — transfer done, submit settlement
-    else Rejected
-        System->>Email: Notify ministry (rejected)
-        Email-->>Minister: Email — request rejected
+    alt Aprobada
+        Sistema->>Email: Notificar al ministerio (aprobada)
+        Email-->>Ministro: Correo — solicitud aprobada
+        Tesoreria->>Sistema: Registrar transferencia (fila en intention_transfers)
+        Sistema->>Email: Notificar al ministerio (transferencia registrada)
+        Email-->>Ministro: Correo — transferencia realizada, debe rendir cuenta
+    else Rechazada
+        Sistema->>Email: Notificar al ministerio (rechazada)
+        Email-->>Ministro: Correo — solicitud rechazada
     end
 
-    Note over Minister,Treasury: Either party may add request_comments at any point (entity_type + entity_id)
+    Note over Ministro,Tesoreria: Cualquiera de las partes puede agregar request_comments en cualquier momento (entity_type + entity_id)
 ```
 
 Note: there is no per-ministry budget check anymore — budget allocation tracking was removed
@@ -45,12 +49,12 @@ Transfer registration and settlement are **not** intention states; they live in 
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING : Ministry submits request
-    PENDING --> APPROVED : Treasury approves
-    PENDING --> REJECTED : Treasury rejects
-    APPROVED --> APPROVED : Treasury registers transfer (intention_transfers row, no status change)
+    [*] --> PENDING : Ministerio envía la solicitud
+    PENDING --> APPROVED : Tesorería aprueba
+    PENDING --> REJECTED : Tesorería rechaza
+    APPROVED --> APPROVED : Tesorería registra la transferencia (fila en intention_transfers, sin cambio de estado)
     REJECTED --> [*]
-    APPROVED --> [*] : Ministry settlement flow continues (see below)
+    APPROVED --> [*] : Continúa el flujo de rendición del ministerio (ver abajo)
 ```
 
 ---
@@ -64,17 +68,17 @@ on whether every settlement has reached a terminal state and treasury has closed
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DRAFT : Minister starts a settlement (optional draft)
-    [*] --> PENDING : Minister submits directly (no draft)
-    DRAFT --> PENDING : Minister submits
-    DRAFT --> CANCELLED : Minister cancels
-    PENDING --> IN_REVIEW : Treasury takes it for review
-    PENDING --> CANCELLED : Minister cancels
-    IN_REVIEW --> APPROVED : Treasury approves
-    IN_REVIEW --> REJECTED : Treasury rejects
-    IN_REVIEW --> RETURNED_FOR_CORRECTION : Treasury returns with comments
-    RETURNED_FOR_CORRECTION --> PENDING : Minister resubmits
-    RETURNED_FOR_CORRECTION --> CANCELLED : Minister cancels
+    [*] --> DRAFT : Ministro inicia una rendición (borrador opcional)
+    [*] --> PENDING : Ministro envía directamente (sin borrador)
+    DRAFT --> PENDING : Ministro envía el borrador
+    DRAFT --> CANCELLED : Ministro cancela
+    PENDING --> IN_REVIEW : Tesorería la toma para revisión
+    PENDING --> CANCELLED : Ministro cancela
+    IN_REVIEW --> APPROVED : Tesorería aprueba
+    IN_REVIEW --> REJECTED : Tesorería rechaza
+    IN_REVIEW --> RETURNED_FOR_CORRECTION : Tesorería la devuelve con observaciones
+    RETURNED_FOR_CORRECTION --> PENDING : Ministro la reenvía
+    RETURNED_FOR_CORRECTION --> CANCELLED : Ministro cancela
     APPROVED --> [*]
     REJECTED --> [*]
     CANCELLED --> [*]
@@ -85,34 +89,34 @@ edit or cancel it until a decision is made (approve, reject, or return for corre
 
 ```mermaid
 sequenceDiagram
-    actor Minister as Ministry (MINISTER)
-    actor Treasury as Treasury (BURSAR/ADMIN)
-    participant System as System
+    actor Ministro as Ministerio (MINISTER)
+    actor Tesoreria as Tesorería (BURSAR/ADMIN)
+    participant Sistema as Sistema
     participant Email as Resend (Email)
 
-    Minister->>System: Submit settlement + attachments (draft or direct, see 01-file-uploading)
-    System->>System: Insert expense_settlements (status: DRAFT or PENDING, is_late if >30 days from expense_date)
-    opt Was a draft
-        Minister->>System: Submit draft for review (DRAFT -> PENDING)
+    Ministro->>Sistema: Enviar rendición + comprobantes (borrador o directo, ver 01-file-uploading.md)
+    Sistema->>Sistema: Insertar expense_settlements (estado: DRAFT o PENDING, is_late si supera 30 días desde expense_date)
+    opt Era un borrador
+        Ministro->>Sistema: Enviar borrador a revisión (DRAFT -> PENDING)
     end
 
-    Treasury->>System: Take for review (PENDING -> IN_REVIEW)
-    Treasury->>System: Approve, reject, or return for correction
+    Tesoreria->>Sistema: Tomar para revisión (PENDING -> IN_REVIEW)
+    Tesoreria->>Sistema: Aprobar, rechazar o devolver para corrección
 
-    alt Approved
+    alt Aprobada
         alt REIMBURSEMENT
-            System->>System: Admin client inserts movements row (category "Rendiciones de Ministerio")
+            Sistema->>Sistema: Cliente admin inserta fila en movements (categoría "Rendiciones de Ministerio")
         else TRANSFER
-            System->>System: Reuse the movement already created when the transfer was registered (no second movement)
+            Sistema->>Sistema: Reutiliza el movimiento ya creado al registrar la transferencia (no se crea un segundo movimiento)
         end
-        System->>System: Link movement_id back onto the settlement; audit-log both
-        System->>Email: Notify ministry (settlement approved)
-    else Rejected
-        System->>Email: Notify ministry (settlement rejected)
-    else Returned for correction
-        System->>System: Insert request_comments row (entity_type SETTLEMENT)
-        System->>Email: Notify ministry (settlement returned, with comment)
-        Minister->>System: Resubmit (RETURNED_FOR_CORRECTION -> PENDING)
+        Sistema->>Sistema: Vincula movement_id a la rendición; audita ambos
+        Sistema->>Email: Notificar al ministerio (rendición aprobada)
+    else Rechazada
+        Sistema->>Email: Notificar al ministerio (rendición rechazada)
+    else Devuelta para corrección
+        Sistema->>Sistema: Inserta fila en request_comments (entity_type SETTLEMENT)
+        Sistema->>Email: Notificar al ministerio (rendición devuelta, con comentario)
+        Ministro->>Sistema: Reenviar (RETURNED_FOR_CORRECTION -> PENDING)
     end
 ```
 
@@ -139,14 +143,14 @@ Standard income or expense recording with audit trail and always-on integrations
 
 ```mermaid
 flowchart TD
-    A([User creates movement]) --> B[API validates session + Zod schema]
-    B --> C[Service saves to DB]
-    C --> E[Audit log entry created]
-    E --> F["processMovementIntegrations() — Promise.allSettled, always runs, each independent"]
-    F --> G[Google Apps Script webhook → PDF generated + saved to Drive]
-    F --> I[Google Apps Script webhook → Google Sheets sync]
-    F --> J[Resend email notification → treasury + registering user]
-    G --> K([pdf_status / synced_to_sheet / notification_status persisted on movements])
+    A(["Usuario crea un movimiento"]) --> B["API valida sesión + esquema Zod"]
+    B --> C[Servicio guarda en la BD]
+    C --> E[Se crea entrada en el log de auditoría]
+    E --> F["processMovementIntegrations() — Promise.allSettled, siempre se ejecuta, cada una independiente"]
+    F --> G[Webhook de Google Apps Script → PDF generado + guardado en Drive]
+    F --> I[Webhook de Google Apps Script → sincronización con Google Sheets]
+    F --> J[Notificación por correo vía Resend → tesorería + usuario que lo registró]
+    G --> K(["pdf_status / synced_to_sheet / notification_status persistidos en movements"])
     I --> K
     J --> K
 ```
@@ -159,9 +163,9 @@ outcome is persisted independently on the `movements` row.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ACTIVE : Created
-    ACTIVE --> ACTIVE : Edited
-    ACTIVE --> CANCELLED : Logically cancelled (no physical delete)
+    [*] --> ACTIVE : Creado
+    ACTIVE --> ACTIVE : Editado
+    ACTIVE --> CANCELLED : Anulado lógicamente (sin borrado físico)
     CANCELLED --> [*]
 ```
 
@@ -177,13 +181,13 @@ fixed at 2: the client confirmed there can be more.
 
 ```mermaid
 flowchart TD
-    A([ADMIN registers monthly payroll]) --> B[Zod validates period + 1..N line items]
-    B --> C["register_payroll() RPC — SECURITY DEFINER, atomic"]
-    C --> D[Insert payroll_records row, period normalized to month start]
-    C --> E["For each line: insert movements (EXPENSE, category Remuneraciones)"]
-    E --> F[Insert payroll_movements linking record ↔ movement ↔ kind]
-    F --> G[Attachments uploaded to Drive per movement, same pattern as Etapa 1]
-    G --> H([System audit log entry: PAYROLL_REGISTERED])
+    A(["ADMIN registra la liquidación mensual"]) --> B["Zod valida el período + 1..N líneas"]
+    B --> C["RPC register_payroll() — SECURITY DEFINER, atómico"]
+    C --> D[Inserta fila en payroll_records, período normalizado al día 1 del mes]
+    C --> E["Por cada línea: inserta movements (EXPENSE, categoría Remuneraciones)"]
+    E --> F[Inserta payroll_movements vinculando registro ↔ movimiento ↔ tipo]
+    F --> G[Se suben adjuntos a Drive por cada movimiento, mismo patrón que la Etapa 1]
+    G --> H(["Entrada en el log de auditoría del sistema: PAYROLL_REGISTERED"])
 ```
 
 One `payroll_records` row per calendar month (unique index on `period`, always the 1st of
@@ -196,9 +200,9 @@ only appended to. Current balance is always derived, never stored as a mutable f
 
 ```mermaid
 flowchart LR
-    A([ADMIN adjusts reserve]) --> B[Zod validates amount_delta ≠ 0 + required note]
-    B --> C[Insert severance_reserve_adjustments row]
-    C --> D([Balance = SUM of all amount_delta])
+    A(["ADMIN ajusta la reserva"]) --> B["Zod valida amount_delta ≠ 0 + nota obligatoria"]
+    B --> C[Inserta fila en severance_reserve_adjustments]
+    C --> D(["Saldo = SUMA de todos los amount_delta"])
 ```
 
 ---
@@ -210,16 +214,16 @@ never accounted for in an approved settlement. Cutoff is "as of a date" (`p_as_o
 today) — not a start/end range.
 
 ```
-remanente = monto_transferido − SUM(rendiciones APROBADAS hasta la fecha de corte)
+remanente = monto_transferido − SUMA(rendiciones APROBADAS hasta la fecha de corte)
 ```
 
 ```mermaid
 flowchart TD
-    A([Ministry detail page loads]) --> B["get_ministry_leftover_summary(ministry_id, as_of) RPC"]
-    B --> C[Filter: funding_method = TRANSFER only]
-    C --> D[Filter: settlement status = APPROVED — explicit whitelist, not a blacklist]
-    D --> E[Group by intention, then by ministry]
-    E --> F([Table: per-request leftover + ministry total])
+    A(["Se carga la página de detalle del ministerio"]) --> B["RPC get_ministry_leftover_summary(ministry_id, as_of)"]
+    B --> C[Filtro: funding_method = TRANSFER únicamente]
+    C --> D[Filtro: estado de rendición = APPROVED — lista blanca explícita, no lista negra]
+    D --> E[Agrupa por solicitud y luego por ministerio]
+    E --> F(["Tabla: remanente por solicitud + total por ministerio"])
 ```
 
 Two deliberate filters, both from the plan: `funding_method = 'TRANSFER'` (leftover only
@@ -235,17 +239,17 @@ to zero.
 ## Dashboard Consolidado (Etapa 8)
 
 Pure composition — no new schema or calculation, just surfacing Etapa 6 and Etapa 7's data
-on the main dashboard. Restricted to `VIEW_MOVEMENT` (ADMIN/BURSAR/FINANCE) — MINISTER
+on the main dashboard. Restricted to `VIEW_DASHBOARD` (ADMIN/BURSAR/FINANCE) — MINISTER
 doesn't see either widget, and the data isn't even fetched for a viewer who won't see it.
 
 ```mermaid
 flowchart TD
-    A([Dashboard page loads]) --> B{VIEW_MOVEMENT?}
-    B -- No --> C([Only the standard KPIs/charts render])
-    B -- Yes --> D["dashboardService.getSummary(period, includeFinanceWidgets: true)"]
-    D --> E[severanceReserveService.getBalance] & F[ministryLeftoverService.getSummary, grouped by ministry]
-    E --> G([SeveranceReserveCard])
-    F --> H([MinistryLeftoverWidget — per-ministry totals, links to /ministries/:id])
+    A(["Se carga el dashboard"]) --> B{"¿Tiene VIEW_DASHBOARD?"}
+    B -- No --> C(["Solo se renderizan los KPIs/gráficos estándar"])
+    B -- Sí --> D["dashboardService.getSummary(periodo, includeFinanceWidgets: true)"]
+    D --> E[severanceReserveService.getBalance] & F[ministryLeftoverService.getSummary, agrupado por ministerio]
+    E --> G(["SeveranceReserveCard"])
+    F --> H(["MinistryLeftoverWidget — totales por ministerio, enlaza a /ministries/:id"])
 ```
 
 ---
@@ -257,8 +261,8 @@ and sends a summary email to treasury when there are pending items.
 
 ```mermaid
 flowchart LR
-    Cron([Cron trigger]) --> Q[Query pending intentions + settlements + missing transfers]
-    Q --> Check{Any pending?}
-    Check -- Yes --> Email[Resend summary email → treasury]
-    Check -- No --> Skip([Skip])
+    Cron(["Disparador cron"]) --> Q[Consulta solicitudes/rendiciones pendientes + transferencias faltantes]
+    Q --> Check{"¿Hay pendientes?"}
+    Check -- Sí --> Email[Correo resumen vía Resend → tesorería]
+    Check -- No --> Skip(["No hace nada"])
 ```
