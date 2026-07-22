@@ -15,30 +15,32 @@ Accounting and fund management system for **Primera Iglesia Bautista de Talcahua
 | Charts        | Recharts                              |
 | UI components | Base UI                               |
 | Email         | [Resend](https://resend.com)          |
-| Integrations  | Google Apps Script (PDF, Sheets sync) |
+| Attachments   | Google Drive API v3 (service account) |
 
 ## Modules
 
 | Module              | Description                                                                            |
 | ------------------- | -------------------------------------------------------------------------------------- |
 | **Dashboard**       | KPIs, income/expense chart, monthly summary                                            |
-| **Movements**       | Income and expense records with PDF generation and full audit trail                    |
-| **Fund Requests**   | Ministry fund request workflow with treasury approval and transfer registration        |
-| **Budget**          | Budget period and ministry allocation management                                       |
+| **Movements**       | Income and expense records with attachments and full audit trail                       |
+| **Requests**        | Ministry fund request workflow (intentions), treasury approval, transfer, settlement    |
 | **Ministries**      | Ministry and member administration                                                     |
-| **Settlements**     | Post-transfer expense settlement (receipts and supporting documents)                   |
-| **Events**          | Church event records                                                                   |
+| **Payroll**         | Monthly payroll (remuneraciones) and severance reserve tracking (ADMIN only)           |
 | **Users**           | Account management (ADMIN only)                                                        |
 | **Audit**           | System-wide change and event history                                                   |
 
 ## Roles
 
-| Role       | Permissions                                    |
-| ---------- | ---------------------------------------------- |
-| `ADMIN`    | Full access, user and configuration management          |
-| `OPERATOR` | Create and edit movements and fund requests             |
-| `VIEWER`   | Read-only                                               |
-| `MINISTER` | Submit fund requests and settlements for their ministry |
+Four roles, permission-based (not hardcoded) — permissions live in the `role_permissions`
+table and are configurable by an ADMIN at runtime from Settings → Permisos. See
+[docs/roles.md](docs/roles.md) for the full permission catalog.
+
+| Role       | Description                                                                          |
+| ---------- | -------------------------------------------------------------------------------------- |
+| `ADMIN`    | Full access, user and configuration management                                       |
+| `BURSAR`   | Tesorero — registers/edits/cancels movements; reviews and approves fund requests      |
+| `FINANCE`  | Finanzas — read-only financial oversight; cannot create or approve anything           |
+| `MINISTER` | Submits fund requests for their ministry and settles expenses with proof              |
 
 ## Local setup
 
@@ -92,22 +94,23 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=                    # Server-side only, never expose to client
 
 RESEND_API_KEY=                         # API key from resend.com
-RESEND_FROM_EMAIL=                      # Verified sender address in Resend
 NOTIFICATION_EMAIL=                     # Movement notification recipient
+RESEND_WEBHOOK_SECRET=                  # Verifies the inbound-email webhook
+CRON_SECRET=                            # Shared secret for the reminders cron endpoint
 
-GOOGLE_APPS_SCRIPT_WEBHOOK_URL=         # GAS webhook for PDF/Sheets (optional)
-GOOGLE_APPS_SCRIPT_SECRET=              # Shared secret with GAS
+GOOGLE_DRIVE_FOLDER_ID=                 # Drive folder for uploaded attachments (optional)
+GOOGLE_DRIVE_CLIENT_EMAIL=              # Service account email (optional)
+GOOGLE_DRIVE_PRIVATE_KEY=               # Service account private key (optional)
 ```
 
 ## Documentation
 
-| Document                                                           | Description                                 |
-| ------------------------------------------------------------------ | ------------------------------------------- |
-| [docs/setup.md](docs/setup.md)                                     | Detailed local setup guide                  |
-| [docs/architecture.md](docs/architecture.md)                       | System architecture                         |
-| [docs/email.md](docs/email.md)                                     | Email integration with Resend               |
-| [docs/flows.md](docs/flows.md)                                     | Flow diagrams (Fund Request and Settlement) |
-| [docs/apps-script-integration.md](docs/apps-script-integration.md) | Google Apps Script integration              |
+| Document                                     | Description                                 |
+| --------------------------------------------- | ------------------------------------------- |
+| [docs/setup.md](docs/setup.md)                | Detailed local setup guide                  |
+| [docs/architecture.md](docs/architecture.md)  | System architecture                         |
+| [docs/email.md](docs/email.md)                | Email integration with Resend               |
+| [docs/flows.md](docs/flows.md)                | Flow diagrams (Fund Request and Settlement) |
 
 ## CI/CD
 

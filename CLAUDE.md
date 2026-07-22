@@ -61,7 +61,7 @@ Always use `pnpm`, never `npm`.
 **Roles:** four roles: `ADMIN`, `BURSAR` (tesorero), `FINANCE` (comisión de finanzas), `MINISTER` (encargado de ministerio). Authorization is permission-based, not role-name-based: check `can(permissions, PERMISSIONS.X)`, never compare role strings in business logic. Sidebar visibility does use role names (`components/dashboard/app-sidebar.tsx`).
 
 **Data flow for mutations:**
-API route or server action → reads Supabase session → validates with Zod schema from `lib/validators/` → calls service → service uses Supabase server client → service calls `auditService` for audit log → movement mutations then call `processMovementIntegrations` (PDF/Sheet/email via Google Apps Script webhooks).
+API route or server action → reads Supabase session → validates with Zod schema from `lib/validators/` → calls service → service uses Supabase server client → service calls `auditService` for audit log → movement mutations then call `processMovementIntegrations` (email notification via Resend).
 
 **Auth:**
 Supabase Auth with email/password (`signInWithPassword`). No public sign-up — accounts are created by an ADMIN via the users management page; the invited user receives an email (Resend) and activates via `/activate`. Password reset via `/api/auth/forgot-password`. Session is read server-side via `createServerClient()` from `lib/supabase/server.ts`.
@@ -70,10 +70,10 @@ Supabase Auth with email/password (`signInWithPassword`). No public sign-up — 
 `ministries` + `ministry_assignments` tables; a MINISTER user is assigned to a ministry via `ministry_assignments` (FK to `users`) — there is no free-text minister field. Managed at `/ministries`. Used by the requests workflow.
 
 **Requests workflow:**
-`budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments` tables. Ministers submit spending intentions (amount + description); BURSAR/FINANCE review (approve/reject), register the transfer once approved, and ministers later settle the expense with proof. Per-ministry budget allocation was removed (no `budget_periods`/`ministry_budgets` coupling) — budgets are tracked outside the platform for now. Services: `services/intentions/`, `services/settlements/`. Pages: `app/(dashboard)/requests/page.tsx` (+ `[id]`).
+`budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments` tables. Ministers submit spending intentions (amount + description); BURSAR reviews (approve/reject), registers the transfer once approved, and ministers later settle the expense with proof. FINANCE has read-only visibility into the same workflow (no `REVIEW_INTENTIONS` permission — cannot approve/reject or register transfers). Per-ministry budget allocation was removed (no `budget_periods`/`ministry_budgets` coupling) — budgets are tracked outside the platform for now. Services: `services/intentions/`, `services/settlements/`. Pages: `app/(dashboard)/requests/page.tsx` (+ `[id]`).
 
 **Google integrations:**
-Outbound webhooks via Google Apps Script (configured via env vars): PDF generation + Drive storage and Google Sheets sync. Triggered in `services/google/movement-postprocess.ts` after a movement is created/edited. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`. Integration state tracked on `movements` (`pdf_status`, `synced_to_sheet`, `notification_status`, etc.).
+File attachments (movements, intentions, settlements, payroll liquidaciones) upload directly to Google Drive via the Drive API v3 (`services/google/drive.service.ts`, `googleapis` package, service-account JWT auth — `GOOGLE_DRIVE_CLIENT_EMAIL`/`GOOGLE_DRIVE_PRIVATE_KEY`/`GOOGLE_DRIVE_FOLDER_ID`). The earlier Google Apps Script webhook pipeline (PDF generation + Sheets sync) has been removed. `services/google/movement-postprocess.ts` now only sends an email notification via Resend after a movement is created/edited, tracked on `movements.notification_status`/`notification_error`. Email notifications go through Resend (`services/email/`), with React Email templates in `emails/`.
 
 **Database schema:**
 Migrations live in `supabase/migrations/`. Key tables: `users`, `role_permissions`, `movements`, `movement_audit_log`, `system_audit_log`, `ministries`, `ministry_assignments`, `budget_intentions`, `intention_transfers`, `expense_settlements`, `request_comments`, `app_settings`. All tables have RLS enabled. Run `pnpm supabase db reset` to wipe and re-apply from scratch locally.
@@ -104,9 +104,11 @@ See `.env.example`. Critical ones:
 - `NEXT_PUBLIC_SUPABASE_URL` — from `pnpm supabase status` → API URL
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — from `pnpm supabase status` → Publishable key
 - `SUPABASE_SECRET_KEY` — from `pnpm supabase status` → Secret key (server-side only, never exposed to client)
-- `GOOGLE_APPS_SCRIPT_WEBHOOK_URL` / `GOOGLE_APPS_SCRIPT_SECRET` — Google integrations (optional locally)
-- `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — transactional email via Resend
+- `GOOGLE_DRIVE_FOLDER_ID` / `GOOGLE_DRIVE_CLIENT_EMAIL` / `GOOGLE_DRIVE_PRIVATE_KEY` — Google Drive attachment uploads (optional locally)
+- `RESEND_API_KEY` — transactional email via Resend (sender address is DB-backed via `app_settings.notifications_from_email`, not an env var)
 - `NOTIFICATION_EMAIL` — recipient for movement notifications; if unset, email sending is skipped
+- `RESEND_WEBHOOK_SECRET` — verifies signatures on the inbound-email webhook
+- `CRON_SECRET` — shared secret required by the reminders cron endpoint
 
 ## Git workflow
 

@@ -9,10 +9,11 @@ import { TransferNotificationEmail } from "@/emails/transfer-notification-email"
 import { DEFAULT_FROM_EMAIL } from "@/services/email/resend.service"
 import { settingsService } from "@/services/settings/settings.service"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { getSiteUrl } from "@/lib/utils"
 
 const ORG_SHORT = "Sistema Contable PIBT"
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+const BASE_URL = getSiteUrl()
 
 const TRANSACTIONAL_HEADERS = {
   "List-Unsubscribe": `<mailto:${UNSUBSCRIBE_EMAIL}?subject=unsubscribe>`,

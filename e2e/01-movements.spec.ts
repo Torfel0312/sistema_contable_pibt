@@ -11,8 +11,7 @@ test.describe("Movements (Etapa 1/2)", () => {
     await shot(page, "01-movements", "list")
   })
 
-  // "Nuevo Movimiento" on the list page is a plain Link to /movements/new, not a
-  // dialog — components/movements/new-movement-dialog.tsx is unused dead code.
+  // "Nuevo Movimiento" on the list page is a plain Link to /movements/new, not a dialog.
   test("Nuevo Movimiento navigates to /movements/new", async ({ page }) => {
     await page.goto("/movements", { waitUntil: "networkidle" })
     await page.getByRole("button", { name: "Nuevo Movimiento" }).click()
