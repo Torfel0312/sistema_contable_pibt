@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, type ComponentProps } from "react"
+import { useState, useMemo, useEffect, type ComponentProps } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,7 +29,11 @@ import {
   Check,
   Link,
   Settings2,
-  VenetianMask
+  VenetianMask,
+  LayoutList,
+  List,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import {
@@ -73,20 +77,27 @@ function isLinkExpired(user: UserRow): boolean {
 
 type BadgeVariant = ComponentProps<typeof Badge>["variant"]
 
-function roleBadgeVariant(role: UserRole): BadgeVariant {
-  if (role === "ADMIN") return "primary"
-  if (role === "BURSAR") return "role"
-  if (role === "FINANCE") return "income"
-  if (role === "MINISTER") return "warn"
-  return "neutral"
+const ROLE_ORDER: UserRole[] = ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
+
+const ROLE_BADGE_VARIANT: Record<UserRole, BadgeVariant> = {
+  ADMIN: "primary",
+  BURSAR: "role",
+  FINANCE: "income",
+  MINISTER: "warn"
 }
 
-function roleLabel(role: UserRole) {
-  if (role === "ADMIN") return "Administrador"
-  if (role === "BURSAR") return "Tesorero"
-  if (role === "FINANCE") return "Finanzas"
-  if (role === "MINISTER") return "Ministro"
-  return role
+const ROLE_LABEL: Record<UserRole, string> = {
+  ADMIN: "Administrador",
+  BURSAR: "Tesorero",
+  FINANCE: "Finanzas",
+  MINISTER: "Ministro"
+}
+
+const ROLE_DOT_CLASS: Record<UserRole, string> = {
+  ADMIN: "bg-primary",
+  BURSAR: "bg-role-purple",
+  FINANCE: "bg-income",
+  MINISTER: "bg-warn"
 }
 
 type StatusMeta = {
@@ -108,6 +119,75 @@ function statusMeta(status: UserStatus): StatusMeta {
   }
 }
 
+function UserListItem({
+  user,
+  onOpen,
+  onImpersonate
+}: {
+  user: UserRow
+  onOpen: () => void
+  onImpersonate: () => void
+}) {
+  const meta = statusMeta(user.status)
+  const linkExpired = isLinkExpired(user)
+  return (
+    <Item
+      variant="outline"
+      onClick={onOpen}
+      className={cn("cursor-pointer rounded-[14px] px-[18px]", meta.rowOpacity && "opacity-55")}
+    >
+      <div
+        className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] text-[13px] font-extrabold text-white"
+        style={{ background: avatarColorFor(user.full_name || user.email) }}
+      >
+        {initialsFor(user.full_name || "?")}
+      </div>
+      <ItemContent>
+        <ItemTitle className="font-bold">{user.full_name}</ItemTitle>
+        <ItemDescription className="text-[12.5px]">{user.email}</ItemDescription>
+        <div className="sm:hidden mt-0.5 flex flex-wrap gap-1">
+          {meta.variant && <Badge variant={meta.variant}>{meta.label}</Badge>}
+          {linkExpired && <Badge variant="expense">Enlace expirado</Badge>}
+        </div>
+      </ItemContent>
+      <ItemActions>
+        <Badge
+          variant={ROLE_BADGE_VARIANT[user.role]}
+          className="hidden sm:inline-flex uppercase tracking-wide"
+        >
+          {ROLE_LABEL[user.role]}
+        </Badge>
+        {meta.variant && (
+          <Badge variant={meta.variant} className="hidden sm:inline-flex">
+            {meta.label}
+          </Badge>
+        )}
+        {linkExpired && (
+          <Badge variant="expense" className="hidden sm:inline-flex">
+            Enlace expirado
+          </Badge>
+        )}
+        {user.role !== "ADMIN" && user.status === "ACTIVE" && (
+          <Button
+            size="icon-sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              onImpersonate()
+            }}
+            title="Impersonar"
+          >
+            <VenetianMask className="size-3.5" />
+          </Button>
+        )}
+        <Button size="icon-sm" variant="outline" onClick={onOpen} title="Editar usuario">
+          <Settings2 className="size-3.5" />
+        </Button>
+      </ItemActions>
+    </Item>
+  )
+}
+
 export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -119,6 +199,18 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
   const [search, setSearch] = useState("")
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped")
+  const [collapsedRoles, setCollapsedRoles] = useState<Set<UserRole>>(new Set())
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("users-view-mode")
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing initial state from a client-only store (localStorage) can't be done during render because `window` doesn't exist during SSR
+    if (stored === "flat" || stored === "grouped") setViewMode(stored)
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem("users-view-mode", viewMode)
+  }, [viewMode])
 
   function copyInviteLink() {
     if (!inviteLink) return
@@ -135,6 +227,22 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
       (u) => u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
     )
   }, [users, search])
+
+  const groups = useMemo(() => {
+    return ROLE_ORDER.map((role) => ({
+      role,
+      members: filtered.filter((u) => u.role === role)
+    })).filter((g) => g.members.length > 0)
+  }, [filtered])
+
+  function toggleRoleCollapsed(role: UserRole) {
+    setCollapsedRoles((prev) => {
+      const next = new Set(prev)
+      if (next.has(role)) next.delete(role)
+      else next.add(role)
+      return next
+    })
+  }
 
   const createForm = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
@@ -382,11 +490,41 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
         </Dialog>
       </div>
 
-      {/* Count */}
-      <p className="text-[12.5px] font-semibold text-muted-foreground">
-        {filtered.length} integrante{filtered.length !== 1 ? "s" : ""}
-        {search && ` — filtrando por "${search}"`}
-      </p>
+      {/* Count + view toggle */}
+      <div className="flex items-center justify-between">
+        <p className="text-[12.5px] font-semibold text-muted-foreground">
+          {filtered.length} integrante{filtered.length !== 1 ? "s" : ""}
+          {search && ` — filtrando por "${search}"`}
+        </p>
+        <div className="flex gap-0.5 rounded-[11px] bg-muted p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode("grouped")}
+            className={cn(
+              "flex h-7 items-center gap-1.5 rounded-[9px] px-3 text-xs font-semibold transition-colors",
+              viewMode === "grouped"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LayoutList className="size-3.5" />
+            Por rol
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("flat")}
+            className={cn(
+              "flex h-7 items-center gap-1.5 rounded-[9px] px-3 text-xs font-semibold transition-colors",
+              viewMode === "flat"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <List className="size-3.5" />
+            Lista
+          </button>
+        </div>
+      </div>
 
       {/* Edit dialog */}
       <Dialog
@@ -606,75 +744,56 @@ export function UsersManager({ initialUsers }: { initialUsers: UserRow[] }) {
             <EmptyDescription>No hay usuarios que coincidan con la búsqueda.</EmptyDescription>
           </EmptyHeader>
         </Empty>
-      ) : (
+      ) : viewMode === "flat" ? (
         <ItemGroup>
-          {filtered.map((user) => {
-            const meta = statusMeta(user.status)
-            const linkExpired = isLinkExpired(user)
+          {filtered.map((user) => (
+            <UserListItem
+              key={user.id}
+              user={user}
+              onOpen={() => openEdit(user)}
+              onImpersonate={() => handleImpersonate(user.id)}
+            />
+          ))}
+        </ItemGroup>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => {
+            const collapsed = collapsedRoles.has(group.role)
             return (
-              <Item
-                key={user.id}
-                variant="outline"
-                onClick={() => openEdit(user)}
-                className={cn(
-                  "cursor-pointer rounded-[14px] px-[18px]",
-                  meta.rowOpacity && "opacity-55"
-                )}
-              >
-                <div
-                  className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] text-[13px] font-extrabold text-white"
-                  style={{ background: avatarColorFor(user.full_name || user.email) }}
+              <div key={group.role}>
+                <button
+                  type="button"
+                  onClick={() => toggleRoleCollapsed(group.role)}
+                  className="mb-2.5 flex w-full select-none items-center gap-[10px]"
                 >
-                  {initialsFor(user.full_name || "?")}
-                </div>
-                <ItemContent>
-                  <ItemTitle className="font-bold">{user.full_name}</ItemTitle>
-                  <ItemDescription className="text-[12.5px]">{user.email}</ItemDescription>
-                  <div className="sm:hidden mt-0.5 flex flex-wrap gap-1">
-                    {meta.variant && <Badge variant={meta.variant}>{meta.label}</Badge>}
-                    {linkExpired && <Badge variant="expense">Enlace expirado</Badge>}
-                  </div>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant={roleBadgeVariant(user.role)} className="hidden sm:inline-flex">
-                    {roleLabel(user.role)}
-                  </Badge>
-                  {meta.variant && (
-                    <Badge variant={meta.variant} className="hidden sm:inline-flex">
-                      {meta.label}
-                    </Badge>
+                  {collapsed ? (
+                    <ChevronRight className="size-[15px] shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="size-[15px] shrink-0 text-muted-foreground" />
                   )}
-                  {linkExpired && (
-                    <Badge variant="expense" className="hidden sm:inline-flex">
-                      Enlace expirado
-                    </Badge>
-                  )}
-                  {user.role !== "ADMIN" && user.status === "ACTIVE" && (
-                    <Button
-                      size="icon-sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleImpersonate(user.id)
-                      }}
-                      title="Impersonar"
-                    >
-                      <VenetianMask className="size-3.5" />
-                    </Button>
-                  )}
-                  <Button
-                    size="icon-sm"
-                    variant="outline"
-                    onClick={() => openEdit(user)}
-                    title="Editar usuario"
-                  >
-                    <Settings2 className="size-3.5" />
-                  </Button>
-                </ItemActions>
-              </Item>
+                  <span className={cn("size-2 rounded-full", ROLE_DOT_CLASS[group.role])} />
+                  <span className="text-[13px] font-extrabold">{ROLE_LABEL[group.role]}</span>
+                  <span className="rounded-full bg-muted px-[9px] py-0.5 text-[11.5px] font-bold text-muted-foreground">
+                    {group.members.length}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </button>
+                {!collapsed && (
+                  <ItemGroup>
+                    {group.members.map((user) => (
+                      <UserListItem
+                        key={user.id}
+                        user={user}
+                        onOpen={() => openEdit(user)}
+                        onImpersonate={() => handleImpersonate(user.id)}
+                      />
+                    ))}
+                  </ItemGroup>
+                )}
+              </div>
             )
           })}
-        </ItemGroup>
+        </div>
       )}
     </div>
   )
