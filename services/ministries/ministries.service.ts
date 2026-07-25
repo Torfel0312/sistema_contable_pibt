@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { auditService } from "@/services/audit/audit.service"
+import { usersService } from "@/services/users/users.service"
 import type {
   CreateMinistryInput,
   UpdateMinistryInput,
-  AssignMinisterInput
+  AssignMinisterInput,
+  InviteDelegateInput
 } from "@/lib/validators/ministry"
 
 type DB = SupabaseClient<Database>
@@ -99,6 +101,11 @@ export const ministriesService = {
     return data
   },
 
+  // Resolves the ministry a MINISTER or DELEGATE acts for. Checked in that order —
+  // a person is never both for the same ministry (delegates get their own account,
+  // see inviteDelegate) — falling back to ministry_delegates keeps every existing
+  // caller (requests page/actions, ministry detail access gate) working for
+  // delegates with no extra code, since they all key off this one lookup.
   async getMinistryForUser(db: DB, userId: string) {
     const { data, error } = await db
       .from("ministry_assignments")
@@ -107,6 +114,79 @@ export const ministriesService = {
       .is("unassigned_at", null)
       .maybeSingle()
     if (error) throw error
+    if (data) return data
+
+    const { data: delegate, error: delegateError } = await db
+      .from("ministry_delegates")
+      .select("*, ministries(*)")
+      .eq("user_id", userId)
+      .maybeSingle()
+    if (delegateError) throw delegateError
+    return delegate
+  },
+
+  async listDelegates(db: DB, ministryId: string) {
+    const { data, error } = await db
+      .from("ministry_delegates")
+      .select("id, user_id, created_at, users!user_id(id, full_name, email)")
+      .eq("ministry_id", ministryId)
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return data
+  },
+
+  async removeDelegate(db: DB, delegateId: string, userId: string) {
+    const { data: delegate, error: fetchError } = await db
+      .from("ministry_delegates")
+      .select("id, ministry_id, user_id")
+      .eq("id", delegateId)
+      .single()
+    if (fetchError) throw fetchError
+
+    const { error } = await db.from("ministry_delegates").delete().eq("id", delegateId)
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "MINISTRY_DELEGATE",
+      action: "DELEGATE_REMOVED",
+      user_id: userId,
+      entity_id: delegate.ministry_id,
+      new_value: { ministry_id: delegate.ministry_id, user_id: delegate.user_id }
+    })
+  },
+
+  // Creates the delegate's user account (role DELEGATE, invite email via
+  // usersService.invite) and links them to the ministry in one call. If linking
+  // fails after the account was created, the user still exists but unlinked —
+  // acceptable here since account creation is the step far more likely to fail
+  // (duplicate email), and an orphaned account is harmless (see removeDelegate).
+  async inviteDelegate(
+    db: DB,
+    ministryId: string,
+    input: InviteDelegateInput,
+    assignedBy: string
+  ) {
+    const created = await usersService.invite(
+      { full_name: input.full_name, email: input.email, role: "DELEGATE" },
+      assignedBy
+    )
+    if (!created.id) throw new Error("No se pudo crear la cuenta del delegado")
+
+    const { data, error } = await db
+      .from("ministry_delegates")
+      .insert({ ministry_id: ministryId, user_id: created.id, assigned_by: assignedBy })
+      .select("id, user_id, created_at, users!user_id(id, full_name, email)")
+      .single()
+    if (error) throw error
+
+    await auditService.logSystem({
+      entity: "MINISTRY_DELEGATE",
+      action: "DELEGATE_ASSIGNED",
+      user_id: assignedBy,
+      entity_id: ministryId,
+      new_value: { ministry_id: ministryId, user_id: created.id }
+    })
+
     return data
   },
 

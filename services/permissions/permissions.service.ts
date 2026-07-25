@@ -14,7 +14,8 @@ export async function getPermissionMap(supabase: SupabaseClient): Promise<Permis
     ADMIN: new Set(),
     BURSAR: new Set(),
     FINANCE: new Set(),
-    MINISTER: new Set()
+    MINISTER: new Set(),
+    DELEGATE: new Set()
   }
 
   for (const row of data ?? []) {

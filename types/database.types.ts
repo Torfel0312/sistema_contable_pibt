@@ -505,6 +505,52 @@ export type Database = {
           },
         ]
       }
+      ministry_delegates: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          id: string
+          ministry_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          id?: string
+          ministry_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          id?: string
+          ministry_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ministry_delegates_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_delegates_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_delegates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movement_attachments: {
         Row: {
           created_at: string
@@ -1192,6 +1238,7 @@ export type Database = {
         Returns: Json
       }
       get_my_active_ministries: { Args: never; Returns: string[] }
+      get_my_ministries_as_minister: { Args: never; Returns: string[] }
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1227,7 +1274,7 @@ export type Database = {
         | "IN_REVIEW"
         | "RETURNED_FOR_CORRECTION"
         | "CANCELLED"
-      user_role: "ADMIN" | "BURSAR" | "FINANCE" | "MINISTER"
+      user_role: "ADMIN" | "BURSAR" | "FINANCE" | "MINISTER" | "DELEGATE"
       user_status:
         | "ACTIVE"
         | "INACTIVE"
@@ -1384,7 +1431,7 @@ export const Constants = {
         "RETURNED_FOR_CORRECTION",
         "CANCELLED",
       ],
-      user_role: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"],
+      user_role: ["ADMIN", "BURSAR", "FINANCE", "MINISTER", "DELEGATE"],
       user_status: [
         "ACTIVE",
         "INACTIVE",

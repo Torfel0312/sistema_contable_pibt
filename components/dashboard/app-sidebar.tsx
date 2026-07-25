@@ -70,7 +70,7 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/payroll",
         label: "Remuneraciones",
         icon: Banknote,
-        roles: ["ADMIN"]
+        roles: ["ADMIN", "BURSAR"]
       }
     ]
   },
@@ -82,7 +82,7 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/requests",
         label: "Solicitudes",
         icon: ClipboardList,
-        roles: ["ADMIN", "BURSAR", "FINANCE", "MINISTER"]
+        roles: ["ADMIN", "BURSAR", "FINANCE", "MINISTER", "DELEGATE"]
       }
     ]
   },

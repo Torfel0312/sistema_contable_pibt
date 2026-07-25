@@ -14,7 +14,7 @@ export const updateSettingsSchema = z.object({
 })
 
 export const updatePermissionSchema = z.object({
-  role: z.enum(["BURSAR", "FINANCE", "MINISTER"]),
+  role: z.enum(["BURSAR", "FINANCE", "MINISTER", "DELEGATE"]),
   permission: z.enum([
     "MANAGE_USERS",
     "CREATE_MOVEMENT",

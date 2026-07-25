@@ -28,7 +28,8 @@ const EDITABLE_PERMISSIONS = Object.keys(PERMISSION_LABELS) as Permission[]
 const EDITABLE_ROLES: { role: Exclude<UserRole, "ADMIN">; label: string; dotClass: string }[] = [
   { role: "BURSAR", label: "Tesorero", dotClass: "bg-role-purple" },
   { role: "FINANCE", label: "Finanzas", dotClass: "bg-income" },
-  { role: "MINISTER", label: "Ministro", dotClass: "bg-warn" }
+  { role: "MINISTER", label: "Ministro", dotClass: "bg-warn" },
+  { role: "DELEGATE", label: "Delegado", dotClass: "bg-muted-foreground" }
 ]
 
 type PermissionMatrix = Record<string, Record<string, boolean>>

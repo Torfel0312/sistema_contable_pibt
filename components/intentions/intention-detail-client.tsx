@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -73,6 +73,7 @@ import {
   removeSettlementAttachment,
   closeIntentionSettlements
 } from "@/app/actions/ministry-settlements"
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh"
 
 type Intention = Awaited<ReturnType<typeof intentionsService.getById>>
 type Transfer = Awaited<ReturnType<typeof intentionsService.getTransfer>>
@@ -145,11 +146,43 @@ export function IntentionDetailClient({
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [settlements, setSettlements] = useState<Settlement[]>(initialSettlements)
   const [currentTransfer, setCurrentTransfer] = useState<Transfer>(transfer)
+
+  // These three are seeded from server props but then locally mutated (optimistic
+  // updates on this user's own actions), so a plain re-render from router.refresh()
+  // — e.g. triggered by another user's realtime change — needs to resync them here;
+  // useState's initial value is otherwise only applied on first mount.
+  useEffect(() => {
+    setComments(initialComments)
+  }, [initialComments])
+  useEffect(() => {
+    setSettlements(initialSettlements)
+  }, [initialSettlements])
+  useEffect(() => {
+    setCurrentTransfer(transfer)
+  }, [transfer])
   const status = STATUS_CONFIG[intention.status]
   const StatusIcon = status.icon
   const isMinister = canCreateSettlement
   const isRequestOwner = canCreateRequest && intention.requested_by === currentUserId
   const isClosed = !!intention.settlement_closed_at
+
+  const settlementIds = settlements.map((s) => s.id)
+  useRealtimeRefresh([
+    { table: "budget_intentions", filter: `id=eq.${intention.id}` },
+    { table: "intention_transfers", filter: `intention_id=eq.${intention.id}` },
+    { table: "expense_settlements", filter: `intention_id=eq.${intention.id}` },
+    {
+      // request_comments is polymorphic (entity_type/entity_id covers both this
+      // request and every one of its settlements) — postgres_changes can't filter
+      // on that directly, so match client-side instead.
+      table: "request_comments",
+      event: "INSERT",
+      predicate: (payload) => {
+        const entityId = (payload.new as { entity_id?: string } | undefined)?.entity_id
+        return entityId === intention.id || settlementIds.includes(entityId as string)
+      }
+    }
+  ])
 
   const commentsBySettlement = settlementComments.reduce<Record<string, SettlementComment[]>>(
     (acc, c) => {

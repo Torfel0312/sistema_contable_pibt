@@ -7,7 +7,8 @@ import { ministriesService } from "@/services/ministries/ministries.service"
 import type {
   CreateMinistryInput,
   UpdateMinistryInput,
-  AssignMinisterInput
+  AssignMinisterInput,
+  InviteDelegateInput
 } from "@/lib/validators/ministry"
 
 function assertMinistriesAccess(user: Awaited<ReturnType<typeof getCurrentUser>>) {
@@ -15,6 +16,23 @@ function assertMinistriesAccess(user: Awaited<ReturnType<typeof getCurrentUser>>
     throw new Error("Sin permisos para gestionar ministerios")
   }
   return user
+}
+
+// ADMIN/BURSAR manage delegates for any ministry; a minister can additionally
+// manage delegates for their own ministry (mirrors ministry_delegates_insert/
+// delete RLS — see 20260722045102_add_ministry_delegates.sql).
+async function assertDelegateAccess(
+  user: Awaited<ReturnType<typeof getCurrentUser>>,
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  ministryId: string
+) {
+  if (!user) throw new Error("Sin permisos para gestionar delegados")
+  if (can(user.permissions, PERMISSIONS.MANAGE_MINISTRIES)) return user
+
+  const currentAssignment = await ministriesService.getCurrentAssignment(db, ministryId)
+  if (currentAssignment?.user_id === user.id) return user
+
+  throw new Error("Sin permisos para gestionar delegados")
 }
 
 export async function createMinistry(input: CreateMinistryInput) {
@@ -55,4 +73,21 @@ export async function unassignMinister(ministryId: string) {
   const db = await createSupabaseServerClient()
   await ministriesService.unassign(db, ministryId, user.id)
   revalidatePath("/ministries")
+}
+
+export async function inviteDelegate(ministryId: string, input: InviteDelegateInput) {
+  const db = await createSupabaseServerClient()
+  const user = await assertDelegateAccess(await getCurrentUser(), db, ministryId)
+  const data = await ministriesService.inviteDelegate(db, ministryId, input, user.id)
+  revalidatePath(`/ministries/${ministryId}`)
+  revalidatePath("/requests")
+  return data
+}
+
+export async function removeDelegate(delegateId: string, ministryId: string) {
+  const db = await createSupabaseServerClient()
+  const user = await assertDelegateAccess(await getCurrentUser(), db, ministryId)
+  await ministriesService.removeDelegate(db, delegateId, user.id)
+  revalidatePath(`/ministries/${ministryId}`)
+  revalidatePath("/requests")
 }
