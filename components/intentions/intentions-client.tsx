@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -41,6 +42,7 @@ import { MIN_REQUEST_AMOUNT, MAX_REQUEST_AMOUNT } from "@/lib/constants/requests
 import type { intentionsService } from "@/services/intentions/intentions.service"
 import type { ministriesService } from "@/services/ministries/ministries.service"
 import { createRequest } from "@/app/actions/requests"
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh"
 
 type Intention = Awaited<ReturnType<typeof intentionsService.list>>[number]
 type MinistryAssignment = Awaited<ReturnType<typeof ministriesService.getMinistryForUser>>
@@ -86,6 +88,15 @@ export function IntentionsClient({
   const router = useRouter()
   const [intentions, setIntentions] = useState<Intention[]>(initialIntentions)
   const [open, setOpen] = useState(false)
+
+  // Resync on router.refresh() (e.g. from useRealtimeRefresh below) — useState's
+  // initial value only applies on first mount, and this list is locally mutated
+  // for the viewer's own actions (see handleSubmit).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resyncing local list state after router.refresh() brings fresh server props; there's no way to do this during render since the previous prop value isn't otherwise observable
+    setIntentions(initialIntentions)
+  }, [initialIntentions])
+  useRealtimeRefresh([{ table: "budget_intentions" }])
 
   const isMinister = canCreateRequest
 
@@ -147,9 +158,20 @@ export function IntentionsClient({
             Solicitudes de Dinero
           </h1>
           <p className="mt-1 text-[13.5px] text-muted-foreground">
-            {isMinister
-              ? `Ministerio: ${ministry?.name ?? "Sin asignar"}`
-              : "Todas las solicitudes"}
+            {isMinister ? (
+              ministry ? (
+                <>
+                  Ministerio:{" "}
+                  <Link href={`/ministries/${ministry.id}`} className="font-semibold hover:underline">
+                    {ministry.name}
+                  </Link>
+                </>
+              ) : (
+                "Ministerio: Sin asignar"
+              )
+            ) : (
+              "Todas las solicitudes"
+            )}
           </p>
         </div>
         {isMinister && (

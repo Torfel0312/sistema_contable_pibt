@@ -16,7 +16,8 @@ import {
   TrendingDown,
   UserPlus,
   UserMinus,
-  UserRound
+  UserRound,
+  X
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -36,9 +37,23 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { formatDate, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
-import { updateMinistrySchema, assignMinisterSchema } from "@/lib/validators/ministry"
-import type { UpdateMinistryInput, AssignMinisterInput } from "@/lib/validators/ministry"
-import { assignMinister, unassignMinister, updateMinistry } from "@/app/actions/ministries"
+import {
+  updateMinistrySchema,
+  assignMinisterSchema,
+  inviteDelegateSchema
+} from "@/lib/validators/ministry"
+import type {
+  UpdateMinistryInput,
+  AssignMinisterInput,
+  InviteDelegateInput
+} from "@/lib/validators/ministry"
+import {
+  assignMinister,
+  unassignMinister,
+  updateMinistry,
+  inviteDelegate,
+  removeDelegate
+} from "@/app/actions/ministries"
 import { USER_ROLES } from "@/lib/constants/roles"
 import type { MinistryLeftoverRow } from "@/services/ministries/ministry-leftover.service"
 import type { intentionsService } from "@/services/intentions/intentions.service"
@@ -68,6 +83,13 @@ type Assignment = {
   users: { id: string; full_name: string; email: string } | null
 }
 
+type Delegate = {
+  id: string
+  user_id: string
+  created_at: string
+  users: { id: string; full_name: string; email: string } | null
+}
+
 type MinistryIntention = Awaited<ReturnType<typeof intentionsService.list>>[number]
 type AssociatedMovement = Awaited<
   ReturnType<typeof ministriesService.getAssociatedMovements>
@@ -78,9 +100,12 @@ type Props = {
   users: MinistryUser[]
   assignments: Assignment[]
   currentAssignment: Assignment | null
+  delegates: Delegate[]
   leftover: MinistryLeftoverRow[]
   intentions: MinistryIntention[]
   associatedMovements: AssociatedMovement[]
+  canManage: boolean
+  isAssignedMinister: boolean
 }
 
 const INTENTION_STATUS_BADGE = {
@@ -96,17 +121,24 @@ export function MinistryDetailClient({
   users,
   assignments: initialAssignments,
   currentAssignment: initialCurrent,
+  delegates: initialDelegates,
   leftover,
   intentions,
-  associatedMovements
+  associatedMovements,
+  canManage,
+  isAssignedMinister
 }: Props) {
   const [ministry, setMinistry] = useState<Ministry>(initialMinistry)
   const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
   const [current, setCurrent] = useState<Assignment | null>(initialCurrent)
+  const [delegates, setDelegates] = useState<Delegate[]>(initialDelegates)
   const [editOpen, setEditOpen] = useState(false)
   const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
   const [unassigning, setUnassigning] = useState(false)
   const [changeMinisterOpen, setChangeMinisterOpen] = useState(false)
+  const [addDelegateOpen, setAddDelegateOpen] = useState(false)
+
+  const canManageDelegates = canManage || isAssignedMinister
 
   const ministers = users.filter((u) => u.role === USER_ROLES.MINISTER)
   const availableMinsters = ministers.filter((u) => u.id !== current?.user_id)
@@ -199,6 +231,33 @@ export function MinistryDetailClient({
       toast.success("Ministerio actualizado")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar")
+    }
+  }
+
+  const delegateForm = useForm<InviteDelegateInput>({
+    resolver: zodResolver(inviteDelegateSchema),
+    defaultValues: { full_name: "", email: "" }
+  })
+
+  async function handleInviteDelegate(values: InviteDelegateInput) {
+    try {
+      const created = await inviteDelegate(ministry.id, values)
+      setDelegates((prev) => [created as unknown as Delegate, ...prev])
+      delegateForm.reset({ full_name: "", email: "" })
+      setAddDelegateOpen(false)
+      toast.success("Delegado invitado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al invitar delegado")
+    }
+  }
+
+  async function handleRemoveDelegate(delegateId: string) {
+    try {
+      await removeDelegate(delegateId, ministry.id)
+      setDelegates((prev) => prev.filter((d) => d.id !== delegateId))
+      toast.success("Delegado eliminado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al quitar delegado")
     }
   }
 
@@ -351,11 +410,11 @@ export function MinistryDetailClient({
       <Button
         variant="ghost"
         className="-ml-2"
-        render={<Link href="/ministries" />}
+        render={<Link href={canManage ? "/ministries" : "/requests"} />}
         nativeButton={false}
       >
         <ArrowLeft className="size-4" />
-        Volver a ministerios
+        {canManage ? "Volver a ministerios" : "Volver a solicitudes"}
       </Button>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -381,59 +440,69 @@ export function MinistryDetailClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Dialog
-            open={editOpen}
-            onOpenChange={(o) => {
-              setEditOpen(o)
-              if (!o)
-                editForm.reset({
-                  name: ministry.name,
-                  description: ministry.description ?? "",
-                  is_active: ministry.is_active
-                })
-            }}
-          >
-            <DialogTrigger
-              render={
-                <Button variant="outline">
-                  <Pencil className="size-4" />
-                  Editar
-                </Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Editar ministerio</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={editForm.handleSubmit(handleEdit)} className="space-y-4 pt-2">
-                <Field>
-                  <FieldLabel htmlFor="edit-name">Nombre *</FieldLabel>
-                  <Input id="edit-name" {...editForm.register("name")} />
-                  <FieldError errors={[editForm.formState.errors.name]} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-description">Descripción</FieldLabel>
-                  <Input id="edit-description" {...editForm.register("description")} />
-                  <FieldError errors={[editForm.formState.errors.description]} />
-                </Field>
-                <Field>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" {...editForm.register("is_active")} className="size-4" />
-                    Ministerio activo
-                  </label>
-                </Field>
-                <Button type="submit" className="w-full" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-          <Button render={<Link href="/movements/new" />} nativeButton={false}>
-            <ArrowLeftRight className="size-4" />
-            Transferir fondos
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-3">
+            <Dialog
+              open={editOpen}
+              onOpenChange={(o) => {
+                setEditOpen(o)
+                if (!o)
+                  editForm.reset({
+                    name: ministry.name,
+                    description: ministry.description ?? "",
+                    is_active: ministry.is_active
+                  })
+              }}
+            >
+              <DialogTrigger
+                render={
+                  <Button variant="outline">
+                    <Pencil className="size-4" />
+                    Editar
+                  </Button>
+                }
+              />
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Editar ministerio</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={editForm.handleSubmit(handleEdit)} className="space-y-4 pt-2">
+                  <Field>
+                    <FieldLabel htmlFor="edit-name">Nombre *</FieldLabel>
+                    <Input id="edit-name" {...editForm.register("name")} />
+                    <FieldError errors={[editForm.formState.errors.name]} />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="edit-description">Descripción</FieldLabel>
+                    <Input id="edit-description" {...editForm.register("description")} />
+                    <FieldError errors={[editForm.formState.errors.description]} />
+                  </Field>
+                  <Field>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...editForm.register("is_active")}
+                        className="size-4"
+                      />
+                      Ministerio activo
+                    </label>
+                  </Field>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={editForm.formState.isSubmitting}
+                  >
+                    {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <Button render={<Link href="/movements/new" />} nativeButton={false}>
+              <ArrowLeftRight className="size-4" />
+              Transferir fondos
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -513,7 +582,7 @@ export function MinistryDetailClient({
               </div>
             )}
 
-            {current && (
+            {canManage && current && (
               <Button
                 variant="destructive"
                 onClick={() => setUnassignConfirmOpen(true)}
@@ -524,17 +593,114 @@ export function MinistryDetailClient({
               </Button>
             )}
 
-            {current ? (
-              <>
-                <Button variant="outline" onClick={() => setChangeMinisterOpen(true)}>
-                  Cambiar ministro
-                </Button>
-                {changeMinisterDialog}
-              </>
-            ) : (
-              assignMinisterForm
-            )}
+            {canManage &&
+              (current ? (
+                <>
+                  <Button variant="outline" onClick={() => setChangeMinisterOpen(true)}>
+                    Cambiar ministro
+                  </Button>
+                  {changeMinisterDialog}
+                </>
+              ) : (
+                assignMinisterForm
+              ))}
           </div>
+
+          {canManageDelegates && (
+            <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-3.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[13px] font-bold text-foreground">Delegados</h2>
+                <Dialog
+                  open={addDelegateOpen}
+                  onOpenChange={(o) => {
+                    setAddDelegateOpen(o)
+                    if (!o) delegateForm.reset({ full_name: "", email: "" })
+                  }}
+                >
+                  <DialogTrigger
+                    render={
+                      <button
+                        type="button"
+                        title="Agregar delegado"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-input bg-card text-foreground hover:bg-muted transition-colors"
+                      >
+                        <UserPlus className="size-3.5" />
+                      </button>
+                    }
+                  />
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Agregar delegado</DialogTitle>
+                      <DialogDescription>
+                        Puede actuar en nombre del ministerio con las mismas facultades que el
+                        ministro.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form
+                      onSubmit={delegateForm.handleSubmit(handleInviteDelegate)}
+                      className="space-y-4 pt-2"
+                    >
+                      <Field>
+                        <FieldLabel htmlFor="delegate-name">Nombre *</FieldLabel>
+                        <Input id="delegate-name" {...delegateForm.register("full_name")} />
+                        <FieldError errors={[delegateForm.formState.errors.full_name]} />
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="delegate-email">Correo electrónico *</FieldLabel>
+                        <Input
+                          id="delegate-email"
+                          type="email"
+                          {...delegateForm.register("email")}
+                        />
+                        <FieldError errors={[delegateForm.formState.errors.email]} />
+                      </Field>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={delegateForm.formState.isSubmitting}
+                      >
+                        {delegateForm.formState.isSubmitting ? "Enviando..." : "Enviar invitación"}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+                Pueden actuar en nombre del ministerio. El ministro asignado también puede
+                gestionar sus propios delegados.
+              </p>
+              {delegates.length === 0 ? (
+                <p className="text-[12.5px] text-faint py-1">Sin delegados asignados.</p>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {delegates.map((d) => (
+                    <div key={d.id} className="flex items-center gap-2.5">
+                      <div
+                        className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                        style={{ background: avatarColorFor(d.users?.full_name ?? d.user_id) }}
+                      >
+                        {initialsFor(d.users?.full_name ?? "?")}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[12.5px] font-bold truncate">
+                          {d.users?.full_name ?? "—"}
+                        </p>
+                        <p className="text-[11px] text-faint truncate">{d.users?.email ?? "—"}</p>
+                      </div>
+                      <button
+                        type="button"
+                        title="Quitar delegado"
+                        onClick={() => handleRemoveDelegate(d.id)}
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-expense-surface hover:border-expense hover:text-expense transition-colors"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4">
             <h2 className="text-[13px] font-bold text-foreground">Historial de asignaciones</h2>
