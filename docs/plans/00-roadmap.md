@@ -63,3 +63,7 @@ Cada etapa deja anotado, en su propio documento, qué secciones de `docs/flows.m
 ## Cómo usar este roadmap
 
 Cada documento de etapa sigue la misma estructura: Contexto → Diseño (schema + archivos clave) → Depende de / Alimenta a → Preguntas abiertas → Actualización de `docs/flows.md`. Están escritos para poder tomar cualquiera de ellos y arrancar un plan de implementación más detallado (al estilo de la Etapa 1) sin tener que releer todo el roadmap.
+
+## Después del roadmap
+
+Las 8 etapas de este documento están completas y mergeadas. Los pendientes que surgieron después (feedback de cliente en sesiones posteriores, bugs a investigar) se llevan en [`09-pendientes.md`](./09-pendientes.md), no aquí.
