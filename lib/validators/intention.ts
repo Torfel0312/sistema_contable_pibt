@@ -31,9 +31,11 @@ export const reviewIntentionSchema = z.object({
 export const registerTransferSchema = z.object({
   amount: requestAmountSchema,
   transfer_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
-  reference: z.string().optional(),
   notes: z.string().optional(),
-  attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
+  attachments: z
+    .array(attachmentInputSchema)
+    .min(1, "Debes adjuntar al menos un comprobante")
+    .max(10, "Máximo 10 adjuntos")
 })
 
 export const addCommentSchema = z.object({

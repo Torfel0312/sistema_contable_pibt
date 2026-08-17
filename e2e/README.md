@@ -43,6 +43,12 @@ loaded by `db reset`, never applied to a remote project (which only ever runs
 
 ## Gotchas
 
+- **`05-requests.spec.ts`'s transfer-registration step needs real Google Drive
+  credentials.** Registering a transfer now requires at least one comprobante
+  (`registerTransferSchema`), and `AttachmentInput` uploads to Drive as soon as
+  a file is selected — so `GOOGLE_DRIVE_CLIENT_EMAIL`/`GOOGLE_DRIVE_PRIVATE_KEY`/
+  `GOOGLE_DRIVE_FOLDER_ID` must be set in `.env.local`, or that step fails with
+  "No se pudo subir el archivo a Google Drive".
 - **Payroll is one-record-per-calendar-month.** `06-payroll.spec.ts` registers
   a payroll for the current month — rerunning it in the same month without a
   `db reset` in between will hit the uniqueness guard and fail. That's the
