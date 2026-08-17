@@ -365,7 +365,6 @@ export type Database = {
           intention_id: string
           movement_id: string | null
           notes: string | null
-          reference: string | null
           registered_by: string
           transfer_date: string
         }
@@ -376,7 +375,6 @@ export type Database = {
           intention_id: string
           movement_id?: string | null
           notes?: string | null
-          reference?: string | null
           registered_by: string
           transfer_date: string
         }
@@ -387,7 +385,6 @@ export type Database = {
           intention_id?: string
           movement_id?: string | null
           notes?: string | null
-          reference?: string | null
           registered_by?: string
           transfer_date?: string
         }

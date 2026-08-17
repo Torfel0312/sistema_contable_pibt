@@ -269,7 +269,6 @@ export const intentionsService = {
         intention_id: intentionId,
         amount: input.amount,
         transfer_date: input.transfer_date,
-        reference: input.reference ?? null,
         notes: input.notes ?? null,
         registered_by: userId,
         movement_id: movement.id

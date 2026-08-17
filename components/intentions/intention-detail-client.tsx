@@ -220,10 +220,26 @@ export function IntentionDetailClient({
     defaultValues: {
       amount: String(intention.amount),
       transfer_date: "",
-      reference: "",
       notes: ""
     }
   })
+
+  // attachmentUpload owns the real upload state; registerTransferSchema now requires
+  // at least one attachment, so mirror it into the RHF field it validates (the form
+  // never registers/controls "attachments" directly, only amount/transfer_date/notes).
+  useEffect(() => {
+    transferForm.setValue(
+      "attachments",
+      attachmentUpload.items.map((item) => ({
+        driveFileId: item.driveFileId,
+        driveViewLink: item.driveViewLink,
+        fileName: item.fileName,
+        mimeType: item.mimeType,
+        sizeBytes: item.sizeBytes
+      })),
+      { shouldValidate: transferForm.formState.isSubmitted }
+    )
+  }, [attachmentUpload.items, transferForm])
 
   const commentForm = useForm<AddCommentInput>({
     resolver: zodResolver(addCommentSchema),
@@ -311,7 +327,6 @@ export function IntentionDetailClient({
       }))
       const transferData = await registerTransfer(intention.id, {
         ...values,
-        reference: values.reference || undefined,
         notes: values.notes || undefined,
         attachments
       })
@@ -729,14 +744,6 @@ export function IntentionDetailClient({
                       <FieldError errors={[transferForm.formState.errors.transfer_date]} />
                     </Field>
                     <Field>
-                      <FieldLabel>Referencia</FieldLabel>
-                      <Input
-                        placeholder="N° de comprobante o referencia bancaria"
-                        {...transferForm.register("reference")}
-                      />
-                      <FieldError errors={[transferForm.formState.errors.reference]} />
-                    </Field>
-                    <Field>
                       <FieldLabel>Notas</FieldLabel>
                       <Input
                         placeholder="Observaciones opcionales"
@@ -745,7 +752,7 @@ export function IntentionDetailClient({
                       <FieldError errors={[transferForm.formState.errors.notes]} />
                     </Field>
                     <Field>
-                      <FieldLabel>Comprobante de transferencia</FieldLabel>
+                      <FieldLabel>Comprobante de transferencia *</FieldLabel>
                       <AttachmentInput
                         items={attachmentUpload.items}
                         isUploading={attachmentUpload.isUploading}
@@ -757,6 +764,7 @@ export function IntentionDetailClient({
                           {attachmentUpload.error}
                         </p>
                       )}
+                      <FieldError errors={[transferForm.formState.errors.attachments]} />
                     </Field>
                     <Button
                       type="submit"
@@ -786,14 +794,6 @@ export function IntentionDetailClient({
                   {formatDate(currentTransfer.transfer_date)}
                 </p>
               </div>
-              {currentTransfer.reference && (
-                <div>
-                  <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">
-                    Referencia
-                  </p>
-                  <p className="text-[13.5px] font-semibold">{currentTransfer.reference}</p>
-                </div>
-              )}
               {currentTransfer.notes && (
                 <div>
                   <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-faint mb-1">

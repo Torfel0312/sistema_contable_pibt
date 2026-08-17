@@ -5,6 +5,7 @@ import { getCurrentUser, createSupabaseServerClient } from "@/lib/supabase/serve
 import { PERMISSIONS, can, canAccessWorkflow } from "@/lib/permissions/rbac"
 import { intentionsService } from "@/services/intentions/intentions.service"
 import { ministriesService } from "@/services/ministries/ministries.service"
+import { registerTransferSchema } from "@/lib/validators/intention"
 import type {
   CreateIntentionInput,
   ReviewIntentionInput,
@@ -81,8 +82,9 @@ export async function registerTransfer(id: string, input: RegisterTransferInput)
     throw new Error("Sin permisos para registrar transferencias")
   }
 
+  const parsed = registerTransferSchema.parse(input)
   const db = await createSupabaseServerClient()
-  const data = await intentionsService.registerTransfer(db, id, input, user.id)
+  const data = await intentionsService.registerTransfer(db, id, parsed, user.id)
   revalidatePath(`/requests/${id}`)
   return data
 }
