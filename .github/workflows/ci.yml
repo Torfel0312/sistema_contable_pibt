@@ -91,7 +91,6 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -104,10 +103,5 @@ jobs:
       - name: Link Supabase project
         run: supabase link --project-ref $SUPABASE_PROJECT_ID
 
-      # supabase db push defaults to the project's direct DB connection, which
-      # is IPv6-only unless the project has the paid IPv4 add-on — GitHub Actions
-      # runners are IPv4-only, so that connection fails with "IPv6 is not
-      # supported on your current network". SUPABASE_DB_URL points at the
-      # connection pooler (Supavisor) instead, which supports IPv4.
       - name: Deploy database migrations
-        run: supabase db push --db-url "$SUPABASE_DB_URL"
+        run: supabase db push
