@@ -87,12 +87,18 @@ export async function processMovementIntegrations(movementId: string, userId: st
     })
     .eq("id", movementId)
 
+  const auditMessages: Record<typeof status, { action: string; note: string }> = {
+    SENT: { action: "Notificación enviada", note: "Correo de notificación enviado exitosamente" },
+    SKIPPED: {
+      action: "Notificación omitida",
+      note: "No se envió correo (sin destinatario configurado o el movimiento no lo requiere)"
+    },
+    ERROR: { action: "Error de notificación", note: `Error al enviar correo: ${mail.error ?? ""}` }
+  }
+
   await auditService.logMovement({
     movement_id: movementId,
     user_id: userId,
-    action: mail.ok ? "Notificación enviada" : "Error de notificación",
-    note: mail.ok
-      ? "Correo de notificación enviado exitosamente"
-      : `Error al enviar correo: ${mail.error ?? ""}`
+    ...auditMessages[status]
   })
 }
