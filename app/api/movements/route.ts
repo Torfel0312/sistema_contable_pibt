@@ -49,13 +49,18 @@ export async function POST(request: Request) {
     const db = await createSupabaseServerClient()
     const created = await movementsService.create(db, parsed.data, user.id)
     // Run external integrations after response. Movement stays saved on failure.
-    after(async () => {
-      try {
-        await processMovementIntegrations(created.id, user.id)
-      } catch (error) {
-        console.error("processMovementIntegrations failed", { movementId: created.id, error })
-      }
-    })
+    // notify_by_email already governs notification_status on the row itself
+    // (movementsService.create) — skip the actual send to match, same as the
+    // createMovement server action.
+    if (created.notify_by_email) {
+      after(async () => {
+        try {
+          await processMovementIntegrations(created.id, user.id)
+        } catch (error) {
+          console.error("processMovementIntegrations failed", { movementId: created.id, error })
+        }
+      })
+    }
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error"

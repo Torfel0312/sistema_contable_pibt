@@ -42,13 +42,15 @@ export async function PUT(request: Request, { params }: Params) {
 
     const db = await createSupabaseServerClient()
     const updated = await movementsService.update(db, id, parsed.data, user.id)
-    after(async () => {
-      try {
-        await processMovementIntegrations(updated.id, user.id)
-      } catch (error) {
-        console.error("processMovementIntegrations failed", { movementId: updated.id, error })
-      }
-    })
+    if (updated.notify_by_email) {
+      after(async () => {
+        try {
+          await processMovementIntegrations(updated.id, user.id)
+        } catch (error) {
+          console.error("processMovementIntegrations failed", { movementId: updated.id, error })
+        }
+      })
+    }
     return NextResponse.json(updated)
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error"

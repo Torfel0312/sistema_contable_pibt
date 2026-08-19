@@ -67,6 +67,7 @@ const movementInput = {
   receipt_email: null,
   payment_method_id: null,
   notes: null,
+  notify_by_email: true,
   attachments: []
 }
 
@@ -148,6 +149,17 @@ describe("createMovement", () => {
 
     expect(mockSendVoucherEmail).not.toHaveBeenCalled()
   })
+
+  it("does not fire the internal notification when notify_by_email is false", async () => {
+    const created = { id: "mv-1", ...movementInput, notify_by_email: false }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockCreate.mockResolvedValue(created)
+
+    await createMovement({ ...movementInput, notify_by_email: false })
+
+    expect(mockProcessIntegrations).not.toHaveBeenCalled()
+  })
 })
 
 describe("updateMovement", () => {
@@ -177,6 +189,17 @@ describe("updateMovement", () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith("/movements/mv-1")
     expect(mockRevalidatePath).toHaveBeenCalledWith("/movements")
     expect(data).toEqual(updated)
+  })
+
+  it("does not fire the internal notification when notify_by_email is false", async () => {
+    const updated = { id: "mv-1", ...movementInput, notify_by_email: false }
+    mockGetCurrentUser.mockResolvedValue(mockUser)
+    mockCan.mockReturnValue(true)
+    mockUpdate.mockResolvedValue(updated)
+
+    await updateMovement("mv-1", { ...movementInput, notify_by_email: false })
+
+    expect(mockProcessIntegrations).not.toHaveBeenCalled()
   })
 })
 

@@ -21,6 +21,10 @@ export const movementBaseSchema = z.object({
     .nullable(),
   payment_method_id: z.string().uuid().optional().nullable(),
   notes: z.string().optional().nullable(),
+  // Defaults true (the old, only behavior) so existing callers of the REST
+  // API (app/api/movements) that don't yet know about this field keep
+  // getting notified rather than a 400 or a silent opt-out.
+  notify_by_email: z.boolean().optional().default(true),
   attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
 })
 

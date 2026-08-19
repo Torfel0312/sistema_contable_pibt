@@ -143,6 +143,8 @@ export const movementsService = {
         receipt_email: normalizeOptional(input.receipt_email),
         payment_method_id: input.payment_method_id ?? null,
         notes: normalizeOptional(input.notes),
+        notify_by_email: input.notify_by_email,
+        notification_status: input.notify_by_email ? "PENDING" : "SKIPPED",
         created_by_id: userId
       })
       .select()
@@ -188,6 +190,8 @@ export const movementsService = {
         receipt_email: normalizeOptional(input.receipt_email),
         payment_method_id: input.payment_method_id ?? null,
         notes: normalizeOptional(input.notes),
+        notify_by_email: input.notify_by_email,
+        notification_status: input.notify_by_email ? "PENDING" : "SKIPPED",
         updated_by_id: userId,
         updated_at: new Date().toISOString()
       })

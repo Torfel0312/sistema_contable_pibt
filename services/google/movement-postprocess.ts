@@ -1,7 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { auditService } from "@/services/audit/audit.service"
 import { sendMovementEmail } from "@/services/email/resend.service"
-import type { MovementIntegrationPayload } from "@/services/google/types"
+import type { EmailSendResult, MovementIntegrationPayload } from "@/services/google/types"
 
 function toPayload(m: {
   id: string
@@ -67,26 +67,38 @@ export async function processMovementIntegrations(movementId: string, userId: st
     payment_method_label: paymentMethodLabel
   })
 
-  const mail = await sendMovementEmail(payload).catch((mailError) => ({
-    ok: false,
-    error: String(mailError)
-  }))
+  const mail = await sendMovementEmail(payload).catch(
+    (mailError): EmailSendResult => ({
+      ok: false,
+      error: String(mailError)
+    })
+  )
+
+  // mailSent: false with ok: true means there was nothing to send to (no
+  // NOTIFICATION_EMAIL configured) — distinct from an actual send failure.
+  const status = !mail.ok ? "ERROR" : mail.mailSent === false ? "SKIPPED" : "SENT"
 
   await admin
     .from("movements")
     .update({
-      notification_status: mail.ok ? "SENT" : "ERROR",
-      notification_sent_at: mail.ok ? new Date().toISOString() : null,
+      notification_status: status,
+      notification_sent_at: status === "SENT" ? new Date().toISOString() : null,
       notification_error: mail.ok ? null : (mail.error ?? "Fallo envío correo")
     })
     .eq("id", movementId)
 
+  const auditMessages: Record<typeof status, { action: string; note: string }> = {
+    SENT: { action: "Notificación enviada", note: "Correo de notificación enviado exitosamente" },
+    SKIPPED: {
+      action: "Notificación omitida",
+      note: "No se envió correo (sin destinatario configurado o el movimiento no lo requiere)"
+    },
+    ERROR: { action: "Error de notificación", note: `Error al enviar correo: ${mail.error ?? ""}` }
+  }
+
   await auditService.logMovement({
     movement_id: movementId,
     user_id: userId,
-    action: mail.ok ? "Notificación enviada" : "Error de notificación",
-    note: mail.ok
-      ? "Correo de notificación enviado exitosamente"
-      : `Error al enviar correo: ${mail.error ?? ""}`
+    ...auditMessages[status]
   })
 }

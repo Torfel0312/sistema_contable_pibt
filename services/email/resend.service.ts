@@ -20,13 +20,20 @@ const TRANSACTIONAL_HEADERS = {
 export async function sendMovementEmail(
   movement: MovementIntegrationPayload
 ): Promise<EmailSendResult> {
+  // Only goes to the fixed oversight inbox now — it used to also CC whoever
+  // registered the movement, which meant the treasurer got emailed on every
+  // single entry they typed in themselves. If no oversight inbox is
+  // configured there's nowhere to send this, so skip rather than error on an
+  // empty `to`.
+  if (!process.env.NOTIFICATION_EMAIL) return { ok: true, mailSent: false }
+
   const settings = await settingsService.getAll(createSupabaseAdminClient())
   const from = settings.notifications_from_email || DEFAULT_FROM_EMAIL
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: [process.env.NOTIFICATION_EMAIL, movement.registeredEmail].filter(Boolean) as string[],
+    to: process.env.NOTIFICATION_EMAIL,
     replyTo: process.env.NOTIFICATION_EMAIL,
     subject: `[${movement.movementTypeLabel}] ${movement.category}`,
     react: MovementEmail({ movement }),
