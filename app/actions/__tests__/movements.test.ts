@@ -157,8 +157,6 @@ describe("createMovement", () => {
     mockCreate.mockResolvedValue(created)
 
     await createMovement({ ...movementInput, notify_by_email: false })
-    await Promise.resolve()
-    await Promise.resolve()
 
     expect(mockProcessIntegrations).not.toHaveBeenCalled()
   })
