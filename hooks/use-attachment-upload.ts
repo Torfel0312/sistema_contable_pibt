@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { uploadMovementAttachment, deleteUnattachedDriveAttachment } from "@/app/actions/movements"
+import imageCompression from "browser-image-compression"
+import { uploadAttachment, deleteUnattachedAttachment } from "@/app/actions/attachments"
 import { MAX_ATTACHMENTS_PER_ENTITY, MAX_ATTACHMENT_SIZE_BYTES } from "@/lib/constants/attachments"
 
 export type PendingAttachment = {
@@ -9,9 +10,30 @@ export type PendingAttachment = {
   fileName: string
   mimeType: string
   sizeBytes: number
-  driveFileId: string
-  driveViewLink: string
+  path: string
   previewUrl?: string // for images, via URL.createObjectURL — only used client-side, never sent to server
+}
+
+const COMPRESSION_OPTIONS = {
+  maxSizeMB: 0.6,
+  maxWidthOrHeight: 1600,
+  useWebWorker: true
+}
+
+// Receipts/comprobantes don't need more than this to stay legible, and this
+// app's movements are never deleted — every uploaded photo stays in Supabase
+// Storage forever, so keeping images small matters for the free-tier 1GB quota.
+async function compressIfImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file
+  try {
+    return await imageCompression(file, COMPRESSION_OPTIONS)
+  } catch (error) {
+    console.warn("Image compression failed, uploading original file", {
+      fileName: file.name,
+      error
+    })
+    return file
+  }
 }
 
 // existingCount is the number of attachments already persisted on the movement
@@ -27,30 +49,31 @@ export function useAttachmentUpload(existingCount: number = 0) {
       if (!list.length) return
 
       setError(null)
-
-      const currentCount = existingCount + items.length
-      const accepted: File[] = []
-      for (const file of list) {
-        if (currentCount + accepted.length >= MAX_ATTACHMENTS_PER_ENTITY) {
-          setError(`Solo se permiten hasta ${MAX_ATTACHMENTS_PER_ENTITY} adjuntos por movimiento`)
-          break
-        }
-        if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-          setError(`"${file.name}" supera el tamaño máximo permitido (30MB)`)
-          continue
-        }
-        accepted.push(file)
-      }
-
-      if (!accepted.length) return
-
       setIsUploading(true)
+
       try {
+        const currentCount = existingCount + items.length
+        const accepted: File[] = []
+        for (const file of list) {
+          if (currentCount + accepted.length >= MAX_ATTACHMENTS_PER_ENTITY) {
+            setError(`Solo se permiten hasta ${MAX_ATTACHMENTS_PER_ENTITY} adjuntos por movimiento`)
+            break
+          }
+          const processed = await compressIfImage(file)
+          if (processed.size > MAX_ATTACHMENT_SIZE_BYTES) {
+            setError(`"${file.name}" supera el tamaño máximo permitido (10MB)`)
+            continue
+          }
+          accepted.push(processed)
+        }
+
+        if (!accepted.length) return
+
         for (const file of accepted) {
           const formData = new FormData()
           formData.set("file", file)
 
-          const result = await uploadMovementAttachment(formData)
+          const result = await uploadAttachment(formData)
 
           if ("error" in result) {
             setError(result.error)
@@ -68,8 +91,7 @@ export function useAttachmentUpload(existingCount: number = 0) {
               fileName: result.fileName,
               mimeType: result.mimeType,
               sizeBytes: result.sizeBytes,
-              driveFileId: result.driveFileId,
-              driveViewLink: result.driveViewLink,
+              path: result.path,
               previewUrl
             }
           ])
@@ -86,12 +108,12 @@ export function useAttachmentUpload(existingCount: number = 0) {
       const target = prev.find((item) => item.id === id)
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
       if (target) {
-        // This item was never persisted to a movement (only local-only pending
+        // This item was never persisted to an entity (only local-only pending
         // attachments live in this hook's state) — clean up the now-unreferenced
-        // Drive file. Fire-and-forget: don't block the UI on it, just log failures.
-        deleteUnattachedDriveAttachment(target.driveFileId).catch((error: unknown) => {
-          console.warn("deleteUnattachedDriveAttachment failed", {
-            driveFileId: target.driveFileId,
+        // storage object. Fire-and-forget: don't block the UI on it, just log failures.
+        deleteUnattachedAttachment(target.path).catch((error: unknown) => {
+          console.warn("deleteUnattachedAttachment failed", {
+            path: target.path,
             error
           })
         })
