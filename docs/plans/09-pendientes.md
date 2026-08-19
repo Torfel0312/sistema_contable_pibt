@@ -4,14 +4,7 @@
 
 El roadmap original de 8 etapas (ver [`00-roadmap.md`](./00-roadmap.md)) está completo y mergeado. Este documento junta los pendientes que fueron surgiendo después, recogidos de sesiones de feedback con el cliente, para no perderlos entre conversaciones. No es un plan de implementación etapa por etapa como el roadmap — es una lista de trabajo priorizable.
 
-Cada ítem indica su estado actual y, cuando aplica, el PR que lo resolvió.
-
-## Resueltos recientemente (para contexto, no quedan pendientes)
-
-- **Delegados de ministerio.** Un ministro (o ADMIN/BURSAR) puede invitar un delegado por email, que actúa con los mismos permisos que MINISTER sobre ese ministerio. PR #87 (mergeado en `main`).
-- **Referencia redundante y comprobante obligatorio en `/requests`.** El campo "Referencia" del formulario de registro de transferencia (lado tesorero) era redundante con los adjuntos — se eliminó (columna `intention_transfers.reference` incluida). Los comprobantes ahora son obligatorios (mínimo 1), validado también en el servidor. PR #88.
-- **Restar la reserva de indemnización del saldo disponible.** Ya implementado desde la Etapa 6/8 vía `severanceReserveService.getBalance()`, descontado en `dashboard.service.ts`. No requiere trabajo adicional salvo que se pida ajustar la fórmula.
-- **"Un ministro no puede ver el detalle de su propio ministerio ni asignar un delegado"** (reportado 2026-08-17, cerrado 2026-08-19). No era un bug de PR #87. Causa real: el proyecto de Supabase se había pausado (plan free, inactividad), lo que rompe la app entera en producción (auth + todas las queries), no solo esta pantalla — el cliente probablemente reportó lo primero que probó, no un defecto específico. Esto también explica por qué CI fallaba en el job "Supabase Migrations" en PR #88/#89. Se intentó un fix (PR #90, pooler de conexión) para un segundo problema post-resume (`db push` fallando por IPv6), pero resultó innecesario — la conexión directa se recuperó por sí sola después de que el proyecto llevara un rato reanudado, así que PR #90 se revirtió (PR #92) y CI volvió a quedar verde con el `supabase db push` original, sin cambios. Verificado dos veces en local contra `main`: login directo como MINISTER y también vía impersonación (ADMIN → Impersonar), en ambos casos viendo el detalle del ministerio y agregando/quitando un delegado sin errores de consola. Detalle completo de la investigación en `tasks/plan.md` / `tasks/todo.md`.
+Cada ítem indica su estado actual. Solo se listan ítems abiertos — lo resuelto vive en el historial de git/PRs, no acá.
 
 ## Pendientes
 
@@ -27,7 +20,6 @@ Cada ítem indica su estado actual y, cuando aplica, el PR que lo resolvió.
 
 ### Notificaciones / correo
 - **Correos de prueba en ambiente local.** Usar el modo de test de Resend ([enviar correos de prueba sin gastar cuota real](https://resend.com/docs/dashboard/emails/send-test-emails)) en vez de `RESEND_API_KEY` real cuando se corre localmente.
-- **Revisar si todo movimiento debe disparar correo.** El cliente pidió específicamente revisar esto — hoy la creación de un movimiento siempre intenta notificar (`services/google/movement-postprocess.ts`), sujeto a que `NOTIFICATION_EMAIL` esté seteado. Falta la conversación con el cliente para saber en qué casos no debería notificar.
 
 ## Cómo usar este documento
 
