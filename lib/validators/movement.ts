@@ -21,6 +21,7 @@ export const movementBaseSchema = z.object({
     .nullable(),
   payment_method_id: z.string().uuid().optional().nullable(),
   notes: z.string().optional().nullable(),
+  notify_by_email: z.boolean(),
   attachments: z.array(attachmentInputSchema).max(10, "Máximo 10 adjuntos").optional().default([])
 })
 

@@ -29,6 +29,7 @@ export type EditMovement = {
   receipt_email?: string | null
   payment_method_id?: string | null
   notes?: string | null
+  notify_by_email?: boolean
   movement_attachments?: ExistingAttachment[]
 }
 
@@ -96,7 +97,13 @@ export function useMovementForm(props: UseMovementFormProps) {
       delivered_by: movement?.delivered_by ?? "",
       receipt_email: movement?.receipt_email ?? "",
       payment_method_id: movement?.payment_method_id ?? "",
-      notes: movement?.notes ?? ""
+      notes: movement?.notes ?? "",
+      // Edit mode respects whatever was already stored; create mode gets a
+      // sensible default here and then re-synced below as the user picks a
+      // type, since movement_type isn't known yet at this first render.
+      notify_by_email:
+        movement?.notify_by_email ??
+        (movement?.movement_type ?? defaultValues?.movement_type ?? "INCOME") === "INCOME"
     }
   })
 
@@ -153,6 +160,18 @@ export function useMovementForm(props: UseMovementFormProps) {
     if (currentCategoryId && !stillValid) {
       form.setValue("category_id", "")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movementType])
+
+  // Only in create mode: keep the "notify by email" default in sync with the
+  // chosen type (checked for INCOME, unchecked for EXPENSE) as the user moves
+  // through the wizard, but stop touching it the moment they manually toggle
+  // it themselves. Edit mode never runs this — it respects the stored value
+  // and lets the user change it with no type-driven magic.
+  useEffect(() => {
+    if (mode !== "create") return
+    if (form.formState.dirtyFields.notify_by_email) return
+    form.setValue("notify_by_email", movementType === "INCOME")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movementType])
 

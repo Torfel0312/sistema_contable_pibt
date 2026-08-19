@@ -766,6 +766,7 @@ export type Database = {
           notification_error: string | null
           notification_sent_at: string | null
           notification_status: Database["public"]["Enums"]["notification_status"]
+          notify_by_email: boolean
           payment_method_id: string | null
           receipt_email: string | null
           status: Database["public"]["Enums"]["movement_status"]
@@ -789,6 +790,7 @@ export type Database = {
           notification_error?: string | null
           notification_sent_at?: string | null
           notification_status?: Database["public"]["Enums"]["notification_status"]
+          notify_by_email?: boolean
           payment_method_id?: string | null
           receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
@@ -812,6 +814,7 @@ export type Database = {
           notification_error?: string | null
           notification_sent_at?: string | null
           notification_status?: Database["public"]["Enums"]["notification_status"]
+          notify_by_email?: boolean
           payment_method_id?: string | null
           receipt_email?: string | null
           status?: Database["public"]["Enums"]["movement_status"]
@@ -1262,7 +1265,7 @@ export type Database = {
         | "CANCELLED"
       movement_status: "ACTIVE" | "CANCELLED"
       movement_type: "INCOME" | "EXPENSE"
-      notification_status: "PENDING" | "SENT" | "ERROR"
+      notification_status: "PENDING" | "SENT" | "ERROR" | "SKIPPED"
       settlement_status:
         | "PENDING"
         | "APPROVED"
@@ -1418,7 +1421,7 @@ export const Constants = {
       ],
       movement_status: ["ACTIVE", "CANCELLED"],
       movement_type: ["INCOME", "EXPENSE"],
-      notification_status: ["PENDING", "SENT", "ERROR"],
+      notification_status: ["PENDING", "SENT", "ERROR", "SKIPPED"],
       settlement_status: [
         "PENDING",
         "APPROVED",

@@ -196,6 +196,23 @@ export function MovementStep3Fields({ state }: { state: MovementFormState }) {
         />
       </Field>
 
+      <Field>
+        <label className="flex items-start gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4"
+            {...form.register("notify_by_email")}
+          />
+          <span>
+            Notificar por correo a tesorería
+            <span className="block text-xs font-normal text-muted-foreground">
+              Se avisa por correo que este movimiento fue registrado. El movimiento queda
+              igual en el sistema aunque no lo marques.
+            </span>
+          </span>
+        </label>
+      </Field>
+
       {existingAttachments.length > 0 && (
         <Field>
           <FieldLabel className={labelClass}>Adjuntos existentes</FieldLabel>

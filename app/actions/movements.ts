@@ -38,7 +38,7 @@ export async function createMovement(input: CreateMovementInput) {
 
   const db = await createSupabaseServerClient()
   const created = await movementsService.create(db, input, user.id)
-  scheduleIntegrations(created.id, user.id)
+  if (created.notify_by_email) scheduleIntegrations(created.id, user.id)
 
   if (created.movement_type === "INCOME" && created.receipt_email) {
     after(async () => {
@@ -68,7 +68,7 @@ export async function updateMovement(id: string, input: Omit<UpdateMovementInput
 
   const db = await createSupabaseServerClient()
   const updated = await movementsService.update(db, id, { ...input, id }, user.id)
-  scheduleIntegrations(updated.id, user.id)
+  if (updated.notify_by_email) scheduleIntegrations(updated.id, user.id)
   revalidatePath(`/movements/${id}`)
   revalidatePath("/movements")
   return updated
