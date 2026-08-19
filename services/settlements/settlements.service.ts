@@ -27,8 +27,7 @@ async function insertSettlementAttachments(
   const { error } = await db.from("settlement_attachments").insert(
     attachments.map((attachment) => ({
       settlement_id: settlementId,
-      drive_file_id: attachment.driveFileId,
-      drive_view_link: attachment.driveViewLink,
+      storage_path: attachment.path,
       file_name: attachment.fileName,
       mime_type: attachment.mimeType,
       size_bytes: attachment.sizeBytes,
@@ -47,8 +46,7 @@ async function insertIntentionAttachments(
   const { error } = await db.from("intention_attachments").insert(
     attachments.map((attachment) => ({
       intention_id: intentionId,
-      drive_file_id: attachment.driveFileId,
-      drive_view_link: attachment.driveViewLink,
+      storage_path: attachment.path,
       file_name: attachment.fileName,
       mime_type: attachment.mimeType,
       size_bytes: attachment.sizeBytes,

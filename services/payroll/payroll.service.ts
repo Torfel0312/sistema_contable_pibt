@@ -76,8 +76,7 @@ export const payrollService = {
     const { error: liquidacionErr } = await admin
       .from("payroll_records")
       .update({
-        liquidacion_drive_file_id: input.liquidacion.driveFileId,
-        liquidacion_drive_view_link: input.liquidacion.driveViewLink,
+        liquidacion_storage_path: input.liquidacion.path,
         liquidacion_file_name: input.liquidacion.fileName,
         liquidacion_mime_type: input.liquidacion.mimeType,
         liquidacion_size_bytes: input.liquidacion.sizeBytes
