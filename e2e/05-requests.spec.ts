@@ -133,8 +133,8 @@ test.describe("Requests — Etapa 4/5 full lifecycle", () => {
     await shot(bursar, "05-requests", "register-transfer-dialog")
     await dialog.locator('input[inputmode="numeric"]').fill("80000")
     await pickToday(bursar, dialog)
-    // Comprobante is required (registerTransferSchema.min(1)) — needs GOOGLE_DRIVE_CLIENT_EMAIL/
-    // GOOGLE_DRIVE_PRIVATE_KEY configured locally, since AttachmentInput uploads to Drive on select.
+    // Comprobante is required (registerTransferSchema.min(1)) — AttachmentInput
+    // uploads to Supabase Storage on select, against the local Supabase stack.
     await dialog.locator('input[type="file"]').setInputFiles("e2e/fixtures/sample-receipt.png")
     await expect(bursar.getByText("sample-receipt.png")).toBeVisible({ timeout: 10_000 })
     await dialog.getByRole("button", { name: "Registrar" }).click()

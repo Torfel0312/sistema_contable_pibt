@@ -54,11 +54,9 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     await pickTodayIn(page, line2)
     await shot(page, "06-payroll", "register-dialog-two-lines")
 
-    // Liquidación is a required upload, but actually completing it needs a real
-    // Google Drive service-account key (GOOGLE_APPLICATION_CREDENTIALS) that isn't
-    // configured in local/e2e envs — same reason no other spec in this suite
-    // exercises a real attachment upload. Cover the validation guard instead of
-    // faking a successful upload.
+    // Liquidación is a required upload. This test covers the validation guard
+    // (no file selected) rather than a real upload — see 05-requests.spec.ts
+    // for a spec that exercises a real Supabase Storage upload.
     await dialog.getByRole("button", { name: "Registrar remuneración" }).click()
     await expect(dialog.getByText("Debes adjuntar la liquidación")).toBeVisible()
     await shot(page, "06-payroll", "register-dialog-liquidacion-required")
