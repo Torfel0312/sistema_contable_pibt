@@ -29,7 +29,7 @@ async function createIntention(
 }
 
 function settlementCard(page: Page, description: string) {
-  return page.locator("div.rounded-md.border.p-3").filter({ hasText: description })
+  return page.locator("div.rounded-xl.border.border-border.p-4").filter({ hasText: description })
 }
 
 async function openRequestByPurpose(page: Page, purpose: string): Promise<string> {

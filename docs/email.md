@@ -8,6 +8,7 @@ No Gmail or SMTP credentials are required for email.
 ```env
 RESEND_API_KEY="re_..."                                  # From resend.com dashboard
 NOTIFICATION_EMAIL="tesoreria@example.com"               # Movement notification recipient
+RESEND_TEST_MODE="false"                                 # true: redirect all sends to delivered@resend.dev
 ```
 
 The sender address is not an env var — it's read from `app_settings.notifications_from_email`
@@ -34,9 +35,9 @@ verified in your Resend account.
 
 ### Movement notifications
 
-| Trigger          | Recipients                              | Content                                               |
-| ---------------- | --------------------------------------- | ----------------------------------------------------- |
-| Movement created | `NOTIFICATION_EMAIL` + registering user | Movement detail table (amount, category, etc.) |
+| Trigger                                          | Recipients          | Content                                        |
+| ------------------------------------------------ | ------------------- | ----------------------------------------------- |
+| Movement created/edited, "Notificar por correo a tesorería" checked | `NOTIFICATION_EMAIL` | Movement detail table (amount, category, etc.) |
 
 ### Fund request workflow
 
@@ -81,4 +82,7 @@ export async function sendMyEmail(opts: { to: string; ... }): Promise<void> {
    (or leave it unset to use the built-in default).
 
 For local development, email sending is skipped when `RESEND_API_KEY` is not set
-or when `NOTIFICATION_EMAIL` is empty.
+or when `NOTIFICATION_EMAIL` is empty. To send real emails locally without spending
+send quota or reaching a real inbox, set `RESEND_TEST_MODE="true"` — every send is
+redirected to Resend's [test address](https://resend.com/docs/dashboard/emails/send-test-emails)
+(`delivered@resend.dev`) instead of the real recipient.

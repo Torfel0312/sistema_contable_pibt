@@ -6,14 +6,14 @@ test.describe("Users / Audit / Profile / Voucher Book (ADMIN)", () => {
     await login(page, "admin")
   })
 
-  test("users page + invite dialog", async ({ page }) => {
+  test("users page + create user dialog", async ({ page }) => {
     await page.goto("/users", { waitUntil: "networkidle" })
     await shot(page, "03-admin-misc", "users")
 
-    await page.getByRole("button", { name: "Invitar" }).click()
+    await page.getByRole("button", { name: "Crear usuario" }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
-    await shot(page, "03-admin-misc", "users-invite-dialog")
+    await shot(page, "03-admin-misc", "users-create-dialog")
   })
 
   test("audit log page", async ({ page }) => {
