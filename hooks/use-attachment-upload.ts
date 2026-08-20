@@ -26,7 +26,8 @@ const COMPRESSION_OPTIONS = {
 async function compressIfImage(file: File): Promise<File> {
   if (!file.type.startsWith("image/")) return file
   try {
-    return await imageCompression(file, COMPRESSION_OPTIONS)
+    const compressed = await imageCompression(file, COMPRESSION_OPTIONS)
+    return new File([compressed], file.name, { type: compressed.type || file.type })
   } catch (error) {
     console.warn("Image compression failed, uploading original file", {
       fileName: file.name,
