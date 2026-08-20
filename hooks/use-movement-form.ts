@@ -15,7 +15,7 @@ export type ExistingAttachment = {
   id: string
   file_name: string
   mime_type: string
-  drive_view_link: string
+  storage_path: string
 }
 
 export type EditMovement = {
@@ -204,8 +204,7 @@ export function useMovementForm(props: UseMovementFormProps) {
     setError(null)
 
     const attachments = attachmentUpload.items.map((item) => ({
-      driveFileId: item.driveFileId,
-      driveViewLink: item.driveViewLink,
+      path: item.path,
       fileName: item.fileName,
       mimeType: item.mimeType,
       sizeBytes: item.sizeBytes

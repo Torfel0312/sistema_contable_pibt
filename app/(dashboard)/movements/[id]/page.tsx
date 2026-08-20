@@ -8,6 +8,7 @@ import { RegeneratePdfButton } from "@/components/movements/regenerate-pdf-butto
 import { VoucherActions } from "@/components/vouchers/voucher-actions"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, formatDateTime, formatCLP } from "@/lib/utils"
+import { attachmentHref } from "@/lib/storage/attachments"
 import { auditActionLabel, auditActionVariant } from "@/lib/constants/audit"
 import { AuditDiff } from "@/components/audit/audit-diff"
 import type { MovementIntegrationPayload } from "@/services/google/types"
@@ -65,7 +66,7 @@ export default async function MovementDetailPage({ params }: Props) {
     id: string
     file_name: string
     mime_type: string
-    drive_view_link: string
+    storage_path: string
   }>
   const deliveredByLabel = row.movement_type === "INCOME" ? "Entregado por" : "Entregado a"
   const isIncome = row.movement_type === "INCOME"
@@ -262,7 +263,11 @@ export default async function MovementDetailPage({ params }: Props) {
                   variant="outline"
                   className="h-8 rounded-full px-3.5 text-xs shrink-0"
                   render={
-                    <Link href={att.drive_view_link} target="_blank" rel="noopener noreferrer" />
+                    <Link
+                      href={attachmentHref("attachments", att.storage_path) ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
                   }
                   nativeButton={false}
                 >

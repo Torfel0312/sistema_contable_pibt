@@ -43,6 +43,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload"
 import { formatDate, formatDateTime, formatCLP, avatarColorFor, initialsFor } from "@/lib/utils"
+import { attachmentHref } from "@/lib/storage/attachments"
 import {
   reviewIntentionSchema,
   registerTransferSchema,
@@ -231,8 +232,7 @@ export function IntentionDetailClient({
     transferForm.setValue(
       "attachments",
       attachmentUpload.items.map((item) => ({
-        driveFileId: item.driveFileId,
-        driveViewLink: item.driveViewLink,
+        path: item.path,
         fileName: item.fileName,
         mimeType: item.mimeType,
         sizeBytes: item.sizeBytes
@@ -319,8 +319,7 @@ export function IntentionDetailClient({
   async function handleRegisterTransfer(values: RegisterTransferInput) {
     try {
       const attachments = attachmentUpload.items.map((item) => ({
-        driveFileId: item.driveFileId,
-        driveViewLink: item.driveViewLink,
+        path: item.path,
         fileName: item.fileName,
         mimeType: item.mimeType,
         sizeBytes: item.sizeBytes
@@ -351,8 +350,7 @@ export function IntentionDetailClient({
   async function handleSubmitSettlement(values: CreateSettlementInput) {
     try {
       const attachments = settlementAttachmentUpload.items.map((item) => ({
-        driveFileId: item.driveFileId,
-        driveViewLink: item.driveViewLink,
+        path: item.path,
         fileName: item.fileName,
         mimeType: item.mimeType,
         sizeBytes: item.sizeBytes
@@ -468,8 +466,7 @@ export function IntentionDetailClient({
     }
     try {
       const attachments = closeAttachmentUpload.items.map((item) => ({
-        driveFileId: item.driveFileId,
-        driveViewLink: item.driveViewLink,
+        path: item.path,
         fileName: item.fileName,
         mimeType: item.mimeType,
         sizeBytes: item.sizeBytes
@@ -982,7 +979,7 @@ export function IntentionDetailClient({
                             >
                               <Paperclip className="size-3" />
                               <a
-                                href={a.drive_view_link}
+                                href={attachmentHref("attachments", a.storage_path) ?? "#"}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="underline"
@@ -1175,7 +1172,7 @@ export function IntentionDetailClient({
                       >
                         <Paperclip className="size-3" />
                         <a
-                          href={a.drive_view_link}
+                          href={attachmentHref("attachments", a.storage_path) ?? "#"}
                           target="_blank"
                           rel="noreferrer"
                           className="underline"

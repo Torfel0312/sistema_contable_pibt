@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowLeft, Banknote, Download, FileText, TrendingDown, Vault } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { formatDate, formatCLP } from "@/lib/utils"
+import { attachmentHref } from "@/lib/storage/attachments"
 import type { payrollService } from "@/services/payroll/payroll.service"
 
 type PayrollRecord = Awaited<ReturnType<typeof payrollService.getById>>
@@ -35,12 +36,12 @@ export function PayrollDetailClient({
   }))
   const total = lines.reduce((sum, l) => sum + l.amount, 0)
   const allAttachments = [
-    ...(record.liquidacion_drive_view_link
+    ...(record.liquidacion_storage_path
       ? [
           {
             id: "liquidacion",
             fileName: record.liquidacion_file_name ?? "Liquidación",
-            driveViewLink: record.liquidacion_drive_view_link,
+            path: record.liquidacion_storage_path,
             sizeBytes: record.liquidacion_size_bytes,
             mimeType: record.liquidacion_mime_type
           }
@@ -50,7 +51,7 @@ export function PayrollDetailClient({
       l.attachments.map((a) => ({
         id: a.id,
         fileName: a.file_name,
-        driveViewLink: a.drive_view_link,
+        path: a.storage_path,
         sizeBytes: a.size_bytes,
         mimeType: a.mime_type
       }))
@@ -202,7 +203,7 @@ export function PayrollDetailClient({
                 {allAttachments.map((a) => (
                   <a
                     key={a.id}
-                    href={a.driveViewLink}
+                    href={attachmentHref("attachments", a.path) ?? "#"}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2.5 rounded-[10px] border border-border px-3 py-2.5 hover:bg-muted transition-colors"

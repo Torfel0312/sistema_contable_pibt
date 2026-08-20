@@ -234,8 +234,7 @@ function PayrollLineAttachment({
     form.setValue(
       `lines.${index}.attachments`,
       attachmentUpload.items.map((item) => ({
-        driveFileId: item.driveFileId,
-        driveViewLink: item.driveViewLink,
+        path: item.path,
         fileName: item.fileName,
         mimeType: item.mimeType,
         sizeBytes: item.sizeBytes
@@ -285,8 +284,7 @@ function LiquidacionAttachment({
       "liquidacion",
       item
         ? {
-            driveFileId: item.driveFileId,
-            driveViewLink: item.driveViewLink,
+            path: item.path,
             fileName: item.fileName,
             mimeType: item.mimeType,
             sizeBytes: item.sizeBytes
