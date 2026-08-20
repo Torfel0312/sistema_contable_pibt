@@ -310,35 +310,32 @@ export type Database = {
         Row: {
           created_at: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id: string
           intention_id: string
           mime_type: string
           size_bytes: number
+          storage_path: string
         }
         Insert: {
           created_at?: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id?: string
           intention_id: string
           mime_type: string
           size_bytes: number
+          storage_path: string
         }
         Update: {
           created_at?: string
           created_by_id?: string
-          drive_file_id?: string
-          drive_view_link?: string
           file_name?: string
           id?: string
           intention_id?: string
           mime_type?: string
           size_bytes?: number
+          storage_path?: string
         }
         Relationships: [
           {
@@ -552,35 +549,32 @@ export type Database = {
         Row: {
           created_at: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id: string
           mime_type: string
           movement_id: string
           size_bytes: number
+          storage_path: string
         }
         Insert: {
           created_at?: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id?: string
           mime_type: string
           movement_id: string
           size_bytes: number
+          storage_path: string
         }
         Update: {
           created_at?: string
           created_by_id?: string
-          drive_file_id?: string
-          drive_view_link?: string
           file_name?: string
           id?: string
           mime_type?: string
           movement_id?: string
           size_bytes?: number
+          storage_path?: string
         }
         Relationships: [
           {
@@ -946,11 +940,10 @@ export type Database = {
           created_at: string
           created_by_id: string
           id: string
-          liquidacion_drive_file_id: string | null
-          liquidacion_drive_view_link: string | null
           liquidacion_file_name: string | null
           liquidacion_mime_type: string | null
           liquidacion_size_bytes: number | null
+          liquidacion_storage_path: string | null
           period: string
           updated_at: string
         }
@@ -958,11 +951,10 @@ export type Database = {
           created_at?: string
           created_by_id: string
           id?: string
-          liquidacion_drive_file_id?: string | null
-          liquidacion_drive_view_link?: string | null
           liquidacion_file_name?: string | null
           liquidacion_mime_type?: string | null
           liquidacion_size_bytes?: number | null
+          liquidacion_storage_path?: string | null
           period: string
           updated_at?: string
         }
@@ -970,11 +962,10 @@ export type Database = {
           created_at?: string
           created_by_id?: string
           id?: string
-          liquidacion_drive_file_id?: string | null
-          liquidacion_drive_view_link?: string | null
           liquidacion_file_name?: string | null
           liquidacion_mime_type?: string | null
           liquidacion_size_bytes?: number | null
+          liquidacion_storage_path?: string | null
           period?: string
           updated_at?: string
         }
@@ -1045,35 +1036,32 @@ export type Database = {
         Row: {
           created_at: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id: string
           mime_type: string
           settlement_id: string
           size_bytes: number
+          storage_path: string
         }
         Insert: {
           created_at?: string
           created_by_id: string
-          drive_file_id: string
-          drive_view_link: string
           file_name: string
           id?: string
           mime_type: string
           settlement_id: string
           size_bytes: number
+          storage_path: string
         }
         Update: {
           created_at?: string
           created_by_id?: string
-          drive_file_id?: string
-          drive_view_link?: string
           file_name?: string
           id?: string
           mime_type?: string
           settlement_id?: string
           size_bytes?: number
+          storage_path?: string
         }
         Relationships: [
           {

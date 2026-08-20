@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { auditService } from "@/services/audit/audit.service"
-import { deleteFileFromDrive } from "@/services/google/drive.service"
+import { attachmentStorageService } from "@/services/storage/attachment-storage.service"
 
 type DB = SupabaseClient<Database>
 
@@ -9,7 +9,7 @@ export const movementAttachmentsService = {
   async remove(db: DB, attachmentId: string, userId: string): Promise<void> {
     const { data: attachment, error: fetchError } = await db
       .from("movement_attachments")
-      .select("id, movement_id, drive_file_id, file_name")
+      .select("id, movement_id, storage_path, file_name")
       .eq("id", attachmentId)
       .single()
 
@@ -17,11 +17,11 @@ export const movementAttachmentsService = {
     if (!attachment) throw new Error("Adjunto no encontrado")
 
     try {
-      await deleteFileFromDrive(attachment.drive_file_id)
+      await attachmentStorageService.remove(attachment.storage_path)
     } catch (error) {
-      // Non-fatal: don't let a Drive-side failure block removing the reference —
-      // the goal is removing it from the movement regardless of Drive state.
-      console.warn("deleteFileFromDrive failed", { attachmentId, error })
+      // Non-fatal: don't let a storage-side failure block removing the reference —
+      // the goal is removing it from the movement regardless of storage state.
+      console.warn("attachmentStorageService.remove failed", { attachmentId, error })
     }
 
     // movement_attachments RLS already allows ADMIN/BURSAR to delete directly —

@@ -11,6 +11,7 @@ import { NativeSelect } from "@/components/ui/native-select"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
 import { AttachmentInput } from "@/components/ui/attachment-input"
 import { MAX_ATTACHMENTS_PER_ENTITY } from "@/lib/constants/attachments"
+import { attachmentHref } from "@/lib/storage/attachments"
 import type { MovementFormState } from "@/hooks/use-movement-form"
 
 const labelClass = "text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1"
@@ -227,7 +228,7 @@ export function MovementStep3Fields({ state }: { state: MovementFormState }) {
                   )}
                 </div>
                 <a
-                  href={att.drive_view_link}
+                  href={attachmentHref("attachments", att.storage_path) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="min-w-0 flex-1 truncate text-xs font-bold text-primary hover:underline"

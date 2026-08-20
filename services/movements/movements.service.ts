@@ -29,8 +29,7 @@ export async function insertMovementAttachments(
   const { error } = await db.from("movement_attachments").insert(
     attachments.map((attachment) => ({
       movement_id: movementId,
-      drive_file_id: attachment.driveFileId,
-      drive_view_link: attachment.driveViewLink,
+      storage_path: attachment.path,
       file_name: attachment.fileName,
       mime_type: attachment.mimeType,
       size_bytes: attachment.sizeBytes,

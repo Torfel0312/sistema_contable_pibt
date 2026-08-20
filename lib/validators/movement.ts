@@ -1,8 +1,7 @@
 import { z } from "zod"
 
 export const attachmentInputSchema = z.object({
-  driveFileId: z.string().min(1),
-  driveViewLink: z.string().min(1),
+  path: z.string().min(1),
   fileName: z.string().min(1),
   mimeType: z.string().min(1),
   sizeBytes: z.number().int().positive()

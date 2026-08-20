@@ -15,7 +15,7 @@ Accounting and fund management system for **Primera Iglesia Bautista de Talcahua
 | Charts        | Recharts                              |
 | UI components | Base UI                               |
 | Email         | [Resend](https://resend.com)          |
-| Attachments   | Google Drive API v3 (service account) |
+| Attachments   | Supabase Storage (private bucket, signed URLs) |
 
 ## Modules
 
@@ -97,10 +97,6 @@ RESEND_API_KEY=                         # API key from resend.com
 NOTIFICATION_EMAIL=                     # Movement notification recipient
 RESEND_WEBHOOK_SECRET=                  # Verifies the inbound-email webhook
 CRON_SECRET=                            # Shared secret for the reminders cron endpoint
-
-GOOGLE_DRIVE_FOLDER_ID=                 # Drive folder for uploaded attachments (optional)
-GOOGLE_DRIVE_CLIENT_EMAIL=              # Service account email (optional)
-GOOGLE_DRIVE_PRIVATE_KEY=               # Service account private key (optional)
 ```
 
 ## Documentation
