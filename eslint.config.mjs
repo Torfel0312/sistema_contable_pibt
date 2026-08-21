@@ -1,4 +1,5 @@
 import { dirname } from "path"
+import { createRequire } from "module"
 import { fileURLToPath } from "url"
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
@@ -6,6 +7,7 @@ import tsParser from "@typescript-eslint/parser"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const require = createRequire(import.meta.url)
 
 const eslintConfig = [
   {
@@ -27,6 +29,16 @@ const eslintConfig = [
   },
   ...nextVitals,
   ...nextTs,
+  {
+    // eslint-config-next sets settings.react.version to "detect", which makes
+    // eslint-plugin-react call the removed context.getFilename() API under
+    // ESLint 10 and crash. Pin the version explicitly to skip that lookup.
+    settings: {
+      react: {
+        version: require("react/package.json").version
+      }
+    }
+  },
   // Type-aware rule set applied to TypeScript files. We enable the
   // parser/project option so rules like no-explicit-any and
   // no-unsafe-assignment can use type information.
