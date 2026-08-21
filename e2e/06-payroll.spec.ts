@@ -15,24 +15,14 @@ test.describe("Payroll (Etapa 6, ADMIN only)", () => {
     await login(page, "admin")
   })
 
-  test("page + severance adjustment dialog", async ({ page }) => {
+  test("page", async ({ page }) => {
     await page.goto("/payroll", { waitUntil: "networkidle" })
     await shot(page, "06-payroll", "page")
-
-    await page.getByRole("button", { name: "Ajustar reserva" }).click()
-    const dialog = page.getByRole("dialog")
-    await expect(dialog).toBeVisible()
-    await shot(page, "06-payroll", "severance-adjust-dialog-empty")
-    await pickTodayIn(page, dialog)
-    await dialog.locator('input[type="number"]').fill("500000")
-    await dialog.getByPlaceholder("Razón del ajuste").fill("Ajuste E2E de prueba")
-    await shot(page, "06-payroll", "severance-adjust-dialog-filled")
-    await dialog.getByRole("button", { name: "Confirmar ajuste" }).click()
-    await page.waitForTimeout(1000)
-    await shot(page, "06-payroll", "severance-balance-updated")
   })
 
-  test("register payroll dialog + multi-line form + history", async ({ page }) => {
+  test("register payroll dialog + multi-line form + severance reserve + history", async ({
+    page
+  }) => {
     await page.goto("/payroll", { waitUntil: "networkidle" })
     await page.getByRole("button", { name: "Registrar remuneración" }).click()
     const dialog = page.getByRole("dialog")

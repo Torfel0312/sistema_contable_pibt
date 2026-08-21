@@ -13,12 +13,12 @@ test.describe("Dashboard (Etapa 8 widgets, all roles)", () => {
   test("finance widgets visible only for ADMIN/BURSAR/FINANCE", async ({ page }) => {
     await login(page, "admin")
     await expect(page.getByText("Reserva de indemnización")).toBeVisible()
-    await expect(page.getByText("Remanente por ministerio")).toBeVisible()
+    await expect(page.getByText("Remanentes por ministerio")).toBeVisible()
   })
 
   test("finance widgets hidden for MINISTER", async ({ page }) => {
     await login(page, "minister")
     await expect(page.getByText("Reserva de indemnización")).not.toBeVisible()
-    await expect(page.getByText("Remanente por ministerio")).not.toBeVisible()
+    await expect(page.getByText("Remanentes por ministerio")).not.toBeVisible()
   })
 })

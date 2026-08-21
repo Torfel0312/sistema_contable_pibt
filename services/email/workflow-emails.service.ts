@@ -6,7 +6,7 @@ import { ReminderEmail } from "@/emails/reminder-email"
 import { SettlementReviewEmail } from "@/emails/settlement-review-email"
 import { SettlementReturnedEmail } from "@/emails/settlement-returned-email"
 import { TransferNotificationEmail } from "@/emails/transfer-notification-email"
-import { DEFAULT_FROM_EMAIL } from "@/services/email/resend.service"
+import { DEFAULT_FROM_EMAIL, resendRecipient } from "@/services/email/resend.service"
 import { settingsService } from "@/services/settings/settings.service"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { getSiteUrl } from "@/lib/utils"
@@ -35,7 +35,7 @@ export async function sendIntentionNotification(intention: {
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `Nueva solicitud de presupuesto — ${ORG_SHORT}`,
     react: IntentionNotificationEmail({
       intention,
@@ -59,7 +59,7 @@ export async function sendIntentionReviewNotification(
 
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `Solicitud ${statusLabel} — ${ORG_SHORT}`,
     react: IntentionReviewEmail({
       intention,
@@ -82,7 +82,7 @@ export async function sendTransferNotification(
 
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `Transferencia registrada — ${ORG_SHORT}`,
     react: TransferNotificationEmail({
       intention,
@@ -107,7 +107,7 @@ export async function sendSettlementReviewNotification(
 
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `Rendición ${statusLabel} — ${ORG_SHORT}`,
     react: SettlementReviewEmail({
       settlement,
@@ -131,7 +131,7 @@ export async function sendSettlementReturnedNotification(
 
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `Rendición devuelta para corrección — ${ORG_SHORT}`,
     react: SettlementReturnedEmail({
       settlement,
@@ -158,7 +158,7 @@ export async function sendReminderEmail(summary: {
 
   await resend.emails.send({
     from,
-    to,
+    to: resendRecipient(to),
     subject: `[Recordatorio] ${total} items pendientes — ${ORG_SHORT}`,
     react: ReminderEmail({ summary, dashboardUrl: `${BASE_URL}/requests` }),
     headers: TRANSACTIONAL_HEADERS

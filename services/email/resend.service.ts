@@ -8,6 +8,15 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export const DEFAULT_FROM_EMAIL = "Sistema contable PIBT <hola@pibtalcahuano.com>"
 
+const RESEND_TEST_RECIPIENT = "delivered@resend.dev"
+
+// When RESEND_TEST_MODE=true, redirect every send to Resend's test address
+// instead of the real recipient, so local runs don't spend real send quota
+// or land in someone's actual inbox.
+export function resendRecipient(to: string): string {
+  return process.env.RESEND_TEST_MODE === "true" ? RESEND_TEST_RECIPIENT : to
+}
+
 const ORG_SHORT = "Sistema Contable PIBT"
 
 const UNSUBSCRIBE_EMAIL = "hola@pibtalcahuano.com"
@@ -33,7 +42,7 @@ export async function sendMovementEmail(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: process.env.NOTIFICATION_EMAIL,
+    to: resendRecipient(process.env.NOTIFICATION_EMAIL),
     replyTo: process.env.NOTIFICATION_EMAIL,
     subject: `[${movement.movementTypeLabel}] ${movement.category}`,
     react: MovementEmail({ movement }),
@@ -57,7 +66,7 @@ export async function sendInviteEmail(opts: {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: opts.to,
+    to: resendRecipient(opts.to),
     subject: `Activa tu cuenta — ${ORG_SHORT}`,
     react: AuthEmail({
       title: `Hola ${opts.full_name}, tu cuenta está lista`,
@@ -83,7 +92,7 @@ export async function sendResetEmail(opts: {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: opts.to,
+    to: resendRecipient(opts.to),
     subject: `Restablece tu contraseña — ${ORG_SHORT}`,
     react: AuthEmail({
       title: "Restablece tu contraseña",
@@ -108,7 +117,7 @@ export async function sendForgotPasswordEmail(opts: {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from,
-    to: opts.to,
+    to: resendRecipient(opts.to),
     subject: `Recupera tu contraseña — ${ORG_SHORT}`,
     react: AuthEmail({
       title: "Recupera tu contraseña",

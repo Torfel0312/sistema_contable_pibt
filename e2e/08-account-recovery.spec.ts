@@ -47,21 +47,18 @@ test.describe("Account recovery", () => {
     await page.goto("/", { waitUntil: "networkidle" })
     await shot(page, "08-account-recovery", "01-login-page")
 
-    // 2. Open "forgot password" dialog
-    await page.getByRole("button", { name: "¿Olvidaste tu contraseña?" }).click()
-    const dialog = page.getByRole("dialog")
-    await expect(dialog).toBeVisible()
-    await page.waitForTimeout(300) // let the open transition settle
-    await shot(page, "08-account-recovery", "02-forgot-password-dialog")
+    // 2. Navigate to the forgot-password page (a plain nav link now, not a dialog trigger)
+    await page.getByRole("link", { name: "¿Olvidaste tu contraseña?" }).click()
+    await expect(page).toHaveURL(/\/forgot-password/)
+    await shot(page, "08-account-recovery", "02-forgot-password-page")
 
     // 3. Fill email + submit
-    await page.locator("#forgot-email").fill(TEST_EMAIL)
+    await page.locator("#email").fill(TEST_EMAIL)
     await shot(page, "08-account-recovery", "03-forgot-password-email-filled")
 
-    await page.getByRole("button", { name: "Enviar enlace" }).click()
-    await expect(page.getByText(/recibirás un enlace/)).toBeVisible()
+    await page.getByRole("button", { name: "Enviar enlace de recuperación" }).click()
+    await expect(page.getByText("Revisa tu correo")).toBeVisible()
     await shot(page, "08-account-recovery", "04-forgot-password-confirmation")
-    await page.keyboard.press("Escape")
 
     // Confirm the backend flipped the profile to PENDING_RESET
     const { data: profile } = await admin
