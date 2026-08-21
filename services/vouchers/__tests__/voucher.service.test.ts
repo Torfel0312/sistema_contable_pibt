@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 type SendCallArgs = {
   to: string
   bcc?: string
